@@ -1,0 +1,82 @@
+name: CMake
+
+on:
+  push:
+    branches:
+      - development
+      - main
+  pull_request:
+    branches:
+      - development
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally
+    # well on Windows or Mac.  You can convert this to a matrix build if you need
+    # cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    # runs-on: ubuntu-latest
+    runs-on: icx
+
+    steps:
+    - uses: actions/checkout@v2
+
+
+    - name: Format
+      working-directory: ${{github.workspace}}
+      run: |
+        source /home/github-runner/runner/pre-commit-venv/bin/activate
+        pre-commit install
+        pre-commit run --all-files
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
+
+    - name: Install
+      # Install the built binaries
+      run: cmake --install ${{github.workspace}}/build
+
+    - name: Test
+      working-directory: ${{github.workspace}}/build/bin
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      # run: ctest -C ${{env.BUILD_TYPE}}
+      run: ./test_harness --backend_lib_path ../lib/libhebench_example_backend.so
+
+    - name: Validation
+      working-directory: ${{github.workspace}}/build
+      run: ../.github/workflows/validate_testharness_output.sh
+      
+    - name: Documentation
+      if: | # run documentation step only when merging into main
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'pull_request' && github.base_ref == 'main')
+      working-directory: ${{github.workspace}}
+      run: |
+        API_BRIDGE_TAG="main"
+        if [ -f cmake/third-party/API_BRIDGE.version ]; then
+            API_BRIDGE_TAG=$(scripts/read_version.sh cmake/third-party/API_BRIDGE.version)
+        fi
+        rm -rf docs
+        tmp_dir=$(mktemp -d)
+        yes | scripts/build_docs.sh $tmp_dir "${API_BRIDGE_TAG}"
+        git clone https://github.com/hebench/frontend.git docs-repo
+        cd docs-repo
+        git checkout documentation
+        git reset --hard dc8f478c5b3483a430bf59f3c00fa694139cecba
+        git clean -fdx
+        mv $tmp_dir/docs/html docs
+        rm -rf $tmp_dir
+        git add . --force
+        git commit -m "Documentation"
+        git push origin documentation --force
