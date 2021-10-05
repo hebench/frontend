@@ -73,7 +73,7 @@ jobs:
         git clone https://github.com/hebench/frontend.git docs-repo
         cd docs-repo
         git checkout documentation
-        git reset --hard dc8f478c5b3483a430bf59f3c00fa694139cecba
+        git reset --hard 210fb7c819a79eeb75163eee3bf7ccf7b66fcdd5
         git clean -fdx
         mv $tmp_dir/docs/html docs
         rm -rf $tmp_dir
