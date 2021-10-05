@@ -1,0 +1,43 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v2.5.0
+      hooks:
+        - id: trailing-whitespace
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in|py)$
+        - id: end-of-file-fixer
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in|py)$
+        - id: check-merge-conflict
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in|py)$
+        - id: mixed-line-ending
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in|py)$
+        - id: check-byte-order-marker
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in|py)$
+    - repo: https://github.com/Lucas-C/pre-commit-hooks
+      rev: v1.1.10
+      hooks:
+        - id: insert-license
+          files: \.(sh|py)$
+          args:
+          - --license-filepath
+          # defaults to: LICENSE.txt
+          - HEADER
+    - repo: https://github.com/Lucas-C/pre-commit-hooks
+      rev: v1.1.10
+      hooks:
+        - id: insert-license
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl|h.in)$
+          args:
+          - --license-filepath
+          # defaults to: LICENSE.txt
+          - HEADER
+          - --comment-style
+          - //                   # defaults to: #
+    - repo: local
+      hooks:
+        - id: clang-format
+          name: clang-format
+          entry: clang-format
+          language: system
+          files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl)$
+          args: ["-i", "--style=file"]
+
