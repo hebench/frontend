@@ -138,7 +138,7 @@ std::ostream &ProgramConfig::showConfig(std::ostream &os) const
         os << "(none)" << std::endl;
     else
         os << config_file << std::endl;
-    os << "    Back-end library: " << backend_lib_path << std::endl;
+    os << "    Backend library: " << backend_lib_path << std::endl;
     return os;
 }
 
@@ -170,11 +170,11 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument("--benchmark_config_file", "--config_file", "-c", 1, "<path_to_config_file>",
                        "   [OPTIONAL] Path to benchmark run configuration file.\n"
                        "   YAML file specifying the selection of benchmarks and their workload\n"
-                       "   parameters to run. If not present, all back-end benchmarks will be run\n"
+                       "   parameters to run. If not present, all backend benchmarks will be run\n"
                        "   with default parameters.");
     parser.addArgument("--dump_config", "--dump", 0, "",
                        "   [OPTIONAL] If specified, Test Harness will dump a general configuration\n"
-                       "   file with the possible benchmarks that the back-end can run. This file can\n"
+                       "   file with the possible benchmarks that the backend can run. This file can\n"
                        "   be used as starting point template for a benchmark run configuration file.\n"
                        "   The destination file is specified by \"--benchmark_config_file\" argument.");
     parser.addArgument("--enable_validation", "--validation", "-v", 1, "<bool: 0|false|1|true>",
@@ -197,7 +197,7 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "   Must exist and be accessible for writing. Any files with the same name will\n"
                        "   be overwritten. Defaults to current working directory \".\"");
     parser.addArgument("--version", 0, "",
-                       "   [OPTIONAL] Outputs Test harness version, required API Bridge version and\n"
+                       "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
                        "   currently linked API Bridge version. Application exists after this.");
     parser.parse(argc, argv);
 }
@@ -376,18 +376,18 @@ int main(int argc, char **argv)
         std::cout << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 
         ss = std::stringstream();
-        ss << "Initializing Back-end from shared library:" << std::endl
+        ss << "Initializing Backend from shared library:" << std::endl
            << config.backend_lib_path;
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
         hebench::APIBridge::DynamicLibLoad::loadLibrary(config.backend_lib_path);
         std::cout << IOS_MSG_OK << std::endl;
 
         // create engine and register all benchmarks
-        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Back-end engine...") << std::endl;
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
         hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create();
         std::cout << IOS_MSG_OK << std::endl;
 
-        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Back-end...") << std::endl;
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;
         std::shared_ptr<hebench::Utilities::BenchmarkConfiguration> p_bench_config =
             std::make_shared<hebench::Utilities::BenchmarkConfiguration>(p_engine, config.backend_lib_path);
         std::cout << IOS_MSG_DONE << std::endl;
@@ -522,7 +522,7 @@ int main(int argc, char **argv)
                             report.clear(); // report event data is no longer valid for a failed run
 
                             ss = std::stringstream();
-                            ss << "Workload back-end failed with message: " << std::endl
+                            ss << "Workload backend failed with message: " << std::endl
                                << err_num.what();
                             std::cout << std::endl
                                       << IOS_MSG_ERROR << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;

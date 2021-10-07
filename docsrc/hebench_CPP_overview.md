@@ -19,7 +19,7 @@ The C++ wrapper offers a variety of helper classes and functionality to ease dev
 
 ### API Bridge Handle wrapping
 
-As communication between Test harness and a backend through API Bridge occurs via opaque handles of type `hebench::APIBridge::Handle`, C++ wrapper offers a handy set of methods, part of `hebench::cpp::BaseEngine` to assist on the creation of and extraction of information from opaque handles.
+As communication between Test Harness and a backend through API Bridge occurs via opaque handles of type `hebench::APIBridge::Handle`, C++ wrapper offers a handy set of methods, part of `hebench::cpp::BaseEngine` to assist on the creation of and extraction of information from opaque handles.
 
 Templated method `hebench::cpp::BaseEngine::createHandle()` allows for the creation of an opaque handle that wraps around the constructed object. As part of its parameters, it takes the parameters to construct the object getting wrapped. It is convenient to use `CopyConstructible` or `CopyMovable` objects as it may be easier to construct an object and modify it before wrapping it in a handle. This method also allows for tagging and checks that the tag respects the C++ wrapper convention.
 

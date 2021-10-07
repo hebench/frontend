@@ -29,10 +29,10 @@ Current build system uses CMake.
 ## Online Documentation <a name="online-documentation"></a>
 For an overview of HEBench, please visit the homepage here [HEBench Home](https://hebench.github.io/).
 
-The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](DOCLINK).
+The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](https://hebench.github.io/frontend).
 
 ## Test Harness
-The Test Harness is the core front-end of HEBench. It orchestrates the benchmarking operations, submits and times requests to back-ends.
+The Test Harness is the core frontend of HEBench. It orchestrates the benchmarking operations, submits and times requests to backends.
 
 ## Build Configuration <a name="build-configuration"></a>
 
@@ -63,7 +63,7 @@ The build system will search for pre-installed third-party components in each of
 2. `-D{COMPONENT_NAME}_INSTALL_DIR`
 3. `/usr/local`
 
-Note that if pre-installed versions are incompatible with the current version of the front-end, the build will fail.
+Note that if pre-installed versions are incompatible with the current version of the frontend, the build will fail.
 
 See the following sections for the specific configuration variable names for each required third-party component.
 
@@ -73,7 +73,7 @@ See the following sections for the specific configuration variable names for eac
 - [YAML CPP](https://github.com/jbeder/yaml-cpp)
 
 #### Configuring Pre-Installed API Bridge <a name="configuring-pre-installed-api-bridge"></a>
-The <b>API Bridge</b> is the component in HEBench that allows communication between Test harness and backends.
+The <b>API Bridge</b> is the component in HEBench that allows communication between Test Harness and backends.
 
 If API Bridge has been pre-built, users can point the build system to the pre-installed version of API Bridge using the following CMake config variables:
 
@@ -118,7 +118,7 @@ cd $INSTALL_LOCATION/bin
 ./test_harness --backend_lib_path /path/to/specified/libbackend.so --report_root_path $REPORT_OUTPUT_PATH
 ```
 
-The Test harness will save the reports and summary of the run to the path specified in `$REPORT_OUTPUT_PATH`.
+The Test Harness will save the reports and summary of the run to the path specified in `$REPORT_OUTPUT_PATH`.
 
 The API Bridge builds with an included simple backend example. Assuming the API Bridge has been built and installed (also in `$INSTALL_LOCATION`) successfully, users may then run as follows:
 
@@ -127,9 +127,9 @@ cd $INSTALL_LOCATION/bin
 ./test_harness --backend_lib_path $INSTALL_LOCATION/lib/libhebench_example_backend.so --report_root_path $REPORT_OUTPUT_PATH
 ```
 
-Full details on using the Test harness can be found in the [Test Harness User Guide](DOCLINKtest_harness_usage_guide.html).
+Full details on using the Test Harness can be found in the [Test Harness User Guide](https://hebench.github.io/frontend/test_harness_usage_guide.html).
 
-For a list of available backends, visit [Published Backends](https://github.com/hebench/frontend/wiki/HEBench-Published-Backends).
+For a list of available backends, visit [Published Backends](https://hebench.github.io/hebench_published_backends.html).
 
 ## Building the Documentation <a name="building-the-documentation"></a>
 To build the complete documentation use the provided script in `scripts/build_docs.sh`.

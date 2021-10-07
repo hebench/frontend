@@ -25,7 +25,7 @@ Backwards compatible:
  - Complete reference to API Bridge: @ref hebench::APIBridge
 
 ##API Bridge Function Details
-Communication between the Test harness and a backend occurs through opaque handles as defined by `hebench::APIBridge::Handle`. A backend will store information it requires in an opaque handle and returns it to the Test harness via the API Bridge. The Test harness will use the corresponding handle when requesting backend to operate on it. These handles expose a `tag` field that backends can use to identify the content of the handle at run-time.
+Communication between the Test Harness and a backend occurs through opaque handles as defined by `hebench::APIBridge::Handle`. A backend will store information it requires in an opaque handle and returns it to the Test Harness via the API Bridge. The Test Harness will use the corresponding handle when requesting backend to operate on it. These handles expose a `tag` field that backends can use to identify the content of the handle at run-time.
 
 The API Bridge defines the following set of functions for the main pipeline flow which backends are required to implement. For the complete function pipeline flow, see @ref function_pipeline_chart .
 

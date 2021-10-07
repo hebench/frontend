@@ -1,7 +1,7 @@
 Adding a New Workload to Test Harness                {#extend_test_harness}
 ========================
 
-To add a new workload to HEBench, the first step is to define it, followed by adding it into the Test Harness. Since Test Harness is the program that tests back-ends on workloads, if it doesn't know the workload, it will not test for it.
+To add a new workload to HEBench, the first step is to define it, followed by adding it into the Test Harness. Since Test Harness is the program that tests backends on workloads, if it doesn't know the workload, it will not test for it.
 
 ### 1. Define a workload.
 
@@ -15,14 +15,14 @@ Next, once the workload is defined, HEBench must be made aware of it.
 
 To declare the workload in the API Bridge, a new enumeration value must be added for it in `hebench/api_bridge/types.h` `enum hebench::APIBridge::Workload`.
 
-At this point, Test Harness and any back-ends are able to use the workload as part of their workload description.
+At this point, Test Harness and any backends are able to use the workload as part of their workload description.
 
 Note: make sure to change the API version constants in `hebench/api_bridge/types.h` as appropriate to reflect changes in the API Bridge. Adding new workload, as explained, should only constitute a revision increase.
 
 For appropriate API Bridge versioning, check <b>API Bridge Versioning General Guidelines</b> in @ref APIBridge_overview .
 
 #### (Optional) Add a C++ wrapper for the workload parameters.
-If the new workload requires flexible workload parameters, adding a wrapper to ease development of back-ends is optional, but encouraged.
+If the new workload requires flexible workload parameters, adding a wrapper to ease development of backends is optional, but encouraged.
 
 To add a wrapper, extend class `hebench::cpp::WorkloadParams::Generic` from `workload_params.h`. Check this header file for examples of other wrappers already implemented for existing workloads.
 
@@ -34,9 +34,9 @@ There are two ways to extend the Test Harness with a new workload. Which one is 
 
 1. For full flexibility, inherit from `hebench::TestHarness::PartialBenchmark` to have common implementations to trivial methods declared by interface `IBenchmark`.
     
-    Method `hebench::TestHarness::PartialBenchmark::init()` must be implemented to perform initialization after construction, but before the back-end itself is initialized. Data loading or generation should take place in this method. Errors during initialization should be reported as exceptions derived from `std::exception`.
+    Method `hebench::TestHarness::PartialBenchmark::init()` must be implemented to perform initialization after construction, but before the backend itself is initialized. Data loading or generation should take place in this method. Errors during initialization should be reported as exceptions derived from `std::exception`.
     
-    Method `hebench::TestHarness::PartialBenchmark::postInit()` can be overriden to provide initialization that requires the back-end to already exist. Note that overrides of this method must call the base method as their first operation.
+    Method `hebench::TestHarness::PartialBenchmark::postInit()` can be overriden to provide initialization that requires the backend to already exist. Note that overrides of this method must call the base method as their first operation.
     
     The implementation of method `IBenchmark::run()` is the most important since it is the implementation of the actual benchmark. For correct statistical computations of reported events during the run, make sure that events of the same type are added to the `hebench::Utilities::TimingReportEx` `out_report` parameter under the same event ID, and the event which is the main benchmarking operation is clearly specified when adding the event type.
     
@@ -62,7 +62,7 @@ Once the workload is implemented, the final step is to make the Test Harness awa
     
     Inside `createBenchmark()`, the benchmark object should be constructed and returned. The object's initialization methods will be called after construction automatically, and thus, they should not be called manually by our implementation.
     
-    Note that benchmark description objects should be lightweight because they will exist throughout the lifetime of the main Test harness process.
+    Note that benchmark description objects should be lightweight because they will exist throughout the lifetime of the main Test Harness process.
 
 2. Register workload description with the benchmark factory.
 
