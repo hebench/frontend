@@ -117,7 +117,7 @@ See `hebench::APIBridge::CategoryParams::latency`.
 
 See `hebench::APIBridge::CategoryParams::offline`.
 
-Value ranges for elements in `CategoryParams::offline::data_count`. Default value is used for elements that take any sample size, but sample size of `0` is specified by Test harness.
+Value ranges for elements in `CategoryParams::offline::data_count`. Default value is used for elements that take any sample size, but sample size of `0` is specified by Test Harness.
 
 | Parameter | Lower bound | Upper bound | Default |
 |-|-|-|-|
@@ -125,7 +125,7 @@ Value ranges for elements in `CategoryParams::offline::data_count`. Default valu
 | `1`* | `1` | `1` | `1` | 
 | `2` | `1` | none | `100` |
 
-&nbsp;* When set to `0`, these are set to the specified default values. Not affected by Test harness sample size option.
+&nbsp;* When set to `0`, these are set to the specified default values. Not affected by Test Harness sample size option.
 
 ## Data Type
 

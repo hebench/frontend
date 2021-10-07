@@ -62,7 +62,7 @@ Once the workload is implemented, the final step is to make the Test Harness awa
     
     Inside `createBenchmark()`, the benchmark object should be constructed and returned. The object's initialization methods will be called after construction automatically, and thus, they should not be called manually by our implementation.
     
-    Note that benchmark description objects should be lightweight because they will exist throughout the lifetime of the main Test harness process.
+    Note that benchmark description objects should be lightweight because they will exist throughout the lifetime of the main Test Harness process.
 
 2. Register workload description with the benchmark factory.
 

@@ -226,4 +226,4 @@ See the method descriptions for more information on the expected functionality a
 <hr>
 <br>
 
-At this point, the `MyWorkloadLatency` class should be completed. Refer to documentation on [adding a workload to the Test Harness](extend_test_harness.md) for the final steps to make Test harness aware of the new class.
+At this point, the `MyWorkloadLatency` class should be completed. Refer to documentation on [adding a workload to the Test Harness](extend_test_harness.md) for the final steps to make Test Harness aware of the new class.

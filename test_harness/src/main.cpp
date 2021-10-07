@@ -197,7 +197,7 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "   Must exist and be accessible for writing. Any files with the same name will\n"
                        "   be overwritten. Defaults to current working directory \".\"");
     parser.addArgument("--version", 0, "",
-                       "   [OPTIONAL] Outputs Test harness version, required API Bridge version and\n"
+                       "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
                        "   currently linked API Bridge version. Application exists after this.");
     parser.parse(argc, argv);
 }

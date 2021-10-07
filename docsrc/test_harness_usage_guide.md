@@ -12,7 +12,7 @@ Usage:
 ```
 ## 1. Test Harness Command Line Options
 
-To display the Test harness help which lists all the available command line options, use the following command:
+To display the Test Harness help which lists all the available command line options, use the following command:
 
 ```bash
 ./test_harness -h
@@ -43,7 +43,7 @@ To display the Test harness help which lists all the available command line opti
 
 |<div style="width:390px">Option</div>                     | Required | Description|
 |---------------------------|--|--------------|
-| `--version` | N | When present, outputs Test harness version, required API Bridge version and currently linked API Bridge version. Application exists after this. |
+| `--version` | N | When present, outputs Test Harness version, required API Bridge version and currently linked API Bridge version. Application exists after this. |
 | `-h, /h, \h, --help, /help, \help` | N | Shows this help. Application exists after this. |
 
 ## 2. Execute All Default Benchmarks for a Backend
@@ -64,25 +64,25 @@ Optionally the output location for the performance report can also be specified.
 
 Backends can support several workloads and offer a set of default parameters for each workload. Sometimes, however, we may want to run specific workloads, or workloads with parameters other than the default sets.
 
-Test harness offers facilities to configure the run using a configuration file. This benchmark configuration file is a YAML file that contains the list of which benchmarks to run and the workload parameters to use for each benchmark.
+Test Harness offers facilities to configure the run using a configuration file. This benchmark configuration file is a YAML file that contains the list of which benchmarks to run and the workload parameters to use for each benchmark.
 
-If we already have a configuration file named `config.yaml`, we can load it for a Test harness run as follows:
+If we already have a configuration file named `config.yaml`, we can load it for a Test Harness run as follows:
 
 ```bash
 ./test_harness --backend_lib_path libmy_backend.so --benchmark_config_file config.yaml
 ```
 
-This will launch the Test harness which will load `config.yaml`, validate that the selection of benchmarks and parameters are supported by the backend, and then execute only those benchmarks specified in the configuration file.
+This will launch the Test Harness which will load `config.yaml`, validate that the selection of benchmarks and parameters are supported by the backend, and then execute only those benchmarks specified in the configuration file.
 
 ### 3.2 Exporting a benchmark configuration file
 
-While the format of a benchmark configuration YAML file is standard for the Test harness, the benchmark parameters and IDs may differ by backend. So, in order to find out the correct values for the configuration, a user may export the default benchmark configuration for a backend using the following:
+While the format of a benchmark configuration YAML file is standard for the Test Harness, the benchmark parameters and IDs may differ by backend. So, in order to find out the correct values for the configuration, a user may export the default benchmark configuration for a backend using the following:
 
 ```bash
 ./test_harness --backend_lib_path libmy_backend.so --benchmark_config_file config.yaml --dump_config
 ```
 
-This will launch the Test harness which, instead of running any benchmarks, will query the specified backend and generate the file `config.yaml` containing the benchmark configuration information to run the backend with default parameters. This file will contain comments on how to use and what  benchmark is represented by each section.
+This will launch the Test Harness which, instead of running any benchmarks, will query the specified backend and generate the file `config.yaml` containing the benchmark configuration information to run the backend with default parameters. This file will contain comments on how to use and what  benchmark is represented by each section.
 
 Exported default configuration files are the starting point for users to create their own run configuration by editing these files to match their needs. Some workload parameter values may not be supported by certain backends, so, it is recommended to consult specific backend documentation for information on supported values.
 

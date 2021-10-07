@@ -5,7 +5,7 @@ The previous steps were all about getting the new backend project, engine, and b
 
 For this benchmark example we will be implementing the vector element-wise addition test which is detailed on @ref elementwise_add . Each workload has a detailed description page which provides all information on the number, format and layout of the parameters. A detailed description of the benchmarks algorithm and how each of the previously described parameters are used. And finally the expected format and data layout of the benchmark results.
 
-All the methods that will be called from Test harness should receive validated inputs; however, it is a good idea to validate those inputs in the case where we are using incompatible versions between Test harness and our back-end, or any other errors occur. For clarity, though, most validation will be omited in this tutorial.
+All the methods that will be called from Test Harness should receive validated inputs; however, it is a good idea to validate those inputs in the case where we are using incompatible versions between Test Harness and our back-end, or any other errors occur. For clarity, though, most validation will be omited in this tutorial.
 
 ## Steps
 
@@ -18,7 +18,7 @@ During construction of our actual benchmark class, we validate the workload flex
 #### 0.1. Information regarding function communication
 Benchmarks are required to implement a number of functions as defined in the APIBridge. These functions are called by the frontend as part of the testing procedure. Each function will recieve some parameters as input, perform some expected operation, and then pass the results back to the frontend which will use the returned results as input to later functions in the flow. This logical flow must be respected by the different functions we have to implement. To see the pipline flow, check @ref function_pipeline_chart .
 
-To enable a high amount of flexibility and enable the widest variety of implementations with the exception of the encode and decode's `hebench::APIBridge::PackedData` parameters, all communication is done via `hebench::APIBridge::Handle objects`. These handle objects are completely opaque to the Test harness and it is up to the backend to decide what is stored in each handle at each step of the pipeline.
+To enable a high amount of flexibility and enable the widest variety of implementations with the exception of the encode and decode's `hebench::APIBridge::PackedData` parameters, all communication is done via `hebench::APIBridge::Handle objects`. These handle objects are completely opaque to the Test Harness and it is up to the backend to decide what is stored in each handle at each step of the pipeline.
 
 C++ wrapper offers a series of helper methods to ease the creation and data wrapping in these handles. While it is not necessary to use these methods, it is recommended for code correctness, robustness and clarity. See `hebench::cpp::BaseEngine::createHandle()` and `hebench::cpp::BaseEngine::retrieveFromHandle()` for details.
 
@@ -37,7 +37,7 @@ The encoded data must be compatible with `hebench::cpp::BaseBenchmark::encrypt()
   <span>API Bridge Encode flow chart.</span>
 </div>
 
-For our benchmark, the element-wise add operation has only 2 operands. We have specified in the benchmark description that first is plain text and second is ciphertext. According to documentation, Test harness will encode all parameters that ought to be encrypted first in a single call to encode, and all the plain text in another call.
+For our benchmark, the element-wise add operation has only 2 operands. We have specified in the benchmark description that first is plain text and second is ciphertext. According to documentation, Test Harness will encode all parameters that ought to be encrypted first in a single call to encode, and all the plain text in another call.
 
 First, we retrieve the data pack for the parameter that we will be encoding, then, we create and allocate our internal representation.
 
@@ -47,7 +47,7 @@ We use a smart pointer to the vector because we want to be able to copy the poin
 
 \snippet{lineno} docsrc/examples/backend_tutorials/tutorial_backend/src/tutorial_eltwiseadd_benchmark.cpp benchmark encode allocation
 
-The next step is the actual encoding from the raw data into our internal encoded representation. The raw pointer incoming from Test harness actually points to an array of `double` in clear text since the data type we described for this benchmark was `Float64`.
+The next step is the actual encoding from the raw data into our internal encoded representation. The raw pointer incoming from Test Harness actually points to an array of `double` in clear text since the data type we described for this benchmark was `Float64`.
 
 \snippet{lineno} docsrc/examples/backend_tutorials/tutorial_backend/src/tutorial_eltwiseadd_benchmark.cpp benchmark encode encoding
 

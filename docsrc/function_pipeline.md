@@ -1,7 +1,7 @@
 API Bridge Function Pipeline Chart {#function_pipeline_chart}
 ========================
 
-API Bridge functions are called by the front-end's Test harness as part of the testing procedure. Each function will recieve some parameters as input, perform some expected operation in the back-end, and then pass the results back to the Test harness which will use the returned results as input to later functions in the flow.
+API Bridge functions are called by the front-end's Test Harness as part of the testing procedure. Each function will recieve some parameters as input, perform some expected operation in the back-end, and then pass the results back to the Test Harness which will use the returned results as input to later functions in the flow.
 
 This chart depicts the pipeline.
 

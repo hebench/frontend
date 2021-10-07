@@ -1,7 +1,7 @@
 Benchmark Configuration File Reference {#config_file_reference}
 ========================
 
-Benchmark configuration files can be specified during a run of Test harness via the `--benchmark_config_file` command line argument.
+Benchmark configuration files can be specified during a run of Test Harness via the `--benchmark_config_file` command line argument.
 
 A configuration file contains a list of benchmarks to run and parameters to use for each workload. While the syntax of configuration files is the same for all, IDs for benchmarks are specific to each backend.
 
@@ -108,7 +108,7 @@ else
 }
 ```
 
-For workloads with multiple parameters, all possible combinations for each range will be generated and the benchmark for each combination executed by Test harness. The order of each combination is undefined.
+For workloads with multiple parameters, all possible combinations for each range will be generated and the benchmark for each combination executed by Test Harness. The order of each combination is undefined.
 
 Finally, backends may have extra workload parameters, beyond those required. Configuration files are expected to fulfill these as well. To know if and which extra parameters a backend has defined for a benchmark, users must consult the specific backend documentation. Exported configuration files may offer a hint at any extra parameters as well.
 
@@ -118,7 +118,7 @@ The best starting point for creating a custom benchmark configuration file is to
 
 The exported file will contain the correct information regarding each benchmark ID and its workload parameters. Each benchmark will be preceded by a comment describing what the configuration represents (workload, category, category parameters, etc.).
 
-Users may add, edit or remove benchmarks in this file as needed. Invalid configurations will be rejected by Test harness when loading.
+Users may add, edit or remove benchmarks in this file as needed. Invalid configurations will be rejected by Test Harness when loading.
 
 For example, if a backend exported configuration looks like below:
 
@@ -149,10 +149,10 @@ We can modify the parameters at will, as long as our new values are supported by
 
 We can add more benchmarks, as long as their IDs are one of the IDs in the original exported file, and the number of parameters and their types match the correct workload.
 
-Note that adding benchmarks that exactly match parameters of other existing benchmarks will not cause an error. Test harness will run duplicate benchmarks, but the results of the last run will overwrite the results of any previous runs of the duplicated benchmark.
+Note that adding benchmarks that exactly match parameters of other existing benchmarks will not cause an error. Test Harness will run duplicate benchmarks, but the results of the last run will overwrite the results of any previous runs of the duplicated benchmark.
 
 ### Exporting default configuration
-The following command will make Test harness query the specified backend and generate the file pointed by variable `$CONFIG_FILE_PATH` containing the benchmark configuration information to run the backend with default parameters, instead of running any benchmarks.
+The following command will make Test Harness query the specified backend and generate the file pointed by variable `$CONFIG_FILE_PATH` containing the benchmark configuration information to run the backend with default parameters, instead of running any benchmarks.
 
 If the file already exists, it will be overwritten without notification.
 
@@ -162,7 +162,7 @@ If the file already exists, it will be overwritten without notification.
 
 ### Running with a configuration file
 
-The command below will launch the Test harness which will load the file pointed in `$CONFIG_FILE_PATH`, validate that the selection of benchmarks and parameters are supported by the backend, and then execute only those benchmarks specified in the configuration file.
+The command below will launch the Test Harness which will load the file pointed in `$CONFIG_FILE_PATH`, validate that the selection of benchmarks and parameters are supported by the backend, and then execute only those benchmarks specified in the configuration file.
 
 ```bash
 ./test_harness --backend_lib_path $BACKEND_LIB --benchmark_config_file $CONFIG_FILE_PATH

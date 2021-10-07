@@ -376,19 +376,19 @@ private:
  *
  * <b>Execution flow:</b>
  *
- * During execution of a single benchmark, Test harness will call `IBenchmark::create()`
+ * During execution of a single benchmark, Test Harness will call `IBenchmark::create()`
  * with parameters to select and create the right benchmark.
  *
  * During benchmark creation, dataset loading or generation compatible with the benchmark
  * is expected to occur.
  *
- * From the benchmark object created, Test harness calls obj->run(TimingReport &).
+ * From the benchmark object created, Test Harness calls obj->run(TimingReport &).
  *
  * After the benchmark run completes without exceptions, the TimingReport gets formated,
  * summarized and writen to files in the location specified by obj->getDescriptorPath().
  * If this location is relative, a root location will be prepended to it as specified by
  * process command line arguments. This path does not need to exist (it will be created
- * automatically or Test harness will terminate if an error occurs).
+ * automatically or Test Harness will terminate if an error occurs).
  */
 class IBenchmark
 {
