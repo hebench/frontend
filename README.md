@@ -29,10 +29,10 @@ Current build system uses CMake.
 ## Online Documentation <a name="online-documentation"></a>
 For an overview of HEBench, please visit the homepage here [HEBench Home](https://hebench.github.io/).
 
-The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](DOCLINK).
+The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](https://hebench.github.io/frontend).
 
 ## Test Harness
-The Test Harness is the core front-end of HEBench. It orchestrates the benchmarking operations, submits and times requests to back-ends.
+The Test Harness is the core frontend of HEBench. It orchestrates the benchmarking operations, submits and times requests to backends.
 
 ## Build Configuration <a name="build-configuration"></a>
 
@@ -127,9 +127,9 @@ cd $INSTALL_LOCATION/bin
 ./test_harness --backend_lib_path $INSTALL_LOCATION/lib/libhebench_example_backend.so --report_root_path $REPORT_OUTPUT_PATH
 ```
 
-Full details on using the Test harness can be found in the [Test Harness User Guide](DOCLINKtest_harness_usage_guide.html).
+Full details on using the Test harness can be found in the [Test Harness User Guide](https://hebench.github.io/frontend/test_harness_usage_guide.html).
 
-For a list of available backends, visit [Published Backends](https://github.com/hebench/frontend/wiki/HEBench-Published-Backends).
+For a list of available backends, visit [Published Backends](https://hebench.github.io/hebench_published_backends.html).
 
 ## Building the Documentation <a name="building-the-documentation"></a>
 To build the complete documentation use the provided script in `scripts/build_docs.sh`.
