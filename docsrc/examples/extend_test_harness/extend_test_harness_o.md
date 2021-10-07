@@ -7,7 +7,7 @@ Class `hebench::TestHarness::BenchmarkOffline` offers a default implementation f
 
 The following pseudo-code depicts the default Offline workflow as implemented by `hebench::TestHarness::BenchmarkOffline::run()`. Descendants of class `hebench::TestHarness::BenchmarkOffline` will inherit this functionality.
 
-Note: all data is cleaned up and handles are released as appropriate. Boiler plate logic has been omited. Exceptions are thrown on errors. `ErrorException` objects are used as exceptions with error numbers from back-end. Test Harness handles these exceptions as appropriate based on the documentation specified for error codes in the [API Bridge](@ref APIBridge_overview).
+Note: all data is cleaned up and handles are released as appropriate. Boiler plate logic has been omited. Exceptions are thrown on errors. `ErrorException` objects are used as exceptions with error numbers from backend. Test Harness handles these exceptions as appropriate based on the documentation specified for error codes in the [API Bridge](@ref APIBridge_overview).
 
 ```cpp
 // each parameter contains a batch of samples for the offline test
@@ -52,7 +52,7 @@ assert(!local_handles.empty());
 // Else (this is not common since, at least 1 parameter should be encrypted)
 //   local_handles[0] <=> plaintext data
 
-// load encrypted data into back-end's remote to use as input to the operation
+// load encrypted data into backend's remote to use as input to the operation
 Handle h_remote_inputs;
 load(h_benchmark,
      &local_handles.data(), local_handles.size()
@@ -79,7 +79,7 @@ while (!elapsed(min_test_time))
 
 // postprocess output
 
-// retrieve data from back-end's remote and store in host
+// retrieve data from backend's remote and store in host
 Handle h_local_result;
 startTiming();
 store(h_benchmark, h_remote_result, &h_local_result, 1);
@@ -164,7 +164,7 @@ During benchmark creation and initialization the framework will call the methods
 
 ##### Method init()
 
-Inherited method `hebench::TestHarness::BenchmarkOffline::init()` is abstract and always must be implemented . This method is provided to perform initialization steps before the back-end itself is initialized. It is a dedicated method to provide the ability of polymorphic initialization if required.
+Inherited method `hebench::TestHarness::BenchmarkOffline::init()` is abstract and always must be implemented . This method is provided to perform initialization steps before the backend itself is initialized. It is a dedicated method to provide the ability of polymorphic initialization if required.
 
 * <b>Create a workload compatible </b> `hebench::TestHarness::IDataLoader`
 
@@ -178,7 +178,7 @@ Inherited method `hebench::TestHarness::BenchmarkOffline::init()` is abstract an
 
 ##### Method postInit()
 
-Inherited method `hebench::TestHarness::BenchmarkOffline::postInit()` allows initialization that requires the back-end to already exist. It provides a default implementation and, unless necessary, an override is not required. If one is provided, however, it is required that the base implementation is called as the first step.
+Inherited method `hebench::TestHarness::BenchmarkOffline::postInit()` allows initialization that requires the backend to already exist. It provides a default implementation and, unless necessary, an override is not required. If one is provided, however, it is required that the base implementation is called as the first step.
     
 #### ii. Override methods.
 
@@ -203,4 +203,4 @@ See the method descriptions for more information on the expected functionality a
 <hr>
 <br>
 
-At this point, the `MyWorkloadOffline` class should be completed. Refer to documentation on [adding a workload to the Test Harness](extend_test_harness.md) for the final steps to make Test harness aware of the new class.
+At this point, the `MyWorkloadOffline` class should be completed. Refer to documentation on [adding a workload to the Test Harness](extend_test_harness.md) for the final steps to make Test Harness aware of the new class.

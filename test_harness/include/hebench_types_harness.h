@@ -35,13 +35,13 @@ constexpr const char *FileNameNoExtSummary = "summary";
 
 typedef std::vector<std::vector<hebench::APIBridge::WorkloadParam>> WorkloadArgumentsSets;
 /**
- * @brief Specifies the index of the benchmark as registered by back-end and all
+ * @brief Specifies the index of the benchmark as registered by backend and all
  * the workload parameters requested to benchmark.
  */
 struct BenchmarkRequest
 {
     /**
-     * @brief Index of the benchmark as registered by back-end.
+     * @brief Index of the benchmark as registered by backend.
      */
     std::size_t benchmark_index;
     /**

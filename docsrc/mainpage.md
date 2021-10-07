@@ -22,7 +22,7 @@ Figure 1 above shows a high level diagram of the project architecture and the it
 ##HEBench Backend
 The HEBench backend is where the API and helper classes for interfacing with different homomorphic encryption (HE) hardware and software are defined.
 
-<b>Submitters</b> are the primary users expected to interface with the HEBench project. Submitters create back-ends for HEBench by implementing the specified API for any subset of existing benchmarks already defined in the frontend.
+<b>Submitters</b> are the primary users expected to interface with the HEBench project. Submitters create backends for HEBench by implementing the specified API for any subset of existing benchmarks already defined in the frontend.
 
 Users interested in submitting their solution to the existing HE benchmarks should start here.
 

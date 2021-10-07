@@ -63,7 +63,7 @@ An input batch is, therefore, a subset of samples from the input dataset (with r
 <br>
 
 ## Order of Input Samples in a Batch
-Some workload categories in HEBench, such as **offline**, allow processing on a batch of input samples so that back-ends can optimize execution for an input batch, instead of operating on a single input sample at a time.
+Some workload categories in HEBench, such as **offline**, allow processing on a batch of input samples so that backends can optimize execution for an input batch, instead of operating on a single input sample at a time.
 
 Given component batches for the input, Test Harness combines a component sample for each input component to form an input sample. The order of the input samples in a batch given the input component samples follows **row-major ordering**. This means that the index for the most significant parameter moves faster when computing the index of an input sample in the ordering, given the indices of all of the component samples that make up said input sample.
 
@@ -102,7 +102,7 @@ cn[2] = 3
 
 which means that there are `2` samples for ```input_0```, `1` sample for ```input_1```, and `3` samples for ```input_2```.
 
-Given this example's configuration and based on the algorithm for computation of the index order `r` for an input sample listed earlier, the following table shows the order in which Test Harness expects a back-end to form the input samples based on the component batches:
+Given this example's configuration and based on the algorithm for computation of the index order `r` for an input sample listed earlier, the following table shows the order in which Test Harness expects a backend to form the input samples based on the component batches:
 
 | `r` | ```param[0]```  | ```param[1]```  | ```param[2]```  |
 |---|---|---|---|
@@ -123,7 +123,7 @@ r = param[2] + cn[2] * param[1] + cn[2] * cn[1] * param[0]
 
 Because the definition of operation requires a mapping from an input sample to a result vector, there is a result for every input sample in an input batch.
 
-When Test Harness passes an input batch of size `n` to a back-end for processing, it is expected that the back-end will form the input samples using the order defined in the previous section. Test Harness expects `n` results in return, and, because of the operation definition, the result vector at index `r` must be the output of the operation on the `r`-th input sample.
+When Test Harness passes an input batch of size `n` to a backend for processing, it is expected that the backend will form the input samples using the order defined in the previous section. Test Harness expects `n` results in return, and, because of the operation definition, the result vector at index `r` must be the output of the operation on the `r`-th input sample.
 <hr>
 
 **Example**
@@ -161,4 +161,4 @@ where `value_index` is the index for the component sample inside the loaded inpu
 
 This structure is provided for workload flexibility, but Test Harness default behavior is to load a complete batch per component and set the corresponding `ParameterIndexer::value_index` to `0` and `ParameterIndexer::batch_size` to the loaded number of elements for the component batch.
 
-When a workload or category specifies non-default behavior in this regard, the index of the first input sample is computed using the `value_index` for all `ParameterIndexer`s in this array. However, after decoding, the results of the workload operation must always be stored starting at index `0` regardless; where result at `0` is the result of operating on first input sample; result at `1` corresponds to second input sample, and so on. Test Harness will take into account the starting input offset when validating against ground truth values, thus back-ends must not offset the results.
+When a workload or category specifies non-default behavior in this regard, the index of the first input sample is computed using the `value_index` for all `ParameterIndexer`s in this array. However, after decoding, the results of the workload operation must always be stored starting at index `0` regardless; where result at `0` is the result of operating on first input sample; result at `1` corresponds to second input sample, and so on. Test Harness will take into account the starting input offset when validating against ground truth values, thus backends must not offset the results.

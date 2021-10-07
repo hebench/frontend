@@ -50,8 +50,8 @@ public:
      * result that fails validation.
      *
      * - Returns when no errors (`true`), or validation failed (`false`).
-     * - hebench::Common::ErrorException with back-end error number attached if
-     * back-end errors occur.
+     * - hebench::Common::ErrorException with backend error number attached if
+     * backend errors occur.
      * - Throws std::exception (or derived exception other than hebench::Common::ErrorException)
      * on any other errors.
      */

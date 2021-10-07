@@ -352,7 +352,7 @@ void PartialBenchmark::initBackend(hebench::Utilities::TimingReportEx &out_repor
     params.count  = m_workload_params.size();
     params.params = m_workload_params.data();
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing back-end benchmark...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing backend benchmark...") << std::endl;
     timer.start();
     validateRetCode(hebench::APIBridge::initBenchmark(m_p_engine->handle(),
                                                       m_h_descriptor,
