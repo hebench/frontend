@@ -344,7 +344,7 @@ protected:
      * , , Scheme, CKKS
      * , , Security, 128 bits
      * , , Poly mod degree, 8192          <--- This is example extra description returned by
-     * , , Primes, 3                      <--- back-end
+     * , , Primes, 3                      <--- backend
      *
      * , Category, Latency
      * , , Warmup iterations, 2
@@ -406,10 +406,10 @@ public:
     struct RunConfig
     {
         /**
-        * @brief Specifies whether the benchmark will validate back-end results (`true`) or
+        * @brief Specifies whether the benchmark will validate backend results (`true`) or
         * it will simply benchmark without validating (`false`).
         * @details Shutting down validation can be useful when re-running benchmarks
-        * that have been already validated or when creating and debugging new back-ends.
+        * that have been already validated or when creating and debugging new backends.
         */
         bool b_validate_results;
     };
@@ -426,8 +426,8 @@ public:
      * <b>Convention:</b>
      *
      * - Returns when no errors (`true`), or validation failed (`false`).
-     * - hebench::Common::ErrorException with back-end error number attached if
-     * back-end errors occur.
+     * - hebench::Common::ErrorException with backend error number attached if
+     * backend errors occur.
      * - Throws std::exception (or derived exception other than hebench::Common::ErrorException)
      * on any other errors.
      */
@@ -515,7 +515,7 @@ public:
      */
     virtual void init(const IBenchmarkDescription::Description &description) = 0;
     /**
-     * @brief Initializes back-end benchmark.
+     * @brief Initializes backend benchmark.
      * @details HEBench API calls are performed here in order to initialize the
      * benchmark corresponding to the description token used during construction.
      */
@@ -582,7 +582,7 @@ protected:
      * @throws std::runtime_error if \p err_code represents an error.
      * @details If \p err_code represents success, this method returns immediately.
      * Otherwise, a std::runtime_error exception is thrown with the error description
-     * and extra information as retrieved from the back-end if requested by setting
+     * and extra information as retrieved from the backend if requested by setting
      * \p last_error to `true`.
      */
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;

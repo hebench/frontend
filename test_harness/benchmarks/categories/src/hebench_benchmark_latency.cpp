@@ -163,7 +163,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     else
         std::cout << IOS_MSG_WARNING << hebench::Logging::GlobalLogger::log("No encrypted parameters requested (skipping).") << std::endl;
 
-    // load encrypted data into back-end's remote to use as input to the operation
+    // load encrypted data into backend's remote to use as input to the operation
 
     event_id   = getEventIDNext();
     event_name = "Loading";
@@ -183,7 +183,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
 
     // load handles
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading data to remote back-end...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading data to remote backend...") << std::endl;
 
     RAIIHandle h_inputs_remote;
     timer.start();
@@ -324,12 +324,12 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
 
     // Handle h_cipher_output;
 
-    // retrieve data from back-end's remote and store in host
+    // retrieve data from backend's remote and store in host
 
     event_id   = getEventIDNext();
     event_name = "Store";
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving data from remote back-end...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving data from remote backend...") << std::endl;
 
     std::vector<RAIIHandle> h_cipher_results(h_remote_results.size());
     for (std::size_t i = 0; i < h_remote_results.size(); ++i)

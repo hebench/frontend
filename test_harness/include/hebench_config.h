@@ -25,7 +25,7 @@ namespace Utilities {
 
 /**
  * @brief Provides facilities to configure the selection of benchmarks to run
- * based on the supported workloads from a loaded back-end.
+ * based on the supported workloads from a loaded backend.
  */
 class BenchmarkConfiguration
 {

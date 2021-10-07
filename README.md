@@ -63,7 +63,7 @@ The build system will search for pre-installed third-party components in each of
 2. `-D{COMPONENT_NAME}_INSTALL_DIR`
 3. `/usr/local`
 
-Note that if pre-installed versions are incompatible with the current version of the front-end, the build will fail.
+Note that if pre-installed versions are incompatible with the current version of the frontend, the build will fail.
 
 See the following sections for the specific configuration variable names for each required third-party component.
 

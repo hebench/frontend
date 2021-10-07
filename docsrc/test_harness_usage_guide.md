@@ -22,8 +22,8 @@ To display the Test Harness help which lists all the available command line opti
 |<div style="width:390px">Option</div>                     | Required|Description|
 |---------------------------|--|--------------|
 | `--backend_lib_path  <path_to_shared_lib>` <BR> `--backend` <BR> `-b` |Y| Path to backend shared library. The library file must exist and be accessible for reading. |
-|  ` --benchmark_config_file <path_to_config_file>` <BR> ``--config_file `` <BR>`` -c `` | N | Path to benchmark run configuration file. YAML file specifying the selection of benchmarks and their workload parameters to run. If not present, all back-end benchmarks will be run with default parameters. |
-|``--dump_config`` <BR> ``--dump`` | N | If specified, Test Harness will dump a general configuration file with the possible benchmarks that the back-end can run. This file can be used as starting point template for a benchmark run configuration file. The destination file is specified by ``--benchmark_config_file`` argument. |
+|  ` --benchmark_config_file <path_to_config_file>` <BR> ``--config_file `` <BR>`` -c `` | N | Path to benchmark run configuration file. YAML file specifying the selection of benchmarks and their workload parameters to run. If not present, all backend benchmarks will be run with default parameters. |
+|``--dump_config`` <BR> ``--dump`` | N | If specified, Test Harness will dump a general configuration file with the possible benchmarks that the backend can run. This file can be used as starting point template for a benchmark run configuration file. The destination file is specified by ``--benchmark_config_file`` argument. |
 
 #### Report options
 |<div style="width:390px">Option</div>                     | Required | Description|

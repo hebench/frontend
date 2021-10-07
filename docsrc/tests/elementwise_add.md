@@ -61,9 +61,9 @@ Required workload parameters: `1`
 |-|-|-|-|
 | `0` | `n` | `uint64_t` | Number of components in a vector. |
 
-Above parameters are required for the workload in the specified order. A back-end must specify, at least, a set of default arguments for these parameters.
+Above parameters are required for the workload in the specified order. A backend must specify, at least, a set of default arguments for these parameters.
 
-Back-ends can require extra parameters beyond the base requirements. If a back-end requires extra parameters, these must have default values in every set of default arguments for the workload parameters.
+Backends can require extra parameters beyond the base requirements. If a backend requires extra parameters, these must have default values in every set of default arguments for the workload parameters.
 
 ## Categories
 This workload supports the following categories:
@@ -113,7 +113,7 @@ The elements will be stored in memory as:
 |-|-|-|-|
 |A| `a0`  | `a1`  | `a2`  |
 
-Back-ends should expect this layout for their raw, clear text inputs, and must generate this layout for their decoded outputs.
+Backends should expect this layout for their raw, clear text inputs, and must generate this layout for their decoded outputs.
 
 #### Notes
 If several vectors will be pointed at by a single pointer, consecutive vectors will follow each other in memory.

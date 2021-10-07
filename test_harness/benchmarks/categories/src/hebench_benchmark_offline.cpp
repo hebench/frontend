@@ -159,7 +159,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
     else
         std::cout << IOS_MSG_WARNING << hebench::Logging::GlobalLogger::log("No encrypted parameters requested (skipping).") << std::endl;
 
-    // load encrypted data into back-end's remote to use as input to the operation
+    // load encrypted data into backend's remote to use as input to the operation
 
     event_id   = getEventIDNext();
     event_name = "Loading";
@@ -179,7 +179,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
     // load handles
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading data to remote back-end...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading data to remote backend...") << std::endl;
 
     RAIIHandle h_inputs_remote;
     timer.start();
@@ -238,7 +238,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
     out_report.addEventType(event_id, event_name, true);
 
-    // TODO: (nice to have) maybe have a way to report progress or check if back-end is stuck
+    // TODO: (nice to have) maybe have a way to report progress or check if backend is stuck
     // since this operation can be time consuming.
 
     RAIIHandle h_remote_results;
@@ -290,12 +290,12 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
     // Handle h_cipher_output;
 
-    // retrieve data from back-end's remote and store in host
+    // retrieve data from backend's remote and store in host
 
     event_id   = getEventIDNext();
     event_name = "Store";
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving data from remote back-end...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving data from remote backend...") << std::endl;
 
     RAIIHandle h_cipher_results;
     // store(h_benchmark, h_remote_result,

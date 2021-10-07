@@ -65,9 +65,9 @@ Required workload parameters: `3`
 
 Number of rows in `M1` is the same as number of columns in `M0` as per definition of the operation.
 
-Above parameters are required for the workload in the specified order. A back-end must specify, at least, a set of default arguments for these parameters.
+Above parameters are required for the workload in the specified order. A backend must specify, at least, a set of default arguments for these parameters.
 
-Back-ends can require extra parameters beyond the base requirements. If a back-end requires extra parameters, these must have default values in every set of default arguments for the workload parameters.
+Backends can require extra parameters beyond the base requirements. If a backend requires extra parameters, these must have default values in every set of default arguments for the workload parameters.
 
 ## Categories
 This workload supports the following categories:
@@ -120,7 +120,7 @@ The elements will be stored in memory as:
 |-|-|-|-|-|-|-|
 |A| `a00`  | `a01`  | `a02`  | `a10` | `a11` | `a12`  |
 
-Back-ends should expect this layout for their raw, clear text inputs, and must generate this layout for their decoded outputs.
+Backends should expect this layout for their raw, clear text inputs, and must generate this layout for their decoded outputs.
 
 #### Notes
 If several matrices will be pointed at by a single pointer, consecutive matrix will follow each other in memory.

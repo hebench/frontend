@@ -19,10 +19,10 @@ std::string Engine::getErrorDescription(hebench::APIBridge::ErrorCode err_code)
     std::vector<char> ch_retval;
     std::uint64_t n = hebench::APIBridge::getErrorDescription(err_code, nullptr, 0);
     if (n <= 0)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from back-end."));
+        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from backend."));
     ch_retval.resize(n);
     if (hebench::APIBridge::getErrorDescription(err_code, ch_retval.data(), ch_retval.size()) <= 0)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from back-end."));
+        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from backend."));
     return ch_retval.data();
 }
 
@@ -31,10 +31,10 @@ std::string Engine::getLastErrorDescription() const
     std::vector<char> ch_retval;
     std::uint64_t n = hebench::APIBridge::getLastErrorDescription(m_handle, nullptr, 0);
     if (n <= 0)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving last error message from back-end."));
+        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving last error message from backend."));
     ch_retval.resize(n);
     if (hebench::APIBridge::getLastErrorDescription(m_handle, ch_retval.data(), ch_retval.size()) <= 0)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving last error message from back-end."));
+        throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving last error message from backend."));
     return ch_retval.data();
 }
 
@@ -71,7 +71,7 @@ void Engine::init()
 {
     std::stringstream ss;
 
-    // initialize back-end engine
+    // initialize backend engine
     hebench::APIBridge::ErrorCode err_code = hebench::APIBridge::initEngine(&m_handle);
     if (err_code != HEBENCH_ECODE_SUCCESS)
     {
@@ -87,12 +87,12 @@ void Engine::init()
         }
         catch (...)
         {
-            ss = std::stringstream(IL_LOG_MSG_CLASS("Error initializing back-end engine."));
+            ss = std::stringstream(IL_LOG_MSG_CLASS("Error initializing backend engine."));
         }
         throw hebench::Common::ErrorException(ss.str(), err_code);
     } // end if
 
-    // register benchmarks from back-end
+    // register benchmarks from backend
     std::uint64_t count;
     validateRetCode(hebench::APIBridge::subscribeBenchmarksCount(m_handle, &count));
     m_h_bench_desc.resize(count);

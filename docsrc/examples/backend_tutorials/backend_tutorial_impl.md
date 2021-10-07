@@ -5,7 +5,7 @@ The previous steps were all about getting the new backend project, engine, and b
 
 For this benchmark example we will be implementing the vector element-wise addition test which is detailed on @ref elementwise_add . Each workload has a detailed description page which provides all information on the number, format and layout of the parameters. A detailed description of the benchmarks algorithm and how each of the previously described parameters are used. And finally the expected format and data layout of the benchmark results.
 
-All the methods that will be called from Test Harness should receive validated inputs; however, it is a good idea to validate those inputs in the case where we are using incompatible versions between Test Harness and our back-end, or any other errors occur. For clarity, though, most validation will be omited in this tutorial.
+All the methods that will be called from Test Harness should receive validated inputs; however, it is a good idea to validate those inputs in the case where we are using incompatible versions between Test Harness and our backend, or any other errors occur. For clarity, though, most validation will be omited in this tutorial.
 
 ## Steps
 
@@ -28,7 +28,7 @@ The next sections follow the logical flow order of the function pipeline.
 **hebench::cpp::BaseBenchmark::encode** wraps the `hebench::APIBridge::encode()` function.
 Encode receives input for the benchmark in the `const hebench::APIBridge::PackedData *p_parameters` variable.
  
-Encode is responsible for rearranging and encoding this data into a format and new memory location that is compatible with the back-end.
+Encode is responsible for rearranging and encoding this data into a format and new memory location that is compatible with the backend.
 
 The encoded data must be compatible with `hebench::cpp::BaseBenchmark::encrypt()` and `hebench::cpp::BaseBenchmark::load()` functions which will recieve the encoding as input in an opaque handle.
 
