@@ -70,13 +70,13 @@ jobs:
         rm -rf docs
         tmp_dir=$(mktemp -d)
         yes | scripts/build_docs.sh $tmp_dir "${API_BRIDGE_TAG}"
-        git clone https://github.com/hebench/frontend.git docs-repo
-        cd docs-repo
+        CURRENT_BRANCH=$(git branch --show-current)
         git checkout documentation
         git reset --hard 210fb7c819a79eeb75163eee3bf7ccf7b66fcdd5
         git clean -fdx
         mv $tmp_dir/docs/html docs
         rm -rf $tmp_dir
         git add . --force
-        git commit -m "Documentation"
+        git commit -m "Documentation" --author "Documentation <support@hebench.org>"
         git push origin documentation --force
+        git checkout $CURRENT_BRANCH
