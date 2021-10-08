@@ -1,0 +1,44 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  documentation:
+    runs-on: icx
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: documentation
+        token: ${{ secrets.TOKEN_DOCS }}
+
+    - name: Documentation
+      working-directory: ${{github.workspace}}
+      run: |
+        git reset --hard 210fb7c819a79eeb75163eee3bf7ccf7b66fcdd5
+        git clean -fdx
+        API_BRIDGE_TAG="main"
+        tmp_dir=$(mktemp -d)
+        DOCTARGETDIR=$PWD
+        cd $tmp_dir
+        git clone https://github.com/hebench/frontend.git
+        cd frontend
+        if [ -f cmake/third-party/API_BRIDGE.version ]; then
+            API_BRIDGE_TAG=$(scripts/read_version.sh cmake/third-party/API_BRIDGE.version)
+        fi
+        yes | scripts/build_docs.sh $tmp_dir "${API_BRIDGE_TAG}"
+        mv $tmp_dir/docs/html $DOCTARGETDIR/docs
+        cd $DOCTARGETDIR
+        rm -rf $tmp_dir
+        git add . --force
+        git config user.email "support@hebench.org"
+        git config user.name "Documentation"
+        PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "Documentation" --author "Documentation <support@hebench.org>"
+        git push origin documentation --force
