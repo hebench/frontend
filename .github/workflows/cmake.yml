@@ -80,5 +80,7 @@ jobs:
         rm -rf $tmp_dir
         git add . --force
         PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "Documentation" --author "Documentation <support@hebench.org>"
+        git config user.email "support@hebench.org"
+        git config user.name "Documentation"
         git push origin documentation --force
         git checkout $CURRENT_BRANCH
