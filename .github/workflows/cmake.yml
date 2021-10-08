@@ -79,6 +79,6 @@ jobs:
         mv $tmp_dir/docs/html docs
         rm -rf $tmp_dir
         git add . --force
-        git commit -m "Documentation" --author "Documentation <support@hebench.org>"
+        PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "Documentation" --author "Documentation <support@hebench.org>"
         git push origin documentation --force
         git checkout $CURRENT_BRANCH
