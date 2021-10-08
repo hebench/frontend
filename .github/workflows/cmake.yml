@@ -4,10 +4,10 @@ on:
   push:
     branches:
       - development
-      - main
   pull_request:
     branches:
       - development
+      - main
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -15,11 +15,6 @@ env:
 
 jobs:
   build:
-    # The CMake configure and build commands are platform agnostic and should work equally
-    # well on Windows or Mac.  You can convert this to a matrix build if you need
-    # cross-platform coverage.
-    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-    # runs-on: ubuntu-latest
     runs-on: icx
 
     steps:
@@ -58,29 +53,3 @@ jobs:
     - name: Validation
       working-directory: ${{github.workspace}}/build
       run: ../.github/workflows/validate_testharness_output.sh
-      
-    - name: Documentation
-      if: | # run documentation step only when merging into main
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-          (github.event_name == 'pull_request' && github.base_ref == 'main')
-      working-directory: ${{github.workspace}}
-      run: |
-        API_BRIDGE_TAG="main"
-        if [ -f cmake/third-party/API_BRIDGE.version ]; then
-            API_BRIDGE_TAG=$(scripts/read_version.sh cmake/third-party/API_BRIDGE.version)
-        fi
-        rm -rf docs
-        tmp_dir=$(mktemp -d)
-        yes | scripts/build_docs.sh $tmp_dir "${API_BRIDGE_TAG}"
-        CURRENT_BRANCH=$(git branch --show-current)
-        git checkout documentation
-        git reset --hard 210fb7c819a79eeb75163eee3bf7ccf7b66fcdd5
-        git clean -fdx
-        mv $tmp_dir/docs/html docs
-        rm -rf $tmp_dir
-        git add . --force
-        PRE_COMMIT_ALLOW_NO_CONFIG=1 git commit -m "Documentation" --author "Documentation <support@hebench.org>"
-        git config user.email "support@hebench.org"
-        git config user.name "Documentation"
-        git push origin documentation --force
-        git checkout $CURRENT_BRANCH
