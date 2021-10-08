@@ -8,7 +8,7 @@ set -e
 mkdir validation-test && pushd validation-test
 echo "Cloning Latest Cleartext Backend..."
 git clone https://github.com/hebench/backend-cpu-cleartext.git
-pushd frameworks.security.cryptography.homomorphic-encryption.benchmarking.hebench.backend-cpu-cleartext
+pushd ./backend-cpu-cleartext
 
 mkdir build && pushd build
 
