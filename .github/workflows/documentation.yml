@@ -12,13 +12,12 @@ env:
 jobs:
   documentation:
     runs-on: icx
-    environment: documentation-build
 
     steps:
     - uses: actions/checkout@v2
       with:
         ref: documentation
-        token: ${{ secrets.TOKEN_REFRESH_DOCS }}
+        token: ${{ secrets.TOKEN_DOCS }}
 
     - name: Documentation
       working-directory: ${{github.workspace}}
