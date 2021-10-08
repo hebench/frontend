@@ -93,7 +93,7 @@ Note that we are setting the mask to `1 << 1` or `0000 0010` in binary, indicati
 
 \snippet{lineno} docsrc/examples/backend_tutorials/tutorial_backend/src/tutorial_eltwiseadd_benchmark.cpp b_desc constructor other
 
-Finally, a workload that requires flexible workload parameters must specify, at least, one set of default arguments. Workload parameters are flexible enough for back-ends to specify other parameters beyond the mandatory requirements, such as, but not limited to parameters that could be used for optimization like padding size, extra memory, etc.
+Finally, a workload that requires flexible workload parameters must specify, at least, one set of default arguments. Workload parameters are flexible enough for backends to specify other parameters beyond the mandatory requirements, such as, but not limited to parameters that could be used for optimization like padding size, extra memory, etc.
 
 Element-wise addition requires the number of elements for a vector. For this tutorial, the required parameter is enough, so, we do not need to create any extra workload parameters.
 

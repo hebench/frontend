@@ -387,7 +387,7 @@ void BenchmarkConfiguration::saveConfiguration(const std::string &yaml_filename,
            << "  " << path_backend.filename() << std::endl
            << std::endl;
     ss << "Only benchmarks with their workload parameters specified here will run when" << std::endl
-       << "this configuration file is used with Test harness. This configuration only" << std::endl
+       << "this configuration file is used with Test Harness. This configuration only" << std::endl
        << "works for the backend used to generate this file (the backend)." << std::endl
        << std::endl
        << "Benchmark \"ID\" represents workload and benchmark descriptor options for the" << std::endl

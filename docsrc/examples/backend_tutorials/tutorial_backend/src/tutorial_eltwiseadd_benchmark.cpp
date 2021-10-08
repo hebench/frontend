@@ -58,7 +58,7 @@ TutorialEltwiseAddBenchmarkDescription::TutorialEltwiseAddBenchmarkDescription()
 
     //! [b_desc constructor other]
     m_descriptor.other = 0; // no extras needed for our purpose:
-        // Other back-ends can use this field to differentiate between
+        // Other backends can use this field to differentiate between
         // benchmarks for which internal parameters, not specified by
         // other fields of this structure, differ.
     //! [b_desc constructor other]
@@ -139,9 +139,9 @@ TutorialEltwiseAddBenchmark::TutorialEltwiseAddBenchmark(TutorialEngine &engine,
     // number of workload parameters (1 for eltwise add: n)
     if (bench_params.count < TutorialEltwiseAddBenchmarkDescription::NumWorkloadParams)
         // Always throw hebench::cpp::HEBenchError from C++ wrapper to report errors.
-        // C++ wrapper will understand this error type and inform Test harness accordingly.
-        // Throwing other exceptions is valid, but they result in Test harness receiving
-        // HEBENCH_ECODE_CRITICAL_ERROR from the back-end.
+        // C++ wrapper will understand this error type and inform Test Harness accordingly.
+        // Throwing other exceptions is valid, but they result in Test Harness receiving
+        // HEBENCH_ECODE_CRITICAL_ERROR from the backend.
         throw hebench::cpp::HEBenchError(HEBERROR_MSG_CLASS("Invalid workload parameters. This workload requires "
                                                             + std::to_string(TutorialEltwiseAddBenchmarkDescription::NumWorkloadParams)
                                                             + "parameters."),

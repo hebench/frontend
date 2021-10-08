@@ -44,7 +44,7 @@ public:
                                     const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const;
 
     /**
-     * @brief Number of benchmarks for which back-end is registered to perform.
+     * @brief Number of benchmarks for which backend is registered to perform.
      */
     std::size_t countBenchmarks() const { return m_h_bench_desc.size(); }
 
@@ -66,9 +66,9 @@ public:
                                     hebench::Utilities::TimingReportEx &out_report);
     /**
      * @brief Describes a benchmark workload that matches the specified description
-     * from the benchmarks registered by the back-end.
+     * from the benchmarks registered by the backend.
      * @param[in] bench_config Configuration for the benchmark to describe.
-     * @param[in] index Index of the registered back-end benchmark description for
+     * @param[in] index Index of the registered backend benchmark description for
      * which to create a benchmark workload.
      * @param[in] w_params Parameters for the workload to be executed by the benchmark.
      * This will be empty if benchmark does not support parameters.
@@ -84,7 +84,7 @@ public:
 
     /**
      * @brief Retrieves the list of default parameters for a workload as specified
-     * by the back-end.
+     * by the backend.
      * @param[in] index Index of the benchmark to query for default parameters.
      * @return A vector with the list of default arguments for the parameters
      * of the workload. Vector is empty if workload does not support parameters.
@@ -97,7 +97,7 @@ public:
 
 private:
     hebench::APIBridge::Handle m_handle;
-    // handles to back-end registered benchmark descriptors in order of subscription
+    // handles to backend registered benchmark descriptors in order of subscription
     std::vector<hebench::APIBridge::Handle> m_h_bench_desc;
     std::weak_ptr<IBenchmark> m_last_benchmark; // keeps track of whether a benchmark is already created
 
