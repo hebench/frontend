@@ -276,9 +276,9 @@ void PartialDataLoader::allocate(const std::uint64_t *input_buffer_sizes,
         for (std::uint64_t i = 0; i < output_batch_sizes[output_i]; ++i)
         {
             // point to the start of the data in the raw data buffer
-            m_output_data[output_i]->p_buffers[i].p = allocate_output ?
-                                                          output_buffers[output_i] + i * output_buffer_sizes[output_i] :
-                                                          nullptr;
+            m_output_data[output_i]->p_buffers[i].p    = allocate_output ?
+                                                             output_buffers[output_i] + i * output_buffer_sizes[output_i] :
+                                                             nullptr;
             m_output_data[output_i]->p_buffers[i].size = output_buffer_sizes[output_i];
             m_output_data[output_i]->p_buffers[i].tag  = 0;
         } // end for

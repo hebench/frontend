@@ -149,7 +149,7 @@ std::string Engine::getExtraDescription(hebench::APIBridge::Handle h_bench_desc,
     const hebench::APIBridge::WorkloadParams hebench_w_params = { const_cast<hebench::APIBridge::WorkloadParam *>(w_params.data()), w_params.size() };
     const hebench::APIBridge::WorkloadParams *p_w_params      = w_params.empty() ? nullptr : &hebench_w_params;
     std::uint64_t n                                           = hebench::APIBridge::getBenchmarkDescriptionEx(this->handle(), h_bench_desc, p_w_params,
-                                                                    nullptr, 0);
+                                                                                                              nullptr, 0);
     if (n <= 0)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving extra description."));
     ch_retval.resize(n);

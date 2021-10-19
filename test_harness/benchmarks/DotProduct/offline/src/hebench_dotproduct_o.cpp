@@ -147,8 +147,8 @@ void Benchmark::init(const IBenchmarkDescription::Description &description)
 
     timer.start();
     m_data         = DataGenerator::create(vector_size,
-                                   batch_sizes[0], batch_sizes[1],
-                                   m_descriptor.data_type);
+                                           batch_sizes[0], batch_sizes[1],
+                                           m_descriptor.data_type);
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();
