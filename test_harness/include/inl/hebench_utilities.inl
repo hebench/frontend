@@ -22,9 +22,9 @@ void printArraysAsColumns(std::ostream &os,
     if (p_buffers && count > 0)
     {
         auto it  = std::max_element(p_buffers, p_buffers + count,
-                                    [](const hebench::APIBridge::NativeDataBuffer *lhs, const hebench::APIBridge::NativeDataBuffer *rhs) {
+                                   [](const hebench::APIBridge::NativeDataBuffer *lhs, const hebench::APIBridge::NativeDataBuffer *rhs) {
                                        return lhs->size < rhs->size;
-                                    });
+                                   });
         max_rows = (*it)->size / sizeof(T);
     } // end if
 

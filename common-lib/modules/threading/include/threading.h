@@ -84,7 +84,7 @@ public:
      * std::cout << result.get();
      * @endcode
      */
-    std::future<RetType> run(Function &&f, ArgTs &&...params)
+    std::future<RetType> run(Function &&f, ArgTs &&... params)
     {
         std::lock_guard<std::mutex> lock(this->m_mutex_run_monitor); // only one instance of Run() at a time
 

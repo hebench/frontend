@@ -49,7 +49,7 @@ public:
     bool valid() const;
 
     template <class... Args>
-    void emplace(Args &&...args)
+    void emplace(Args &&... args)
     {
         m_pq->emplace(args...);
     }

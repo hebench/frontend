@@ -532,8 +532,8 @@ int main(int argc, char **argv)
                     // create the path to output report
                     std::filesystem::path report_filename = bench_path;
                     std::filesystem::path report_path     = (report_filename.is_absolute() ?
-                                                                 report_filename :
-                                                                 config.report_root_path / report_filename);
+                                                             report_filename :
+                                                             config.report_root_path / report_filename);
 
                     ss = std::stringstream();
                     ss << "Saving report to: " << std::endl
