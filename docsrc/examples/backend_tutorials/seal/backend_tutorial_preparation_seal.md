@@ -1,4 +1,4 @@
-Quickstart C++ Wrapper Backend Tutorial - Preparation {#be_tutorial_preparation}
+Quickstart C++ Wrapper Backend Tutorial - Preparation {#be_tutorial_preparation_seal}
 ========================
 ## Steps
 ### 1. Copy example 
@@ -9,11 +9,11 @@ Start by copying api_bridge_example_be to a new folder with the name of the desi
 ### 2. Rename files to new backend name 
 After copying, the next step is to rename all of the included files to match the scheme of the new backend name. The files to rename are:
 
-- `src/ex_engine.cpp` -> `src/tutorial_engine.cpp`
-- `src/ex_benchmark.cpp` -> `src/tutorial_eltwiseadd_benchmark.cpp`
-- `include/ex_benchmark.h` -> `include/tutorial_eltwiseadd_benchmark.h`
-- `include/ex_engine.h` -> `include/tutorial_engine.h`
-- new file -> `include/tutorial_error.h`
+- `src/ex_engine_seal.cpp` -> `src/tutorial_engine_seal.cpp`
+- `src/ex_benchmark_seal.cpp` -> `src/tutorial_eltwiseadd_benchmark_seal.cpp`
+- `include/ex_benchmark_seal.h` -> `include/tutorial_eltwiseadd_benchmark_seal.h`
+- `include/ex_engine_seal.h` -> `include/tutorial_engine_seal.h`
+- new file -> `include/tutorial_error_seal.h`
 	
 ### 3. Update build system
 Update the `CMakeLists.txt` to become stand-alone: point to the new file names, change the target name as appropriate, locate include directory for and link hebench_cpp static library, locate and link other third-party dependencies, like Microsoft SEAL for this tutorial.
@@ -32,13 +32,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(${PROJECT_NAME}_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/tutorial_engine.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/tutorial_eltwiseadd_benchmark.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/tutorial_engine_seal.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/tutorial_eltwiseadd_benchmark_seal.cpp"
     )
 set(${PROJECT_NAME}_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_error.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_engine.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_eltwiseadd_benchmark.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_error_seal.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_engine_seal.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/tutorial_eltwiseadd_benchmark_seal.h"
     )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
@@ -63,23 +63,24 @@ endif()
 # link found library
 target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" hebench_cpp "-Wl,--no-whole-archive")
 
+
 # find other third party dependencies
 
-# Microsoft SEAL (version 3.5)
-set(SEAL_INCLUDE_DIR "/usr/local/include/SEAL-3.5")
+# Microsoft SEAL (version 3.6)
+set(SEAL_INCLUDE_DIR "/usr/local/include/SEAL-3.6")
 target_include_directories(${PROJECT_NAME} PRIVATE ${SEAL_INCLUDE_DIR}) # point to include for SEAL
-find_library(SEAL_FOUND NAMES libseal-3.5.a HINTS "/usr/local/lib")
+find_library(SEAL_FOUND NAMES libseal-3.6.a HINTS "/usr/local/lib")
 if(SEAL_FOUND)
-    add_library(seal-3.5 UNKNOWN IMPORTED)
+    add_library(seal-3.6 UNKNOWN IMPORTED)
     # populate the found library with its properties
-    set_property(TARGET seal-3.5 PROPERTY IMPORTED_LOCATION ${SEAL_FOUND})
-    set_property(TARGET seal-3.5 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SEAL_INCLUDE_DIR})
+    set_property(TARGET seal-3.6 PROPERTY IMPORTED_LOCATION ${SEAL_FOUND})
+    set_property(TARGET seal-3.6 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SEAL_INCLUDE_DIR})
 else()
-    message(FATAL_ERROR "libseal-3.5.a not found.")
+    message(FATAL_ERROR "libseal-3.6.a not found.")
 endif()
 
 # link found library
-target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" seal-3.5 "-Wl,--no-whole-archive")
+target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" seal-3.6 "-Wl,--no-whole-archive")
 
 # extra compile options
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra) # show warnings
@@ -94,43 +95,43 @@ install(TARGETS ${PROJECT_NAME} DESTINATION lib)
 ### 4. Update includes in source files
 After renaming our files for our new engine we must update the includes in the example files as follows. 
 
-**tutorial_engine.cpp**
+**tutorial_engine_seal.cpp**
 
 ```cpp
-#include "../include/ex_engine.h"
+#include "../include/ex_engine_seal.h"
 #include <cstring>
 
 // include all benchmarks
-#include "../include/ex_benchmark.h"
+#include "../include/ex_benchmark_seal.h"
 ```
 changed to 
 
 ```cpp
 #include <cstring>
-#include "tutorial_engine.h"
-#include "tutorial_error.h"
+#include "tutorial_engine_seal.h"
+#include "tutorial_error_seal.h"
 
 // include all benchmarks
-#include "tutorial_eltwiseadd_benchmark.h"
+#include "tutorial_eltwiseadd_benchmark_seal.h"
 ```
 	
-**tutorial_eltwiseadd_benchmark.cpp**
+**tutorial_eltwiseadd_benchmark_seal.cpp**
 
 ```cpp
-#include "../include/ex_benchmark.h"
-#include "../include/ex_engine.h"
+#include "../include/ex_benchmark_seal.h"
+#include "../include/ex_engine_seal.h"
 ```
 	
 changed to
 
 ```cpp
-#include "tutorial_eltwiseadd_benchmark.h"
-#include "tutorial_engine.h"
-#include "tutorial_error.h"
+#include "tutorial_eltwiseadd_benchmark_seal.h"
+#include "tutorial_engine_seal.h"
+#include "tutorial_error_seal.h"
 ```
 
 ### 5. Define any new error codes
-Add the following content to `tutorial_error.h`:
+Add the following content to `tutorial_error_seal.h`:
 
 ```cpp
 #pragma once
@@ -142,11 +143,11 @@ Now that we have renamed the files to a name suitable for our new backend we mus
 
 Refactor the following classes to the new name:
 
-**tutorial_engine.h**
+**tutorial_engine_seal.h**
 
 - `ExampleEngine` -> `TutorialEngine`
 	
-**tutorial_eltwiseadd_benchmark.h**
+**tutorial_eltwiseadd_benchmark_seal.h**
 
 - `ExampleBenchmark` -> `TutorialEltwiseAddBenchmark`
 - `ExampleBenchmarkDescription` -> `TutorialEltwiseAddBenchmarkDescription`
@@ -158,8 +159,8 @@ After completing this step it may be a good idea to try compiling the backend an
 
 ## Tutorial steps
 
-[Tutorial Home](backend_tutorial.md)<br/>
+[Tutorial Home](backend_tutorial_seal.md)<br/>
 <b>Preparation</b><br/>
-[Engine Initialization and Benchmark Description](backend_tutorial_init.md)<br/>
-[Benchmark Implementation](backend_tutorial_impl.md)<br/>
-[File References](backend_tutorial_files.md)
+[Engine Initialization and Benchmark Description](backend_tutorial_init_seal.md)<br/>
+[Benchmark Implementation](backend_tutorial_impl_seal.md)<br/>
+[File References](backend_tutorial_files_seal.md)

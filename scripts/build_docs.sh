@@ -112,27 +112,45 @@ tag_version="main"
 if [ ! -z $2 ]; then
     tag_version=$2
 fi
-echo "[    Info ] API Bridge tag: ${tag_version}"
+if [ -d "${tag_version}" ]; then
+    tag_version=$(realpath "${tag_version}")
+    echo "[    Info ] API Bridge location (local): ${tag_version}"
+else
+    echo "[    Info ] API Bridge tag: ${tag_version}"
+fi
 echo
+
 echo "[    Info ] Creating temporary working location..."
 tmp_dir=$(mktemp -d)
 cd $tmp_dir
+echo $tmp_dir
 
 # prepare the doc sources
 
-echo "[    Info ] Cloning API Bridge project..."
-pushd .
-git clone https://github.com/hebench/api-bridge.git api_bridge
-if [ ! -d "${tmp_dir}/api_bridge" ]; then
-    echo "[   Error ] Failed cloning API Bridge project."
-    exit 1
+if [ -d "${tag_version}" ]; then
+    echo "[    Info ] Retrieving API Bridge project..."
+    cp -R "${tag_version}" $tmp_dir
+    if [ -d "${tmp_dir}/api-bridge" ]; then
+        mv "${tmp_dir}/api-bridge" "${tmp_dir}/api_bridge"
+    elif [ ! -d "${tmp_dir}/api_bridge" ]; then
+        echo "[   Error ] Failed to retrieve API Bridge."
+        exit 1
+    fi
+else
+    echo "[    Info ] Cloning API Bridge project..."
+    pushd .
+    git clone https://github.com/hebench/api-bridge.git api_bridge
+    if [ ! -d "${tmp_dir}/api_bridge" ]; then
+        echo "[   Error ] Failed cloning API Bridge project."
+        exit 1
+    fi
+    cd ${tmp_dir}/api_bridge
+    git checkout ${tag_version}
+    popd
 fi
-cd ${tmp_dir}/api_bridge
-git checkout ${tag_version}
-popd
 echo "[    Info ] Copying documentation source files..."
-cp -R $script_path/../test_harness $tmp_dir
-cp -R $script_path/../docsrc $tmp_dir
+cp -R "$script_path/../test_harness" $tmp_dir
+cp -R "$script_path/../docsrc" $tmp_dir
 
 echo "[    Info ] Configuring doxygen..."
 mv $tmp_dir/docsrc/DoxygenLayout.xml.in $tmp_dir/DoxygenLayout.xml
