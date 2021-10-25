@@ -65,6 +65,16 @@ The complete implementation of our Benchmark description is provided below
 
 ### 2. Benchmark description overrides
 
+We must override methods to create and destroy our actual benchmark. These will be called by C++ wrapper's BaseEngine implementation when the benchmark needs to be instantiated to execute, and disposed of when completed.
+
+Our create method follows:
+
+\snippet{lineno} /data/storage/git-repos/hebench/frontend/docsrc/examples/backend_tutorials/seal/tutorial_backend/src/tutorial_eltwiseadd_benchmark_seal.cpp b_desc create
+
+This is the destroy method:
+
+\snippet{lineno} /data/storage/git-repos/hebench/frontend/docsrc/examples/backend_tutorials/seal/tutorial_backend/src/tutorial_eltwiseadd_benchmark_seal.cpp b_desc destroy
+
 There are other methods that we can override to modify the behavior of the description class. Check the documentation on `hebench::cpp::BenchmarkDescription` for more information.
 
 In this tutorial we are overriding `hebench::cpp::BenchmarkDescription::getBenchmarkDescription()` to output extra information customized for our example.
