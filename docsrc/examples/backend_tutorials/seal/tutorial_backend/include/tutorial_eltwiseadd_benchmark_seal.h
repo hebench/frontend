@@ -4,6 +4,8 @@
 
 #pragma once
 
+/// @cond
+
 #include <array>
 
 #include "hebench/api_bridge/cpp/hebench.hpp"
@@ -136,3 +138,5 @@ private:
 
     std::shared_ptr<Workload> m_p_workload;
 };
+
+/// @endcond

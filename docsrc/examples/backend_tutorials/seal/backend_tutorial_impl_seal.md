@@ -75,7 +75,7 @@ Since we arranged the input from Test Harness into the format expected by our or
 
 From the default pipeline, the result of the encoding will be passed to `encrypt()` or `load()` methods, which correspond to our workflow encryption and (for lack of load step) operation. So, to return the encoding, we wrap it in our internal representation. This representation can be as simple or as sophisticated as we want. The idea is to facilitate access to the wrapped data by methods that will be receiving it.
 
-Then, we hide our representation inside an opaque handle to cross the boundary of the API Bridge. We use `hebench::cpp::BaseEngine:: createHandle()` helper method to generate the handle for our return value.
+Then, we hide our representation inside an opaque handle to cross the boundary of the API Bridge. We use `hebench::cpp::BaseEngine::createHandle()` helper method to generate the handle for our return value.
 
 The tag serves to keep track and identify that we are receiving the correct handles in the pipeline. The values for the tag are arbitrary, for backend to use for this purpose, and thus, we define an internal convention for tagging our handles.
 

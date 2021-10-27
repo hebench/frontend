@@ -2,6 +2,8 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+/// @cond
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -274,14 +276,15 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::AP
     //! [benchmark encode validation]
 
     //! [benchmark encode preparation]
+    hebench::cpp::WorkloadParams::EltwiseAdd w_params(this->getWorkloadParameters());
     std::vector<gsl::span<const std::int64_t>> clear_param(param_pack.buffer_count);
-
     for (std::size_t sample_i = 0; sample_i < clear_param.size(); ++sample_i)
     {
         const hebench::APIBridge::NativeDataBuffer &native_sample = param_pack.p_buffers[sample_i];
         clear_param[sample_i] =
             gsl::span<const std::int64_t>(reinterpret_cast<const std::int64_t *>(native_sample.p),
                                           native_sample.size / sizeof(std::int64_t));
+        assert(clear_param[sample_i] == w_params.n);
     }
     //! [benchmark encode preparation]
 
@@ -294,7 +297,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::AP
     retval.param_position = param_pack.param_position;
     retval.tag            = InternalParamInfo::tagPlaintext;
 
-    return this->getEngine().template createHandle<decltype(retval)>(
+    return this->getEngine().createHandle<decltype(retval)>(
         sizeof(seal::Plaintext) * retval.samples.size(), // size (arbitrary for our usage if we need to)
         retval.tag, // extra tags
         std::move(retval)); // constructor parameters
@@ -340,8 +343,8 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encrypt(hebench::APIBrid
 {
     //! [benchmark encrypt input_handle]
     const InternalParam<seal::Plaintext> &encoded_parameter =
-        this->getEngine().template retrieveFromHandle<InternalParam<seal::Plaintext>>(h_encoded_parameters,
-                                                                                      InternalParamInfo::tagPlaintext);
+        this->getEngine().retrieveFromHandle<InternalParam<seal::Plaintext>>(h_encoded_parameters,
+                                                                             InternalParamInfo::tagPlaintext);
     //! [benchmark encrypt input_handle]
 
     //! [benchmark encrypt encrypting]
@@ -354,7 +357,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encrypt(hebench::APIBrid
     retval.param_position = encoded_parameter.param_position;
     retval.tag            = InternalParamInfo::tagCiphertext;
 
-    return this->getEngine().template createHandle<decltype(retval)>(
+    return this->getEngine().createHandle<decltype(retval)>(
         sizeof(seal::Ciphertext) * retval.samples.size(), // size (arbitrary for our usage if we need to)
         retval.tag, // extra tags
         std::move(retval)); // constructor parameters
@@ -382,7 +385,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::decrypt(hebench::APIBrid
     retval.param_position = encrypted_data.param_position;
     retval.tag            = InternalParamInfo::tagPlaintext;
 
-    return this->getEngine().template createHandle<decltype(retval)>(
+    return this->getEngine().createHandle<decltype(retval)>(
         sizeof(seal::Plaintext) * retval.samples.size(), // size (arbitrary for our usage if we need to)
         retval.tag, // extra tags
         std::move(retval)); // move to avoid copy
@@ -403,6 +406,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
     // We query for the parameter position, and, once found, we create a copy of the data.
     for (std::size_t handle_i = 0; handle_i < count; ++handle_i)
     {
+        // both our InternalParam<Plaintext> and InternalParam<Ciphertext> inherit from InternalParamInfo
         const InternalParamInfo &param_info =
             this->getEngine().retrieveFromHandle<InternalParamInfo>(p_local_data[handle_i]);
         assert(param_info.param_position < TutorialEltwiseAddBenchmarkDescription::ParametersCount);
@@ -414,6 +418,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
             if (!params.first.empty())
                 throw hebench::cpp::HEBenchError(HEBERROR_MSG_CLASS("Duplicated operation parameter detected in input handle."),
                                                  HEBENCH_ECODE_INVALID_ARGS);
+            // specialize to the correct InternalParam<?>
             const InternalParam<seal::Plaintext> &internal_param =
                 this->getEngine().retrieveFromHandle<InternalParam<seal::Plaintext>>(p_local_data[handle_i],
                                                                                      InternalParamInfo::tagPlaintext);
@@ -426,7 +431,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
             if (!params.second.empty())
                 throw hebench::cpp::HEBenchError(HEBERROR_MSG_CLASS("Duplicated operation parameter detected in input handle."),
                                                  HEBENCH_ECODE_INVALID_ARGS);
-            // create a deep copy of input
+            // specialize to the correct InternalParam<?>
             const InternalParam<seal::Ciphertext> &internal_param =
                 this->getEngine().retrieveFromHandle<InternalParam<seal::Ciphertext>>(p_local_data[handle_i],
                                                                                       InternalParamInfo::tagCiphertext);
@@ -439,7 +444,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
     //! [benchmark load input_handle]
 
     //! [benchmark load return]
-    return this->getEngine().template createHandle<decltype(params)>(
+    return this->getEngine().createHandle<decltype(params)>(
         sizeof(params), // size (arbitrary for our usage if we need to)
         InternalParamInfo::tagPlaintext | InternalParamInfo::tagCiphertext, // extra tags
         std::move(params)); // move to avoid extra copy
@@ -520,10 +525,12 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::operate(hebench::APIBrid
 
     // Hide our representation inside an opaque handle to cross the boundary of the API Bridge.
     // This handle will be passed to method `store()` in the default pipeline.
-    return this->getEngine().template createHandle<decltype(retval)>(
+    return this->getEngine().createHandle<decltype(retval)>(
         sizeof(seal::Ciphertext) * retval.samples.size(), // size (arbitrary for our usage if we need to)
         retval.tag, // extra tags
         std::move(retval)); // move to avoid extra copies
     //! [benchmark operate return]
 }
 //! [benchmark operate]
+
+/// @endcond

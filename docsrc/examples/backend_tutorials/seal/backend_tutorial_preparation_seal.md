@@ -16,7 +16,7 @@ After copying, the next step is to rename all of the included files to match the
 
 - `src/ex_engine.cpp` -> `src/tutorial_engine_seal.cpp`
 - `src/ex_benchmark.cpp` -> `src/tutorial_eltwiseadd_benchmark_seal.cpp`
-- `include/ex_benchmark.h` -> `include/tutorial_eltwiseadd_benchmark.h`
+- `include/ex_benchmark.h` -> `include/tutorial_eltwiseadd_benchmark_seal.h`
 - `include/ex_engine.h` -> `include/tutorial_engine_seal.h`
 - new file -> `include/tutorial_error_seal.h`
 	

@@ -4,4 +4,8 @@
 
 #pragma once
 
+/// @cond
+
 #define TUTORIAL_ECODE_SEAL_ERROR 2
+
+/// @endcond

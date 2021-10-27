@@ -4,6 +4,8 @@
 
 #pragma once
 
+/// @cond
+
 #include "hebench/api_bridge/cpp/hebench.hpp"
 #include <seal/seal.h>
 
@@ -27,3 +29,5 @@ protected:
 
     void init() override;
 };
+
+/// @endcond
