@@ -39,7 +39,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" hebench_cpp "-Wl,--no-whole-archive")
 
 # find other third party dependencies
-# Microsoft SEAL (version 3.6)
+# pre-built Microsoft SEAL 3.6
 set(SEAL_INCLUDE_DIR "/usr/local/include/SEAL-3.6")
 target_include_directories(${PROJECT_NAME} PRIVATE ${SEAL_INCLUDE_DIR}) # point to include for SEAL
 find_library(SEAL_FOUND NAMES libseal-3.6.a HINTS "/usr/local/lib")

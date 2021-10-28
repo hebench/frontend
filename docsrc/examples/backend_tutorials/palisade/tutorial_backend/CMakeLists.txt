@@ -38,7 +38,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" hebench_cpp "-Wl,--no-whole-archive")
 
 # find other third party dependencies
-# PALISADE (version 1.11.3)
+# pre-built PALISADE
 set(PALISADE_HINT_DIR "/usr/local/")
 
 find_package(Palisade HINTS ${PALISADE_HINT_DIR} REQUIRED)
