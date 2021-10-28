@@ -97,10 +97,9 @@ private:
         std::vector<lbcrypto::Plaintext> encodeVector(const std::vector<std::vector<std::int64_t>> &vec);
         std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> encryptVector(const std::vector<lbcrypto::Plaintext> &encoded_vec);
         std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> eltwiseadd(const std::vector<lbcrypto::Plaintext> &A,
-                                                const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B);
+                                                                         const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B);
         std::vector<lbcrypto::Plaintext> decryptResult(const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &encrypted_result);
         std::vector<std::vector<int64_t>> decodeResult(const std::vector<lbcrypto::Plaintext> &encoded_result);
-        
 
     private:
         class PalisadeBFVContext
@@ -115,33 +114,18 @@ private:
             {
                 context()->Decrypt(m_keys->secretKey, cipher, &plain);
             }
-            
+
             lbcrypto::Plaintext decrypt(const lbcrypto::Ciphertext<lbcrypto::DCRTPoly> &cipher)
             {
                 lbcrypto::Plaintext retval;
                 decrypt(cipher, retval);
                 return retval;
             }
-            // palisade::BatchEncoder &encoder() { return *m_p_batch_encoder; }
-            // palisade::Evaluator &evaluator() { return *m_p_evaluator; }
-            // palisade::Decryptor &decryptor() { return *m_p_decryptor; }
-            // const palisade::Encryptor &encryptor() const { return *m_p_encryptor; }
-            // const palisade::PublicKey &public_key() const { return m_public_key; }
-            // const palisade::SecretKey &secret_key() const { return m_secret_key; }
-            // palisade::PALISADEContext &context() { return *m_p_palisade_context; }
 
         private:
             std::shared_ptr<lbcrypto::CryptoContext<lbcrypto::DCRTPoly>> m_p_palisade_context;
             std::unique_ptr<lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>> m_keys;
             std::size_t m_slot_count;
-            // std::shared_ptr<palisade::PALISADEContext> m_p_palisade_context;
-            // std::unique_ptr<palisade::KeyGenerator> m_p_keygen;
-            // palisade::PublicKey m_public_key;
-            // palisade::SecretKey m_secret_key;
-            // std::unique_ptr<palisade::Encryptor> m_p_encryptor;
-            // std::unique_ptr<palisade::Evaluator> m_p_evaluator;
-            // std::unique_ptr<palisade::Decryptor> m_p_decryptor;
-            // std::unique_ptr<palisade::BatchEncoder> m_p_batch_encoder;
         };
 
         std::size_t m_vector_size;

@@ -123,17 +123,17 @@ void TutorialEltwiseAddBenchmarkDescription::destroyBenchmark(hebench::cpp::Base
 TutorialEltwiseAddBenchmark::Workload::PalisadeBFVContext::PalisadeBFVContext(int poly_modulus_degree)
 {
     assert(TutorialEltwiseAddBenchmarkDescription::NumCoefficientModuli == 1);
-    std::size_t plaintext_modulus = 65537;
+    std::size_t plaintext_modulus     = 65537;
     lbcrypto::SecurityLevel sec_level = lbcrypto::HEStd_128_classic;
-    double sigma = 3.2;
-    std::size_t num_coeff_moduli = 2;
-    std::size_t max_depth = 2;
-    std::size_t coeff_moduli_bits = 40;
+    double sigma                      = 3.2;
+    std::size_t num_coeff_moduli      = 2;
+    std::size_t max_depth             = 2;
+    std::size_t coeff_moduli_bits     = 40;
 
     lbcrypto::CryptoContext<lbcrypto::DCRTPoly> crypto_context =
-    lbcrypto::CryptoContextFactory<lbcrypto::DCRTPoly>::genCryptoContextBFVrns(
-        plaintext_modulus, sec_level, sigma, 0, num_coeff_moduli,
-        0, OPTIMIZED, max_depth, 0, coeff_moduli_bits, poly_modulus_degree);
+        lbcrypto::CryptoContextFactory<lbcrypto::DCRTPoly>::genCryptoContextBFVrns(
+            plaintext_modulus, sec_level, sigma, 0, num_coeff_moduli,
+            0, OPTIMIZED, max_depth, 0, coeff_moduli_bits, poly_modulus_degree);
     crypto_context->Enable(ENCRYPTION);
     crypto_context->Enable(SHE);
 
@@ -142,23 +142,8 @@ TutorialEltwiseAddBenchmark::Workload::PalisadeBFVContext::PalisadeBFVContext(in
     local_key                                         = lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>();
     m_keys                                            = std::unique_ptr<lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>>(p_key);
 
-    m_p_palisade_context                              = std::make_shared<lbcrypto::CryptoContext<lbcrypto::DCRTPoly>>(crypto_context);
-    m_slot_count                                      = poly_modulus_degree;
-
-//     seal::EncryptionParameters parms{ seal::scheme_type::bfv };
-//     parms.set_poly_modulus_degree(poly_modulus_degree);
-//     parms.set_coeff_modulus(seal::CoeffModulus::Create(poly_modulus_degree, { 60, 60 }));
-//     parms.set_plain_modulus(seal::PlainModulus::Batching(poly_modulus_degree, 20));
-//     m_p_seal_context.reset(new seal::SEALContext(parms, true, seal::sec_level_type::tc128));
-//     m_p_keygen = std::make_unique<seal::KeyGenerator>(context());
-
-//     m_p_keygen->create_public_key(m_public_key);
-//     m_secret_key = m_p_keygen->secret_key();
-
-//     m_p_encryptor     = std::make_unique<seal::Encryptor>(context(), m_public_key);
-//     m_p_evaluator     = std::make_unique<seal::Evaluator>(context());
-//     m_p_decryptor     = std::make_unique<seal::Decryptor>(context(), m_secret_key);
-//     m_p_batch_encoder = std::make_unique<seal::BatchEncoder>(context());
+    m_p_palisade_context = std::make_shared<lbcrypto::CryptoContext<lbcrypto::DCRTPoly>>(crypto_context);
+    m_slot_count         = poly_modulus_degree;
 }
 
 TutorialEltwiseAddBenchmark::Workload::Workload(std::size_t vector_size)
@@ -190,7 +175,7 @@ std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> TutorialEltwiseAddBenchmar
 }
 
 std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> TutorialEltwiseAddBenchmark::Workload::eltwiseadd(const std::vector<lbcrypto::Plaintext> &A,
-                                                                                const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B)
+                                                                                                        const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B)
 {
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> retval(A.size() * B.size());
 
@@ -203,8 +188,7 @@ std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> TutorialEltwiseAddBenchmar
         for (std::size_t B_i = 0; B_i < B.size(); ++B_i)
         {
             lbcrypto::Ciphertext<lbcrypto::DCRTPoly> &retval_item = retval[A_i * B.size() + B_i];
-            // context().evaluator().add_plain(B[B_i], A[A_i], retval_item);
-            retval_item = context().context()->EvalAdd(B[B_i], A[A_i]);
+            retval_item                                           = context().context()->EvalAdd(B[B_i], A[A_i]);
         }
 
     return retval;
@@ -214,8 +198,6 @@ std::vector<lbcrypto::Plaintext> TutorialEltwiseAddBenchmark::Workload::decryptR
 {
     std::vector<lbcrypto::Plaintext> retval(encrypted_result.size());
     for (std::size_t i = 0; i < encrypted_result.size(); i++)
-        // context().decryptor().decrypt(encrypted_result[i], retval[i]);
-        // context().context()->Decrypt(encrypted_result[i], retval[i]);
         retval[i] = context().decrypt(encrypted_result[i]);
     return retval;
 }
@@ -223,11 +205,8 @@ std::vector<lbcrypto::Plaintext> TutorialEltwiseAddBenchmark::Workload::decryptR
 std::vector<std::vector<int64_t>> TutorialEltwiseAddBenchmark::Workload::decodeResult(const std::vector<lbcrypto::Plaintext> &encoded_result)
 {
     std::vector<std::vector<int64_t>> retval(encoded_result.size());
-    // retval = encoded_result.GetPackedValue();
     for (std::size_t i = 0; i < encoded_result.size(); ++i)
     {
-        // context().encoder().decode(encoded_result[i], retval[i]);
-        // retval[i].resize(m_vector_size);
         retval[i] = encoded_result[i]->GetPackedValue();
     }
     return retval;
@@ -301,9 +280,9 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::AP
     for (std::size_t sample_i = 0; sample_i < clear_param.size(); ++sample_i)
     {
         const hebench::APIBridge::NativeDataBuffer &native_sample = param_pack.p_buffers[sample_i];
-        const std::int64_t *start_pt = reinterpret_cast<const std::int64_t *>(native_sample.p);
-        const std::int64_t *end_pt = start_pt + native_sample.size / sizeof(std::int64_t);
-        clear_param[sample_i] = std::vector<std::int64_t>(start_pt, end_pt);
+        const std::int64_t *start_pt                              = reinterpret_cast<const std::int64_t *>(native_sample.p);
+        const std::int64_t *end_pt                                = start_pt + native_sample.size / sizeof(std::int64_t);
+        clear_param[sample_i]                                     = std::vector<std::int64_t>(start_pt, end_pt);
     }
     //! [benchmark encode preparation]
 
@@ -363,7 +342,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encrypt(hebench::APIBrid
     //! [benchmark encrypt input_handle]
     const InternalParam<lbcrypto::Plaintext> &encoded_parameter =
         this->getEngine().template retrieveFromHandle<InternalParam<lbcrypto::Plaintext>>(h_encoded_parameters,
-                                                                                      InternalParamInfo::tagPlaintext);
+                                                                                          InternalParamInfo::tagPlaintext);
     //! [benchmark encrypt input_handle]
 
     //! [benchmark encrypt encrypting]
@@ -438,7 +417,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
                                                  HEBENCH_ECODE_INVALID_ARGS);
             const InternalParam<lbcrypto::Plaintext> &internal_param =
                 this->getEngine().retrieveFromHandle<InternalParam<lbcrypto::Plaintext>>(p_local_data[handle_i],
-                                                                                     InternalParamInfo::tagPlaintext);
+                                                                                         InternalParamInfo::tagPlaintext);
             // create a deep copy of input
             params.first = internal_param.samples;
             break;
@@ -451,7 +430,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::load(const hebench::APIB
             // create a deep copy of input
             const InternalParam<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &internal_param =
                 this->getEngine().retrieveFromHandle<InternalParam<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>>>(p_local_data[handle_i],
-                                                                                      InternalParamInfo::tagCiphertext);
+                                                                                                              InternalParamInfo::tagCiphertext);
             // create a deep copy of input
             params.second = internal_param.samples;
             break;
@@ -497,7 +476,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::operate(hebench::APIBrid
             h_remote_packed, InternalParamInfo::tagCiphertext | InternalParamInfo::tagPlaintext);
 
     // Looks familiar?
-    const std::vector<lbcrypto::Plaintext> &A  = params.first;
+    const std::vector<lbcrypto::Plaintext> &A                      = params.first;
     const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B = params.second;
     //! [benchmark operate load_input]
 

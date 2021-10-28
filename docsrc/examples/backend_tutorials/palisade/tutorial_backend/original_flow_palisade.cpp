@@ -17,17 +17,10 @@ class Workload
 public:
     Workload(std::size_t vector_size);
 
-    // std::vector<seal::Plaintext> encodeVector(const std::vector<std::vector<std::int64_t>> &vec);
-    // std::vector<seal::Ciphertext> encryptVector(const std::vector<seal::Plaintext> &encoded_vec);
-    // std::vector<seal::Ciphertext> eltwiseadd(const std::vector<seal::Plaintext> &A,
-    //                                          const std::vector<seal::Ciphertext> &B);
-    // std::vector<seal::Plaintext> decryptResult(const std::vector<seal::Ciphertext> &encrypted_result);
-    // std::vector<std::vector<int64_t>> decodeResult(const std::vector<seal::Plaintext> &encoded_result);
-
     std::vector<lbcrypto::Plaintext> encodeVector(const std::vector<std::vector<std::int64_t>> &vec);
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> encryptVector(const std::vector<lbcrypto::Plaintext> &encoded_vec);
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> eltwiseadd(const std::vector<lbcrypto::Plaintext> &A,
-                                             const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B);
+                                                                     const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B);
     std::vector<lbcrypto::Plaintext> decryptResult(const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &encrypted_result);
     std::vector<std::vector<int64_t>> decodeResult(const std::vector<lbcrypto::Plaintext> &encoded_result);
 
@@ -37,22 +30,17 @@ private:
     public:
         PalisadeBFVContext(int poly_modulus_degree)
         {
-            // seal::EncryptionParameters parms{ seal::scheme_type::bfv };
-            // parms.set_poly_modulus_degree(poly_modulus_degree);
-            // parms.set_coeff_modulus(seal::CoeffModulus::Create(poly_modulus_degree, { 60, 60 }));
-            // parms.set_plain_modulus(seal::PlainModulus::Batching(poly_modulus_degree, 20));
-
-            std::size_t plaintext_modulus = 65537;
+            std::size_t plaintext_modulus     = 65537;
             lbcrypto::SecurityLevel sec_level = lbcrypto::HEStd_128_classic;
-            double sigma = 3.2;
-            std::size_t num_coeff_moduli = 2;
-            std::size_t max_depth = 2;
-            std::size_t coeff_moduli_bits = 40;
+            double sigma                      = 3.2;
+            std::size_t num_coeff_moduli      = 2;
+            std::size_t max_depth             = 2;
+            std::size_t coeff_moduli_bits     = 40;
 
             lbcrypto::CryptoContext<lbcrypto::DCRTPoly> crypto_context =
-            lbcrypto::CryptoContextFactory<lbcrypto::DCRTPoly>::genCryptoContextBFVrns(
-                plaintext_modulus, sec_level, sigma, 0, num_coeff_moduli,
-                0, OPTIMIZED, max_depth, 0, coeff_moduli_bits, poly_modulus_degree);
+                lbcrypto::CryptoContextFactory<lbcrypto::DCRTPoly>::genCryptoContextBFVrns(
+                    plaintext_modulus, sec_level, sigma, 0, num_coeff_moduli,
+                    0, OPTIMIZED, max_depth, 0, coeff_moduli_bits, poly_modulus_degree);
             crypto_context->Enable(ENCRYPTION);
             crypto_context->Enable(SHE);
 
@@ -60,9 +48,9 @@ private:
             lbcrypto::LPKeyPair<lbcrypto::DCRTPoly> *p_key    = new lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>(local_key.publicKey, local_key.secretKey);
             local_key                                         = lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>();
             m_keys                                            = std::unique_ptr<lbcrypto::LPKeyPair<lbcrypto::DCRTPoly>>(p_key);
-            
-            m_p_palisade_context                              = std::make_shared<lbcrypto::CryptoContext<lbcrypto::DCRTPoly>>(crypto_context);
-            m_slot_count                                      = poly_modulus_degree;
+
+            m_p_palisade_context = std::make_shared<lbcrypto::CryptoContext<lbcrypto::DCRTPoly>>(crypto_context);
+            m_slot_count         = poly_modulus_degree;
         }
 
         auto publicKey() const { return m_keys->publicKey; }
@@ -72,7 +60,7 @@ private:
         {
             context()->Decrypt(m_keys->secretKey, cipher, &plain);
         }
-        
+
         lbcrypto::Plaintext decrypt(const lbcrypto::Ciphertext<lbcrypto::DCRTPoly> &cipher)
         {
             lbcrypto::Plaintext retval;
@@ -121,7 +109,7 @@ std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> Workload::encryptVector(co
 }
 
 std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> Workload::eltwiseadd(const std::vector<lbcrypto::Plaintext> &A,
-                                                   const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B)
+                                                                           const std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> &B)
 {
     std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> retval(A.size() * B.size());
 
@@ -134,8 +122,7 @@ std::vector<lbcrypto::Ciphertext<lbcrypto::DCRTPoly>> Workload::eltwiseadd(const
         for (std::size_t B_i = 0; B_i < B.size(); ++B_i)
         {
             lbcrypto::Ciphertext<lbcrypto::DCRTPoly> &retval_item = retval[A_i * B.size() + B_i];
-            // context().evaluator().add_plain(B[B_i], A[A_i], retval_item);
-            retval_item = context().context()->EvalAdd(B[B_i], A[A_i]);
+            retval_item                                           = context().context()->EvalAdd(B[B_i], A[A_i]);
         }
 
     return retval;
@@ -145,8 +132,6 @@ std::vector<lbcrypto::Plaintext> Workload::decryptResult(const std::vector<lbcry
 {
     std::vector<lbcrypto::Plaintext> retval(encrypted_result.size());
     for (std::size_t i = 0; i < encrypted_result.size(); i++)
-        // context().decryptor().decrypt(encrypted_result[i], retval[i]);
-        // context().context()->Decrypt(encrypted_result[i], retval[i]);
         retval[i] = context().decrypt(encrypted_result[i]);
     return retval;
 }
@@ -154,11 +139,8 @@ std::vector<lbcrypto::Plaintext> Workload::decryptResult(const std::vector<lbcry
 std::vector<std::vector<int64_t>> Workload::decodeResult(const std::vector<lbcrypto::Plaintext> &encoded_result)
 {
     std::vector<std::vector<int64_t>> retval(encoded_result.size());
-    // retval = encoded_result.GetPackedValue();
     for (std::size_t i = 0; i < encoded_result.size(); ++i)
     {
-        // context().encoder().decode(encoded_result[i], retval[i]);
-        // retval[i].resize(m_vector_size);
         retval[i] = encoded_result[i]->GetPackedValue();
     }
     return retval;
