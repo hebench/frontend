@@ -61,7 +61,9 @@ if(hebench_cpp_FOUND)
     add_library(hebench_cpp UNKNOWN IMPORTED)
     # populate the found library with its properties
     set_property(TARGET hebench_cpp PROPERTY IMPORTED_LOCATION ${hebench_cpp_FOUND})
-    set_property(TARGET hebench_cpp APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${HEBENCH_API_INCLUDE_DIR})
+    set_property(TARGET hebench_cpp APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${HEBENCH_API_INCLUDE_DIR}
+    message(STATUS "libhebench_cpp.a found")
+    )
 else()
     message(FATAL_ERROR "libhebench_cpp.a not found.")
 endif()

@@ -4,4 +4,8 @@
 
 #pragma once
 
+/// @cond
+
 #define TUTORIAL_ECODE_PALISADE_ERROR 2
+
+/// @endcond

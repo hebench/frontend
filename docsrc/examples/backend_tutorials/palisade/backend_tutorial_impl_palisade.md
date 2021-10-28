@@ -99,7 +99,7 @@ Here we retrieve our internal representation from the opaque handle representing
 
 \snippet{lineno} docsrc/examples/backend_tutorials/palisade/tutorial_backend/src/tutorial_eltwiseadd_benchmark_palisade.cpp benchmark encrypt input_handle
 
-We want input to `encrypt()` to be of type `InternalParam<palisade::Plaintext>`. It is expected all data returned by all methods feeding into `encrypt()` return data in this format. This data must be wrapped into an opaque handle with tag `InternalParamInfo::tagPlaintext`. Note that this is our internal convention, established to facilitate communication among our implementation of the backend methods. Test Harness is not aware of our convention. It will only pass our handles in the order defined by the workload pipeline flow.
+We want input to `encrypt()` to be of type `InternalParam<lbcrypto::Plaintext>`. It is expected all data returned by all methods feeding into `encrypt()` return data in this format. This data must be wrapped into an opaque handle with tag `InternalParamInfo::tagPlaintext`. Note that this is our internal convention, established to facilitate communication among our implementation of the backend methods. Test Harness is not aware of our convention. It will only pass our handles in the order defined by the workload pipeline flow.
 
 Since our internal representation is designed to maintain the input format expected by our original methods, now we just need to call the encryption from the original workflow.
 

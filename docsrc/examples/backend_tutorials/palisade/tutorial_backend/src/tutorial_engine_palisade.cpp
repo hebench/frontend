@@ -2,6 +2,8 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+/// @cond
+
 #include <cstring>
 
 #include "tutorial_engine_palisade.h"
@@ -90,3 +92,5 @@ void TutorialEngine::init()
     //! [engine init benchmarks]
 }
 //! [engine init]
+
+/// @endcond

@@ -2,6 +2,8 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+/// @cond
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -98,6 +100,7 @@ std::string TutorialEltwiseAddBenchmarkDescription::getBenchmarkDescription(cons
 }
 //! [b_desc print]
 
+//! [b_desc create]
 hebench::cpp::BaseBenchmark *TutorialEltwiseAddBenchmarkDescription::createBenchmark(hebench::cpp::BaseEngine &engine,
                                                                                      const hebench::APIBridge::WorkloadParams *p_params)
 {
@@ -108,12 +111,15 @@ hebench::cpp::BaseBenchmark *TutorialEltwiseAddBenchmarkDescription::createBench
     TutorialEngine &ex_engine = dynamic_cast<TutorialEngine &>(engine);
     return new TutorialEltwiseAddBenchmark(ex_engine, m_descriptor, *p_params);
 }
+//! [b_desc create]
 
+//! [b_desc destroy]
 void TutorialEltwiseAddBenchmarkDescription::destroyBenchmark(hebench::cpp::BaseBenchmark *p_bench)
 {
     if (p_bench)
         delete p_bench;
 }
+//! [b_desc destroy]
 
 //---------------------------------------------
 // class TutorialEltwiseAddBenchmark::Workload
@@ -528,3 +534,5 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::operate(hebench::APIBrid
     //! [benchmark operate return]
 }
 //! [benchmark operate]
+
+/// @endcond

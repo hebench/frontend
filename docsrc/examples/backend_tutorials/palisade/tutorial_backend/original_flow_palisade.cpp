@@ -2,6 +2,8 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+/// @cond
+
 //! [tutorial original_flow palisade]
 #include <cassert>
 #include <cstdint>
@@ -213,4 +215,6 @@ int main()
 
     return 0;
 }
+
 //! [tutorial original_flow palisade]
+/// @endcond

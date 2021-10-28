@@ -1,12 +1,17 @@
 Quickstart C++ Wrapper Backend Tutorial - Preparation {#be_tutorial_preparation_palisade}
 ========================
 ## Steps
+
+Before attempting these steps, you must have a built version of the API Bridge.
+
 ### 1. Copy example 
+
 Start by copying api_bridge_example_be to a new folder with the name of the desired backend
 
 `api_bridge_example_backend` -> `tutorial_backend`
 	
 ### 2. Rename files to new backend name 
+
 After copying, the next step is to rename all of the included files to match the scheme of the new backend name. The files to rename are:
 
 - `src/ex_engine_palisade.cpp` -> `src/tutorial_engine_palisade.cpp`
@@ -214,6 +219,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra) # show warnings
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
+
 ```
 	
 ### 4. Update includes in source files
