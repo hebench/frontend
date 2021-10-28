@@ -17,7 +17,6 @@ set(${PROJECT_NAME}_HEADERS
     )
 
 add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
-
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 # All external libraries are assumed to be pre-compiled for tutorial simplicity.
@@ -39,9 +38,7 @@ endif()
 # link found library
 target_link_libraries(${PROJECT_NAME} PUBLIC "-Wl,--whole-archive" hebench_cpp "-Wl,--no-whole-archive")
 
-
 # find other third party dependencies
-
 # Microsoft SEAL (version 3.6)
 set(SEAL_INCLUDE_DIR "/usr/local/include/SEAL-3.6")
 target_include_directories(${PROJECT_NAME} PRIVATE ${SEAL_INCLUDE_DIR}) # point to include for SEAL
@@ -65,4 +62,3 @@ target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra) # show warnings
 include(GNUInstallDirs)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${PROJECT_NAME} DESTINATION lib)
-

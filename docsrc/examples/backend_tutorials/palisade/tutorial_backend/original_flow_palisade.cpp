@@ -144,6 +144,7 @@ std::vector<std::vector<int64_t>> Workload::decodeResult(const std::vector<lbcry
     for (std::size_t i = 0; i < encoded_result.size(); ++i)
     {
         retval[i] = encoded_result[i]->GetPackedValue();
+	retval[i].resize(m_vector_size);
     }
     return retval;
 }
