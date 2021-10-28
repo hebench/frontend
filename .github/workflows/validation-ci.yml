@@ -13,8 +13,26 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  setup:
-    runs-on: icx
+  find-scripts:
+    runs-on: ubuntu-20.04
+    outputs: 
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v2
+      
+      - id: set-matrix
+        run: |
+          matrix=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci")))')
+          echo $matrix
+          echo "::set-output name=matrix::$matrix"
+          
+  validation:
+    runs-on: ubuntu-20.04
+    needs: find-scripts
+    strategy:
+      matrix: 
+        script: ${{fromJson(needs.find-scripts.outputs.matrix)}}
+
     steps:
       - name: Clone Repository (Latest on development)
         uses: actions/checkout@v2
@@ -29,9 +47,9 @@ jobs:
 
       - name: Setup
         run: |
-          set -x
+          echo yes | .github/workflows/install-requirements.sh
           git branch --show-current
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
           cmake --install ${{github.workspace}}/build
 
@@ -40,48 +58,7 @@ jobs:
 
           # Create config.yml
           ${{github.workspace}}/build/bin/test_harness --config_file ${{github.workspace}}/build/config.yaml --backend_lib_path $CLEARTEXTLIB --dump
-          set +x
 
-  SYMLINK:
-    name: symlink check
-    needs: setup
-    runs-on: icx
-    steps:
-      - name: Validation loading symlink to backend
+      - name: Run validation test
         working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/backend_symlink_validation.sh
-
-      - name: Validation loading symlink to config
-        working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/config_symlink_validation.sh
-
-  SO:
-    name: .so check
-    needs: setup
-    runs-on: icx
-    steps:
-      - name: Validate .so
-        working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/invalid_so.sh
-
-  YML:
-    name: .yml check
-    needs: setup
-    runs-on: icx
-    steps:
-      - name: Validate yml
-        working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/invalid_yml.sh
-
-  TMP:
-    name: tmp check
-    needs: setup
-    runs-on: icx
-    steps:
-      - name: Validate loading backend from tmp
-        working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/backend_tmp_validation.sh
-
-      - name: Validate loading config from tmp
-        working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci/config_tmp_validation.sh
+        run: ../.github/validation-ci/${{ matrix.script }}

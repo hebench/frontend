@@ -13,7 +13,7 @@ pushd ./backend-cpu-cleartext
 mkdir build && pushd build
 
 echo "Configuring & Building Cleartext Backend..."
-cmake -DCMAKE_INSTALL_PREFIX=./ -DCMAKE_BUILD_TYPE=Release -DAPI_BRIDGE_INSTALL_DIR=../../../ ..
+cmake -DCMAKE_INSTALL_PREFIX=./ -DCMAKE_BUILD_TYPE=Release -DAPI_BRIDGE_INSTALL_DIR=../../../ -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 ..
 make -j install
 
 CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)

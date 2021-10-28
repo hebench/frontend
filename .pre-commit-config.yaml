@@ -34,9 +34,9 @@ repos:
           - //                   # defaults to: #
     - repo: local
       hooks:
-        - id: clang-format
-          name: clang-format
-          entry: clang-format
+        - id: clang-format-9
+          name: clang-format-9
+          entry: clang-format-9
           language: system
           files: \.(c|cc|cxx|cpp|h|hpp|hxx|inl)$
           args: ["-i", "--style=file"]

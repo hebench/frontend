@@ -10,10 +10,18 @@
       <tab type="user" visible="yes" url="@ref CPP_overview" title="C++ Wrapper Overview" intro=""/>
       <tab type="user" visible="yes" url="@ref results_order" title="Ordering of Batched Results" intro=""/>
       <tab type="usergroup" visible="yes" url="@ref simple_cpp_example" title="Tutorial: Backend Creation using C++ Wrapper" intro="">
-        <tab type="user" visible="yes" url="@ref be_tutorial_preparation" title="Preparation" intro=""/>
-        <tab type="user" visible="yes" url="@ref be_tutorial_init" title="Engine Initialization and Benchmark Description" intro=""/>
-        <tab type="user" visible="yes" url="@ref be_tutorial_impl" title="Benchmark Implementation" intro=""/>
-        <tab type="user" visible="yes" url="@ref be_tutorial_files" title="File Reference" intro=""/>
+        <tab type="usergroup" visible="yes" url="@ref simple_cpp_example_palisade" title="Tutorial using PALISADE" intro="">
+          <tab type="user" visible="yes" url="@ref be_tutorial_preparation_palisade" title="Preparation" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_init_palisade" title="Engine Initialization and Benchmark Description" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_impl_palisade" title="Benchmark Implementation" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_files_palisade" title="File Reference" intro=""/>
+        </tab>
+        <tab type="usergroup" visible="yes" url="@ref simple_cpp_example_seal" title="Tutorial using Microsoft SEAL" intro="">
+          <tab type="user" visible="yes" url="@ref be_tutorial_preparation_seal" title="Preparation" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_init_seal" title="Engine Initialization and Benchmark Description" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_impl_seal" title="Benchmark Implementation" intro=""/>
+          <tab type="user" visible="yes" url="@ref be_tutorial_files_seal" title="File Reference" intro=""/>
+        </tab>
       </tab>
     </tab>
     <tab type="usergroup" visible="yes" url="@ref frontend_overview" title="Frontend Overview" intro="">
@@ -62,6 +70,7 @@
       <tab type="globals" visible="yes" title="" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>  
+    <tab type="user" visible="yes" url="@ref glossary" title="Glossary" intro=""/>
   </navindex>
 
   <!-- Layout definition for a class page -->
