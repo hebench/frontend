@@ -3,71 +3,14 @@ Ordering of Results Based on Input Batch Sizes                {#results_order}
 
 The following defines the ordering of results based on batched input.
 
-## Definitions
-
-An **operation** in HEBench is defined as a mapping of an input vector with `n` heterogeneous components (type of each component may be different) to a result vector of `m` heterogeneous components, where `m` and `n` are specifically defined for each workload operation.
-
-```
-(result_0, result_1, ..., result_m-1) = op(input_0, input_1, ..., input_n-1)
-```
-
-**Parameter**: the position of each component of the input vector.
-
-**Sample**: a concrete value of either input or result vectors.
-
-**Component sample**: a concrete value of a component of either input or result vectors.
-
-**Argument**: another name for a component sample for the input vector.
-
-**Batch**: A collection of samples for the input vector.
-
-**Component batch**: A collection of samples for a component of a vector.
-
-**Batch size**: Number of samples in a batch.
-
-**Component batch size**: Number of component samples in a component batch.
-
-<hr>
-**Example**
-
-Assume the operation is scalar addition:
-
-```
-(result_0) = op+(input_0, input_1)
-```
-
-defined as
-
-```
-op+(input_0, input_1) = (input_0 + input_1) = (result_0)
-```
-
-and a concrete instantiation:
-
-```
-(5) = op+(2, 3)
-```
-
-In this case, the input vector has `2` components. First  **parameter** is ```input_0```. Second **parameter** is ```input_1```. In the instantiation, `(2, 3)` is an input **sample**, `2` and `3` are the **arguments** corresponding to first and second parameters respectively.
-
-The result vector has 1 component: ```result_0``` is the first component of the result vector. `(5)` is a result **sample** where `5` is a **component sample** of the result sample.
-<hr>
-
-By these definitions, the component batch size for each component in the input vector can differ. The batch size is the multiplication of the component batch size for all components of the input vector.
-
-By the definition of operation, the number of samples per component of the result vector is the same, and it equals the batch size.
-
-**Input dataset**: (or just **dataset**) is a collection of input samples for an operation.
-
-An input batch is, therefore, a subset of samples from the input dataset (with repeating elements allowed).
-<br>
+It is recommended to refer to @ref glossary for a list of terms used in this document.
 
 ## Order of Input Samples in a Batch
 Some workload categories in HEBench, such as **offline**, allow processing on a batch of input samples so that backends can optimize execution for an input batch, instead of operating on a single input sample at a time.
 
-Given component batches for the input, Test Harness combines a component sample for each input component to form an input sample. The order of the input samples in a batch given the input component samples follows **row-major ordering**. This means that the index for the most significant parameter moves faster when computing the index of an input sample in the ordering, given the indices of all of the component samples that make up said input sample.
+Given component batches for the input, Test Harness combines a component sample for each input component to form an input sample. The order of the input samples in a batch given the input component samples follows **row-major ordering**. This means that the index for the most significant operation parameter moves faster when computing the index of an input sample in the ordering, given the indices of all of the component samples that make up said input sample.
 
-In general, let `n` be the number of components in the input vector ```(input_0, input_1, ..., input_n-1)```. If component samples in component batch `i` are ordered from `0` to ```cn[i] - 1```, where ```cn[i]``` is the size for component batch `i`, and ```param[i]``` is the index of the component sample to use for parameter ```input_i``` , then, the index `r` for an input sample is computed using the algorithm below.
+In general, let `n` be the number of components in the input vector ```(input_0, input_1, ..., input_n-1)```. If component samples in component batch `i` are ordered from `0` to ```cn[i] - 1```, where ```cn[i]``` is the size for component batch `i`, and ```param[i]``` is the index of the component sample to use for operand ```input_i``` , then, the index `r` for an input sample is computed using the algorithm below.
 
 ```cpp
 r = param[0];
@@ -90,7 +33,7 @@ Assume a workload for the ternary operation defined as follows:
 (result_0, result_1) = op3(input_0, input_1, input_2)
 ```
 
-Assume that Test Harness will request operation on an input batch, and the input samples are specified using a component batch for each parameter.
+Assume that Test Harness will request operation on an input batch, and the input samples are specified using a component batch for each operation parameter.
 
 Let ```cn[i]``` be the batch size for component ```input_i```, and:
 
