@@ -8,6 +8,13 @@ All HEBench repos welcome pull requests from external contributors. In general, 
 
 See the [Installing Resources](#resources) section for details on installing/setting up all of the requirements below.
 
+In general, when wanting to contribute code, users should expect to take the following steps:
+1. Fork from the repository that is being contributed to. If the user is part of the [HEBench](https://github.com/hebench) GitHub organization, they will be able create branches and push directly to the HEBench repositories without the need to Fork. Contact support@hebench.org for more information.
+2.  Create a branch prefixed with the contributor's GitHub username, and a title describing the content of the branch (e.g. username/titled_describing_branch).
+3.  Confirm that all of the requirements have been satisfied for contributing (see below and the [HEBench PR Template](https://github.com/hebench/frontend/blob/main/.github/PULL_REQUEST_TEMPLATE.md)).
+4.  Create a Pull Request (either from the forked repository or the created branch) into the HEBench *development* branch of the repository being merged into. Note that PR's into branches other than *development* will be closed.
+5.  Pending CI passing and CODEOWNER approval, the PR will be merged into the *development* branch. With a consensus from HEBench organization members, *development* will be merged into the *main* branch periodically.
+
 ## Code Formatting <a name="formatting"></a>
 
 ### Requirements
@@ -47,6 +54,8 @@ All Pull Requests must follow the the provided [HEBench PR Template](https://git
 
 ## Installing Resources <a name="resources"></a>
 
+If wanting a quick script to install the default dependencies, feel free to utilize/run the [Install Requirements](.github/workflows/install-requirements.sh) to save some time. Note that this script primarily installs `clang-format-9`, `pre-commit`, `CMake`, and `gcc`. If there is a previous installation, this script may uninstall them as part of this process. To avoid this happening (or to simply install the requirement manually), please feel free to continue below.
+
 ### clang-format-9
 Ubuntu 16.04:
 ```bash
@@ -66,7 +75,7 @@ sudo apt-get install clang-format-9
 ### pre-commit: [https://pre-commit.com](https://pre-commit.com/)
 *Note that we use a python virtual environment to avoid potentially touching system python components*
 
-Ubuntu 18.04/20.04:
+Ubuntu 16.04/18.04/minimal 20.04:
 ```bash
 sudo apt-get install python3-pip
 python3 -m venv VIRTUAL_ENV_DIR
@@ -96,7 +105,7 @@ sudo apt-get install doxygen-gui
 VERSION=3.16.3 # Use any version 3.13+
 wget https://github.com/Kitware/CMake/releases/download/v$VERSION/cmake-$VERSION-linux-x86_64.sh
 chmod +x cmake-$VERSION-linux-x86_64.sh
-./cmake-$VERSION-linux-x86_64.sh
+sudo ./cmake-$VERSION-linux-x86_64.sh --prefix=/usr/local # or /usr if not using local hierarchy
 ```
 
 ### GCC
@@ -104,7 +113,7 @@ chmod +x cmake-$VERSION-linux-x86_64.sh
 sudo apt install build-essential
 sudo apt -y install gcc-9 g++-9
 ```
-Ubuntu 18.04:
+Ubuntu 16.04/18.04:
 ```bash
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 ```

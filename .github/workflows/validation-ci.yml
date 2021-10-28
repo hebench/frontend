@@ -14,7 +14,7 @@ env:
 
 jobs:
   find-scripts:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     outputs: 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -27,7 +27,7 @@ jobs:
           echo "::set-output name=matrix::$matrix"
           
   validation:
-    runs-on: icx
+    runs-on: ubuntu-20.04
     needs: find-scripts
     strategy:
       matrix: 
@@ -47,8 +47,9 @@ jobs:
 
       - name: Setup
         run: |
+          echo yes | .github/workflows/install-requirements.sh
           git branch --show-current
-          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
           cmake --install ${{github.workspace}}/build
 
