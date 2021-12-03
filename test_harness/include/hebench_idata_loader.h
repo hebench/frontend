@@ -166,7 +166,7 @@ public:
      *
      * Then, `r_i`, the index in the second dimension that corresponds to the NativeDataBuffer
      * in `getResultData(0)` where the result of the operation using the specified indices
-     * whill be placed, is computed in row-major order as:
+     * will be placed, is computed in row-major order as:
      *
      * @code
      * r_i = param_data_pack_indices[0] * param_count[1] + param_data_pack_indices[1]

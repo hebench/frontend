@@ -59,12 +59,11 @@ public:
 
 protected:
     BenchmarkOffline(std::shared_ptr<Engine> p_engine,
-                     const IBenchmarkDescription::DescriptionToken &description_token);
+                     const IBenchmarkDescriptor::DescriptionToken &description_token);
 
 private:
     bool run(hebench::Utilities::TimingReportEx &out_report,
              IDataLoader::Ptr p_dataset,
-             const IBenchmarkDescription::BenchmarkConfig bench_config,
              IBenchmark::RunConfig &run_config);
 };
 

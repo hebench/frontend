@@ -22,7 +22,7 @@ namespace hebench {
 namespace TestHarness {
 
 BenchmarkLatency::BenchmarkLatency(std::shared_ptr<Engine> p_engine,
-                                   const IBenchmarkDescription::DescriptionToken &description_token) :
+                                   const IBenchmarkDescriptor::DescriptionToken &description_token) :
     PartialBenchmarkCategory(p_engine, description_token)
 {
 }
@@ -34,12 +34,11 @@ BenchmarkLatency::~BenchmarkLatency()
 bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
                            IBenchmark::RunConfig &run_config)
 {
-    return run(out_report, getDataset(), m_benchmark_configuration, run_config);
+    return run(out_report, getDataset(), run_config);
 }
 
 bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
                            IDataLoader::Ptr p_dataset,
-                           const IBenchmarkDescription::BenchmarkConfig bench_config,
                            IBenchmark::RunConfig &run_config)
 {
     std::cout << std::endl
@@ -87,7 +86,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     // separate param packs in encrypted/plain
     std::vector<hebench::APIBridge::PackedData> packed_parameters(2);
     std::vector<std::vector<hebench::APIBridge::DataPack>> packed_parameters_data_packs(packed_parameters.size());
-    std::bitset<sizeof(std::uint32_t)> cipher_param_mask(m_descriptor.cipher_param_mask);
+    std::bitset<sizeof(std::uint32_t)> cipher_param_mask(this->getBackendDescription().descriptor.cipher_param_mask);
     for (std::size_t i = 0; i < param_packs.size(); ++i)
     {
         // determine if this parameter is encrypted
@@ -232,18 +231,19 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     //         h_remote_inputs, params,
     //         &h_remote_result);
 
-    if (m_descriptor.cat_params.latency.warmup_iterations_count > 0)
+    std::uint64_t warmup_terations_count = this->getBackendDescription().descriptor.cat_params.latency.warmup_iterations_count;
+    if (warmup_terations_count > 0)
     {
         std::cout << IOS_MSG_INFO
                   << hebench::Logging::GlobalLogger::log("Starting warm-up iterations: requested "
-                                                         + std::to_string(m_descriptor.cat_params.latency.warmup_iterations_count)
+                                                         + std::to_string(warmup_terations_count)
                                                          + " iterations.")
                   << std::endl;
 
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Warming up...") << std::endl;
 
         // warm up
-        for (std::uint64_t rep_i = 0; rep_i < m_descriptor.cat_params.latency.warmup_iterations_count; ++rep_i)
+        for (std::uint64_t rep_i = 0; rep_i < warmup_terations_count; ++rep_i)
         {
             RAIIHandle h_result_remote;
             timer.start();
@@ -263,12 +263,13 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
                   << std::endl;
     } // end else
 
-    std::uint64_t min_test_time_ms = m_descriptor.cat_params.latency.min_test_time_ms > 0 ?
-                                         m_descriptor.cat_params.latency.min_test_time_ms :
-                                         bench_config.default_min_test_time_ms;
+    std::uint64_t min_test_time_ms =
+        this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms > 0 ?
+            this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms :
+            this->getBenchmarkConfiguration().default_min_test_time_ms;
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Starting latency test.") << std::endl
-              << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Requested time: " + std::to_string(m_descriptor.cat_params.latency.min_test_time_ms) + " ms") << std::endl
+              << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Requested time: " + std::to_string(this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms) + " ms") << std::endl
               << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Actual time: " + std::to_string(min_test_time_ms) + " ms") << std::endl;
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Testing...") << std::endl;
@@ -519,7 +520,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
                     data_pack_indices.resize(p_dataset->getParameterCount(), 0);
                     b_valid = validateResult(p_dataset, data_pack_indices.data(),
                                              outputs,
-                                             m_descriptor.data_type);
+                                             this->getBackendDescription().descriptor.data_type);
                 }
                 catch (std::exception &ex)
                 {
@@ -545,7 +546,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
                     ss << std::endl;
                     logResult(ss, p_dataset, data_pack_indices.data(),
                               outputs,
-                              m_descriptor.data_type);
+                              this->getBackendDescription().descriptor.data_type);
                     out_report.appendFooter(ss.str());
                 } // end else
             } // end if

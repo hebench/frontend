@@ -28,50 +28,49 @@ namespace Offline {
 // class BenchmarkDescription
 //----------------------------
 
-bool BenchmarkDescription::m_b_registered = // register the benchmark with the factory
-    hebench::TestHarness::BenchmarkFactory::registerSupportedBenchmark(std::make_shared<BenchmarkDescription>());
+bool BenchmarkDescriptor::m_b_registered = // register the benchmark with the factory
+    hebench::TestHarness::BenchmarkFactory::registerSupportedBenchmark(std::make_shared<BenchmarkDescriptor>());
 
-std::string BenchmarkDescription::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                                           const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+bool BenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
 {
     assert(m_b_registered);
 
-    std::string retval;
+    // return true if benchmark is supported
 
-    // return name if benchmark is supported
-    if (bench_desc.category == hebench::APIBridge::Category::Offline)
-    {
-        retval = BenchmarkDescriptionCategory::matchBenchmarkDescriptor(bench_desc, w_params);
-    } // end if
+    bool retval =
+        BenchmarkDescriptorCategory::matchBenchmarkDescriptor(bench_desc, w_params)
+        && (bench_desc.category == hebench::APIBridge::Category::Offline);
 
     return retval;
 }
 
-void BenchmarkDescription::completeDescription(const Engine &engine,
-                                               DescriptionToken::Ptr pre_token) const
+void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                                      const Engine &engine,
+                                                      const BenchmarkDescription::Backend &backend_desc,
+                                                      const BenchmarkDescription::Configuration &config) const
 {
-    (void)engine;
-
     // finish describing workload
     assert(OpParameterCount == 2);
     assert(DefaultBatchSize == 100);
 
-    std::uint64_t vector_size;
-    std::uint64_t default_batch_size = pre_token->getBenchmarkConfiguration(this).default_sample_size > 0 ?
-                                           pre_token->getBenchmarkConfiguration(this).default_sample_size :
-                                           BenchmarkDescription::DefaultBatchSize;
-    std::uint64_t batch_sizes[OpParameterCount];
+    BenchmarkDescriptorCategory::completeWorkloadDescription(output, engine, backend_desc, config);
+
+    assert(OpParameterCount == output.operation_params_count);
+
     std::stringstream ss;
+    std::uint64_t batch_sizes[OpParameterCount];
+    std::uint64_t vector_size = fetchVectorSize(config.w_params);
 
-    vector_size = fetchVectorSize(pre_token->getWorkloadParams(this));
-
-    ss = std::stringstream();
-    ss << pre_token->description.header;
-
+    std::uint64_t sample_size_fallback =
+        config.fallback_default_sample_size > 0 ?
+            config.fallback_default_sample_size :
+            DefaultBatchSize;
     std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
                                                          OpParameterCount,
-                                                         default_batch_size,
-                                                         pre_token->getDescriptor(this));
+                                                         config.default_sample_sizes,
+                                                         backend_desc.descriptor,
+                                                         sample_size_fallback);
     // complete header with workload specifics
     ss << ", , C = V0 + V1" << std::endl
        << ", , , Elements, Batch size" << std::endl;
@@ -81,20 +80,18 @@ void BenchmarkDescription::completeDescription(const Engine &engine,
     } // end for
     ss << ", , C, " << vector_size << ", " << result_batch_size << std::endl;
 
-    pre_token->description.header = ss.str();
+    output.workload_header = ss.str();
 }
 
-hebench::TestHarness::PartialBenchmark *BenchmarkDescription::createBenchmark(std::shared_ptr<Engine> p_engine,
-                                                                              DescriptionToken::Ptr p_description_token)
+hebench::TestHarness::PartialBenchmark *BenchmarkDescriptor::createBenchmark(std::shared_ptr<Engine> p_engine,
+                                                                             const DescriptionToken &description_token)
 {
     assert(m_b_registered);
     Benchmark *retval = nullptr;
 
     try
     {
-        if (!p_description_token)
-            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null argument 'p_description_token'."));
-        retval = new Benchmark(p_engine, *p_description_token);
+        retval = new Benchmark(p_engine, description_token);
     }
     catch (...)
     {
@@ -106,7 +103,7 @@ hebench::TestHarness::PartialBenchmark *BenchmarkDescription::createBenchmark(st
     return retval;
 }
 
-void BenchmarkDescription::destroyBenchmark(PartialBenchmark *p_bench)
+void BenchmarkDescriptor::destroyBenchmark(PartialBenchmark *p_bench)
 {
     assert(m_b_registered);
     if (p_bench)
@@ -118,28 +115,29 @@ void BenchmarkDescription::destroyBenchmark(PartialBenchmark *p_bench)
 //-----------------
 
 Benchmark::Benchmark(std::shared_ptr<Engine> p_engine,
-                     const IBenchmarkDescription::DescriptionToken &description_token) :
+                     const IBenchmarkDescriptor::DescriptionToken &description_token) :
     BenchmarkOffline(p_engine, description_token)
 {
 }
 
-void Benchmark::init(const IBenchmarkDescription::Description &description)
+void Benchmark::init()
 {
-    (void)description;
     hebench::Common::EventTimer timer;
     hebench::Common::TimingReportEvent::Ptr p_timing_event;
-    std::uint64_t vector_size;
-    std::uint64_t default_batch_size = m_benchmark_configuration.default_sample_size > 0 ?
-                                           m_benchmark_configuration.default_sample_size :
-                                           BenchmarkDescription::DefaultBatchSize;
-    std::uint64_t batch_sizes[BenchmarkDescription::OpParameterCount];
+    std::uint64_t batch_sizes[BenchmarkDescriptor::OpParameterCount];
     std::stringstream ss;
 
-    vector_size = BenchmarkDescription::fetchVectorSize(m_params);
-    BenchmarkDescription::computeSampleSizes(batch_sizes,
-                                             BenchmarkDescription::OpParameterCount,
-                                             default_batch_size,
-                                             m_descriptor);
+    std::uint64_t vector_size = BenchmarkDescriptor::fetchVectorSize(this->getBenchmarkConfiguration().w_params);
+
+    std::uint64_t sample_size_fallback =
+        this->getBenchmarkConfiguration().fallback_default_sample_size > 0 ?
+            this->getBenchmarkConfiguration().fallback_default_sample_size :
+            BenchmarkDescriptor::DefaultBatchSize;
+    BenchmarkDescriptor::computeSampleSizes(batch_sizes,
+                                            BenchmarkDescriptor::OpParameterCount,
+                                            this->getBenchmarkConfiguration().default_sample_sizes,
+                                            this->getBackendDescription().descriptor,
+                                            sample_size_fallback);
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating workload...") << std::endl;
 
@@ -148,7 +146,7 @@ void Benchmark::init(const IBenchmarkDescription::Description &description)
     timer.start();
     m_data         = DataGenerator::create(vector_size,
                                    batch_sizes[0], batch_sizes[1],
-                                   m_descriptor.data_type);
+                                   this->getBackendDescription().descriptor.data_type);
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();
@@ -167,8 +165,8 @@ bool Benchmark::validateResult(IDataLoader::Ptr dataset,
                                const std::vector<hebench::APIBridge::NativeDataBuffer *> &outputs,
                                hebench::APIBridge::DataType data_type) const
 {
-    assert(dataset->getParameterCount() == BenchmarkDescriptionCategory::OpParameterCount
-           && dataset->getResultCount() == BenchmarkDescriptionCategory::OpResultCount);
+    assert(dataset->getParameterCount() == BenchmarkDescriptorCategory::OpParameterCount
+           && dataset->getResultCount() == BenchmarkDescriptorCategory::OpResultCount);
 
     return BenchmarkOffline::validateResult(dataset, param_data_pack_indices, outputs, data_type);
 }

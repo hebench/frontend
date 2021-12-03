@@ -17,14 +17,14 @@ namespace MatrixMultiply {
 //------------------------------------
 
 hebench::APIBridge::WorkloadParamType::WorkloadParamType
-    BenchmarkDescriptionCategory::WorkloadParameterType[BenchmarkDescriptionCategory::WorkloadParameterCount] = {
+    BenchmarkDescriptorCategory::WorkloadParameterType[BenchmarkDescriptorCategory::WorkloadParameterCount] = {
         hebench::APIBridge::WorkloadParamType::UInt64,
         hebench::APIBridge::WorkloadParamType::UInt64,
         hebench::APIBridge::WorkloadParamType::UInt64
     };
 
-std::array<std::pair<std::uint64_t, std::uint64_t>, BenchmarkDescriptionCategory::OpParameterCount>
-BenchmarkDescriptionCategory::fetchMatrixSizes(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
+std::array<std::pair<std::uint64_t, std::uint64_t>, BenchmarkDescriptorCategory::OpParameterCount>
+BenchmarkDescriptorCategory::fetchMatrixSizes(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
 {
     assert(WorkloadParameterCount == 3);
     assert(OpParameterCount == 2);
@@ -63,29 +63,47 @@ BenchmarkDescriptionCategory::fetchMatrixSizes(const std::vector<hebench::APIBri
     return retval;
 }
 
-std::string BenchmarkDescriptionCategory::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                                              const Engine &engine,
+                                                              const BenchmarkDescription::Backend &backend_desc,
+                                                              const BenchmarkDescription::Configuration &config) const
 {
+    (void)engine;
+    (void)backend_desc;
     std::stringstream ss;
+
+    // workload name
+
+    auto mat_dims = fetchMatrixSizes(config.w_params);
+    ss << BaseWorkloadName << " ("
+       << mat_dims[0].first << "x" << mat_dims[0].second << ") x ("
+       << mat_dims[1].first << "x" << mat_dims[1].second << ")";
+
+    output.workload_name          = ss.str();
+    output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
+}
+
+bool BenchmarkDescriptorCategory::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                                           const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+{
+    bool retval = false;
 
     // return true if benchmark is supported
     if (bench_desc.workload == hebench::APIBridge::Workload::MatrixMultiply)
     {
         try
         {
-            auto mat_dims = fetchMatrixSizes(w_params);
-            ss << BaseWorkloadName << " ("
-               << mat_dims[0].first << "x" << mat_dims[0].second << ") x ("
-               << mat_dims[1].first << "x" << mat_dims[1].second << ")";
+            fetchMatrixSizes(w_params);
+            retval = true;
         }
         catch (...)
         {
-            // invalid workload
-            ss = std::stringstream();
+            // workload not supported
+            retval = false;
         }
     } // end if
 
-    return ss.str();
+    return retval;
 }
 
 //---------------------------

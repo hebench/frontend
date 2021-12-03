@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <cassert>
 #include <filesystem>
 #include <sstream>
 
@@ -19,26 +20,32 @@ namespace TestHarness {
 //------------------------
 
 IBenchmark::Ptr BenchmarkFactory::createBenchmark(std::shared_ptr<Engine> p_engine,
-                                                  BenchmarkToken::Ptr p_token,
+                                                  IBenchmarkDescriptor::DescriptionToken::Ptr p_token,
                                                   hebench::Utilities::TimingReportEx &out_report)
 {
     if (!p_engine)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null pointer \"p_engine\"."));
     if (!p_token)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null pointer \"p_token\"."));
-    if (!p_token->m_p_bmd || !p_token->m_p_bdt)
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid benchmark token \"p_token\"."));
+    if (!p_token->getDescriptor())
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid benchmark token \"p_token\" with null descriptor."));
 
-    std::shared_ptr<IBenchmarkDescription> p_bd = p_token->m_p_bmd;
-    PartialBenchmark *p_retval =
-        p_bd->createBenchmark(p_engine, p_token->m_p_bdt);
+    // make sure that the token matches to a descriptor that is registered
+    std::vector<std::shared_ptr<IBenchmarkDescriptor>> &registered_benchmarks = getRegisteredBenchmarks();
+    IBenchmarkDescriptor *p_tmp                                               = p_token->getDescriptor();
+    auto found_it                                                             = std::find_if(registered_benchmarks.begin(), registered_benchmarks.end(),
+                                 [p_tmp](std::shared_ptr<IBenchmarkDescriptor> p) -> bool { return p_tmp == p.get(); });
+    if (found_it == registered_benchmarks.end() || !*found_it)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Benchmark token \"p_token\" descriptor is invalid: not found in registered benchmark descriptors."));
+    std::shared_ptr<IBenchmarkDescriptor> p_bd = *found_it; // this ensures that we are keeping the smart pointer around until after destruction.
+    PartialBenchmark *p_retval                 = p_bd->createBenchmark(p_engine, *p_token);
     if (!p_retval)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error creating benchmark."));
     try
     {
         // perform initialization of the benchmark
         const PartialBenchmark::FriendPrivateKey key;
-        p_retval->init(p_token->description);
+        p_retval->init();
         p_retval->initBackend(out_report, key);
         p_retval->postInit();
         p_retval->checkInitializationState(key);
@@ -56,53 +63,40 @@ IBenchmark::Ptr BenchmarkFactory::createBenchmark(std::shared_ptr<Engine> p_engi
         throw;
     }
     return IBenchmark::Ptr(p_retval,
-                           [p_bd](IBenchmark *p) { p_bd->destroyBenchmark(reinterpret_cast<PartialBenchmark *>(p)); });
+                           [p_bd](IBenchmark *p) { if (p) p_bd->destroyBenchmark(reinterpret_cast<PartialBenchmark *>(p)); });
 }
 
-std::vector<std::shared_ptr<IBenchmarkDescription>> &BenchmarkFactory::getRegisteredBenchmarks()
+std::vector<std::shared_ptr<IBenchmarkDescriptor>> &BenchmarkFactory::getRegisteredBenchmarks()
 {
     // ensures that the static member always exists during static initialization
-    static std::vector<std::shared_ptr<IBenchmarkDescription>> registered_benchmarks;
+    static std::vector<std::shared_ptr<IBenchmarkDescriptor>> registered_benchmarks;
     return registered_benchmarks;
 }
 
-BenchmarkFactory::BenchmarkToken::Ptr BenchmarkFactory::matchBenchmarkDescriptor(const Engine &engine,
-                                                                                 const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                                                 const hebench::APIBridge::Handle &h_desc,
-                                                                                 const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
+IBenchmarkDescriptor::DescriptionToken::Ptr BenchmarkFactory::matchBenchmarkDescriptor(const Engine &engine,
+                                                                                       const BenchmarkDescription::Backend &backend_desc,
+                                                                                       const BenchmarkDescription::Configuration &config)
 {
-    BenchmarkFactory::BenchmarkToken::Ptr retval;
+    IBenchmarkDescriptor::DescriptionToken::Ptr retval;
 
-    std::vector<std::shared_ptr<IBenchmarkDescription>> &registered_benchmarks =
+    std::vector<std::shared_ptr<IBenchmarkDescriptor>> &registered_benchmarks =
         getRegisteredBenchmarks();
     for (std::size_t i = 0; !retval && i < registered_benchmarks.size(); ++i)
-    {
-        IBenchmarkDescription::DescriptionToken::Ptr p_matched_benchmark =
-            registered_benchmarks[i]->matchBenchmarkDescriptor(engine, bench_config, h_desc, w_params);
-        if (p_matched_benchmark)
-            retval = createBenchmarkToken(registered_benchmarks[i], p_matched_benchmark);
-    } // end for
+        retval = registered_benchmarks[i]->matchBenchmarkDescriptor(engine, backend_desc, config);
 
     return retval;
 }
 
-BenchmarkFactory::BenchmarkToken::Ptr BenchmarkFactory::createBenchmarkToken(std::shared_ptr<IBenchmarkDescription> p_bmd,
-                                                                             IBenchmarkDescription::DescriptionToken::Ptr p_bdt)
+bool BenchmarkFactory::registerSupportedBenchmark(std::shared_ptr<IBenchmarkDescriptor> p_desc_obj)
 {
-    BenchmarkFactory::BenchmarkToken::Ptr retval;
-
-    if (p_bmd && p_bdt)
-        retval = BenchmarkFactory::BenchmarkToken::Ptr(new BenchmarkFactory::BenchmarkToken(p_bmd, p_bdt));
-
-    return retval;
-}
-
-bool BenchmarkFactory::registerSupportedBenchmark(std::shared_ptr<IBenchmarkDescription> p_desc_obj)
-{
-    bool retval = true;
+    bool retval = false;
     try
     {
-        getRegisteredBenchmarks().push_back(p_desc_obj);
+        if (p_desc_obj)
+        {
+            getRegisteredBenchmarks().push_back(p_desc_obj);
+            retval = true;
+        } // end if
     }
     catch (...)
     {
