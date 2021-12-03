@@ -25,11 +25,11 @@ namespace LogisticRegression {
 //------------------------------------
 
 hebench::APIBridge::WorkloadParamType::WorkloadParamType
-    BenchmarkDescriptionCategory::WorkloadParameterType[BenchmarkDescriptionCategory::WorkloadParameterCount] = {
+    BenchmarkDescriptorCategory::WorkloadParameterType[BenchmarkDescriptorCategory::WorkloadParameterCount] = {
         hebench::APIBridge::WorkloadParamType::UInt64
     };
 
-std::uint64_t BenchmarkDescriptionCategory::fetchVectorSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
+std::uint64_t BenchmarkDescriptorCategory::fetchVectorSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
 {
     assert(WorkloadParameterCount == 1);
     assert(OpParameterCount == 3);
@@ -66,12 +66,12 @@ std::uint64_t BenchmarkDescriptionCategory::fetchVectorSize(const std::vector<he
     return retval;
 }
 
-std::string BenchmarkDescriptionCategory::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+bool BenchmarkDescriptorCategory::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                                           const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
 {
-    std::stringstream ss;
+    bool retval = false;
 
-    // return name if benchmark is supported
+    // return true if benchmark is supported
     if (bench_desc.workload == hebench::APIBridge::Workload::LogisticRegression
         || bench_desc.workload == hebench::APIBridge::Workload::LogisticRegression_PolyD3
         || bench_desc.workload == hebench::APIBridge::Workload::LogisticRegression_PolyD5
@@ -79,33 +79,51 @@ std::string BenchmarkDescriptionCategory::matchBenchmarkDescriptor(const hebench
     {
         try
         {
-            std::uint64_t vector_size = fetchVectorSize(w_params);
-            ss << BaseWorkloadName << " ";
-            switch (bench_desc.workload)
-            {
-            case hebench::APIBridge::Workload::LogisticRegression_PolyD3:
-                ss << "PolyD3 ";
-                break;
-            case hebench::APIBridge::Workload::LogisticRegression_PolyD5:
-                ss << "PolyD5 ";
-                break;
-            case hebench::APIBridge::Workload::LogisticRegression_PolyD7:
-                ss << "PolyD7 ";
-                break;
-            default:
-                // standard sigmoid
-                break;
-            } // end switch
-            ss << vector_size << " features";
+            fetchVectorSize(w_params);
+            retval = true;
         }
         catch (...)
         {
-            // invalid workload
-            ss = std::stringstream();
+            // workload not supported
+            retval = false;
         }
     } // end if
 
-    return ss.str();
+    return retval;
+}
+
+void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                                              const Engine &engine,
+                                                              const BenchmarkDescription::Backend &backend_desc,
+                                                              const BenchmarkDescription::Configuration &config) const
+{
+    (void)engine;
+    (void)backend_desc;
+    std::stringstream ss;
+
+    // workload name
+
+    std::uint64_t vector_size = fetchVectorSize(config.w_params);
+    ss << BaseWorkloadName << " ";
+    switch (backend_desc.descriptor.workload)
+    {
+    case hebench::APIBridge::Workload::LogisticRegression_PolyD3:
+        ss << "PolyD3 ";
+        break;
+    case hebench::APIBridge::Workload::LogisticRegression_PolyD5:
+        ss << "PolyD5 ";
+        break;
+    case hebench::APIBridge::Workload::LogisticRegression_PolyD7:
+        ss << "PolyD7 ";
+        break;
+    default:
+        // standard sigmoid
+        break;
+    } // end switch
+    ss << vector_size << " features";
+
+    output.workload_name          = ss.str();
+    output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
 }
 
 //---------------------------

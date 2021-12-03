@@ -9,7 +9,7 @@
 #include "hebench/api_bridge/api.h"
 #include "modules/general/include/error.h"
 
-#include "../include/hebench_engine.h"
+#include "include/hebench_engine.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -160,7 +160,7 @@ std::string Engine::getExtraDescription(hebench::APIBridge::Handle h_bench_desc,
     return ch_retval.data();
 }
 
-IBenchmark::Ptr Engine::createBenchmark(BenchmarkFactory::BenchmarkToken::Ptr p_token, hebench::Utilities::TimingReportEx &out_report)
+IBenchmark::Ptr Engine::createBenchmark(IBenchmarkDescriptor::DescriptionToken::Ptr p_token, hebench::Utilities::TimingReportEx &out_report)
 {
     if (!m_last_benchmark.expired())
         throw std::logic_error(IL_LOG_MSG_CLASS("A benchmark already exists. Cannot create more than one benchmark at a time."));
@@ -170,17 +170,24 @@ IBenchmark::Ptr Engine::createBenchmark(BenchmarkFactory::BenchmarkToken::Ptr p_
     return p_retval;
 }
 
-BenchmarkFactory::BenchmarkToken::Ptr Engine::describeBenchmark(const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                                std::size_t index,
-                                                                const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+IBenchmarkDescriptor::DescriptionToken::Ptr Engine::describeBenchmark(std::size_t index,
+                                                                      const BenchmarkDescription::Configuration &config) const
 {
     if (index >= m_h_bench_desc.size())
         throw std::out_of_range(IL_LOG_MSG_CLASS("Total benchmarks: " + std::to_string(m_h_bench_desc.size()) + ". Invalid 'index' out of range: " + std::to_string(index) + "."));
 
-    BenchmarkFactory::BenchmarkToken::Ptr retval =
-        BenchmarkFactory::matchBenchmarkDescriptor(*this, bench_config, m_h_bench_desc[index], w_params);
-    if (!retval)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Benchmark not supported."));
+    IBenchmarkDescriptor::DescriptionToken::Ptr retval;
+
+    BenchmarkDescription::Backend backend_desc;
+    backend_desc.m_backend_description.m_index  = index;
+    backend_desc.m_backend_description.m_handle = m_h_bench_desc[index];
+    validateRetCode(hebench::APIBridge::describeBenchmark(m_handle,
+                                                          m_h_bench_desc[index],
+                                                          &backend_desc.m_backend_description.m_descriptor,
+                                                          nullptr));
+
+    retval = BenchmarkFactory::matchBenchmarkDescriptor(*this, backend_desc, config);
+
     return retval;
 }
 

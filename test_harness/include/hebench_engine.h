@@ -13,6 +13,7 @@
 #include "modules/general/include/nocopy.h"
 #include "modules/logging/include/logging.h"
 
+#include "hebench_benchmark_description.h"
 #include "hebench_benchmark_factory.h"
 
 namespace hebench {
@@ -38,8 +39,6 @@ public:
     std::string getSchemeName(hebench::APIBridge::Scheme s) const;
     std::string getSecurityName(hebench::APIBridge::Scheme s,
                                 hebench::APIBridge::Security sec) const;
-    //    std::string getExtraDescription(const hebench::APIBridge::BenchmarkDescriptor &p_bench_desc,
-    //                                    const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const;
     std::string getExtraDescription(hebench::APIBridge::Handle h_bench_desc,
                                     const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const;
 
@@ -62,25 +61,29 @@ public:
      *
      * The returned object is to be used by Test Harness to execute the benchmark.
      */
-    IBenchmark::Ptr createBenchmark(BenchmarkFactory::BenchmarkToken::Ptr p_token,
+    IBenchmark::Ptr createBenchmark(IBenchmarkDescriptor::DescriptionToken::Ptr p_token,
                                     hebench::Utilities::TimingReportEx &out_report);
     /**
      * @brief Describes a benchmark workload that matches the specified description
      * from the benchmarks registered by the backend.
-     * @param[in] bench_config Configuration for the benchmark to describe.
      * @param[in] index Index of the registered backend benchmark description for
      * which to create a benchmark workload.
-     * @param[in] w_params Parameters for the workload to be executed by the benchmark.
-     * This will be empty if benchmark does not support parameters.
+     * @param[in] config Configuration for the benchmark to describe. See details.
      * @return A token describing the benchmark to be executed given the workload
      * and parameters.
      * @throws Instance of std::exception on errors.
      * @details The token returned by this method is to be used in a call to
      * createBenchmark() to instantiate the actual benchmark to run.
+     *
+     * The token returned by this method contains the correct full description for the
+     * benchmark.
+     *
+     * For parameter \p config only the workload parameters are required to be correct.
+     * The returned token will contain the information passed on the other fields corrected
+     * to the number of operation parameters for the workload.
      */
-    BenchmarkFactory::BenchmarkToken::Ptr describeBenchmark(const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                            std::size_t index,
-                                                            const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const;
+    IBenchmarkDescriptor::DescriptionToken::Ptr describeBenchmark(std::size_t index,
+                                                                  const BenchmarkDescription::Configuration &config) const;
 
     /**
      * @brief Retrieves the list of default parameters for a workload as specified

@@ -23,13 +23,13 @@ namespace hebench {
 namespace TestHarness {
 namespace MatrixMultiply {
 
-class BenchmarkDescriptionCategory : public hebench::TestHarness::PartialBenchmarkDescription
+class BenchmarkDescriptorCategory : public hebench::TestHarness::PartialBenchmarkDescriptor
 {
 public:
-    DISABLE_COPY(BenchmarkDescriptionCategory)
-    DISABLE_MOVE(BenchmarkDescriptionCategory)
+    DISABLE_COPY(BenchmarkDescriptorCategory)
+    DISABLE_MOVE(BenchmarkDescriptorCategory)
 private:
-    IL_DECLARE_CLASS_NAME(MatrixMultiply::BenchmarkDescriptionCategory)
+    IL_DECLARE_CLASS_NAME(MatrixMultiply::BenchmarkDescriptorCategory)
 public:
     static constexpr const char *BaseWorkloadName         = "Matrix Multiplication";
     static constexpr std::uint64_t WorkloadParameterCount = 3; // number of parameters for this workload
@@ -47,12 +47,16 @@ public:
     fetchMatrixSizes(const std::vector<hebench::APIBridge::WorkloadParam> &w_params);
 
 public:
-    BenchmarkDescriptionCategory() {}
-    ~BenchmarkDescriptionCategory() override {}
+    BenchmarkDescriptorCategory()           = default;
+    ~BenchmarkDescriptorCategory() override = default;
 
 protected:
-    std::string matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                         const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+    bool matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                  const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+    void completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                     const Engine &engine,
+                                     const BenchmarkDescription::Backend &backend_desc,
+                                     const BenchmarkDescription::Configuration &config) const override;
 };
 
 class DataGenerator : public hebench::TestHarness::PartialDataLoader

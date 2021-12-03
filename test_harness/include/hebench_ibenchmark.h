@@ -14,75 +14,46 @@
 #include "modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
+#include "hebench_benchmark_description.h"
 #include "hebench_idata_loader.h"
 #include "hebench_utilities.h"
 
 namespace hebench {
 namespace TestHarness {
 
-class BenchmarkFactory;
 class Engine;
 class IBenchmark;
 class PartialBenchmark;
 
-class IBenchmarkDescription
+/**
+ * @brief Base interface for Benchmark Descriptors.
+ * @details Benchmark Descriptors are lightweight classes that represent a benchmark
+ * or collection of benchmarks that can be executed. For each supported benchmark,
+ * a corresponding Benchmark Descriptor is registered with the BenchmarkFactory.
+ *
+ * During benchmark selection, BenchmarkFactory polls every registered Benchmark
+ * Descriptor whether their represented benchmark can execute the benchmark described
+ * by a backend. Once a descriptor is matched, it is responsible for creating its
+ * represented benchmark object. Once the benchmark completes, the same descriptor is
+ * tasked with destroying it.
+ *
+ * Clients should extend PartialBenchmarkDescriptor class when creating their descriptors
+ * instead of this interface.
+ */
+class IBenchmarkDescriptor
 {
 public:
-    DISABLE_COPY(IBenchmarkDescription)
-    DISABLE_MOVE(IBenchmarkDescription)
+    DISABLE_COPY(IBenchmarkDescriptor)
+    DISABLE_MOVE(IBenchmarkDescriptor)
 
 public:
     /**
-     * @brief Provides configuration for a benchmark creation.
-     */
-    struct BenchmarkConfig
-    {
-        /**
-         * @brief Random seed used to generate synthetic data as input for benchmarks.
-         */
-        std::uint64_t random_seed;
-        /**
-         * @brief Default minimum test time for latency tests in milliseconds.
-         * @details This will be the default time used when backends specify 0
-         * for their minimum test time.
-         */
-        std::uint64_t default_min_test_time_ms;
-        /**
-         * @brief Default sample size to use for offline category.
-         * @details This will be the default sample size used when backends specify 0
-         * for the sample size of an operation parameter that can have variable sample size.
-         * If this value is also 0, the sample size used will be the default value as
-         * stated in the workload specification.
-         */
-        std::uint64_t default_sample_size;
-    };
-    /**
-     * @brief Contains fields that describe a benchmark.
-     * @details This structure is filled out by
-     * IBenchmarkDescription::matchBenchmarkDescriptor() on a successful match.
-     */
-    struct Description
-    {
-        /**
-         * @brief Human-readable friendly name of the benchmark workload.
-         */
-        std::string workload_name;
-        /**
-         * @brief CSV formatted header for this benchmark. This will be the header
-         * pre-pended to the report containing the benchmark results.
-         */
-        std::string header;
-        /**
-         * @brief A string uniquely representing the benchmark descriptor that
-         * can be used as a relative directory path. This may be several directories deep.
-         */
-        std::string path;
-    };
-
-    /**
-     * @brief Token returned by a successful call to matchBenchmarkDescriptor().
-     * @details Use the token returned by matchBenchmarkDescriptor() to instantiate
+     * @brief Token returned by a successful call to IBenchmarkDescriptor::matchBenchmarkDescriptor().
+     * @details Use the token returned by IBenchmarkDescriptor::matchBenchmarkDescriptor() to instantiate
      * the actual benchmark.
+     *
+     * When returned by IBenchmarkDescriptor::matchBenchmarkDescriptor(), this token fields
+     * are fully and correctly set and can be used to describe the benchmark.
      */
     class DescriptionToken
     {
@@ -90,112 +61,74 @@ public:
         class FriendKeyCreation
         {
         public:
-            friend class IBenchmarkDescription;
+            friend class IBenchmarkDescriptor;
 
         private:
             FriendKeyCreation() {}
         };
-        class FriendKeyAccess
-        {
-        public:
-            friend class PartialBenchmark;
-
-        private:
-            FriendKeyAccess() {}
-        };
         typedef std::shared_ptr<DescriptionToken> Ptr;
 
     public:
-        DescriptionToken(const IBenchmarkDescription *p_caller,
-                         const BenchmarkConfig &default_config,
-                         const hebench::APIBridge::Handle &h_desc,
-                         const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                         const std::vector<hebench::APIBridge::WorkloadParam> &w_params,
+        DescriptionToken(IBenchmarkDescriptor &caller,
+                         const BenchmarkDescription::Backend &backend_desc,
+                         const BenchmarkDescription::Configuration &config,
+                         const BenchmarkDescription::Description &text_desc,
                          const FriendKeyCreation &) :
-            m_p_caller(p_caller),
-            m_h_desc(h_desc), m_bench_desc(bench_desc), m_w_params(w_params), m_config(default_config)
+            m_p_caller(&caller),
+            m_backend_desc(backend_desc), m_config(config), m_description(text_desc)
         {
         }
 
-        /**
-         * @brief Text description of a matched benchmark.
-         */
-        IBenchmarkDescription::Description description;
-
-        const IBenchmarkDescription::BenchmarkConfig &getBenchmarkConfiguration(const void *p_caller) const
-        {
-            if (p_caller != m_p_caller)
-                throw std::invalid_argument("Invalid calling object. This token can only be used by object that created it.");
-            return m_config;
-        }
-        const hebench::APIBridge::Handle &getDescriptorHandle(const void *p_caller) const
-        {
-            if (p_caller != m_p_caller)
-                throw std::invalid_argument("Invalid calling object. This token can only be used by object that created it.");
-            return m_h_desc;
-        }
-        const hebench::APIBridge::BenchmarkDescriptor &getDescriptor(const void *p_caller) const
-        {
-            if (p_caller != m_p_caller)
-                throw std::invalid_argument("Invalid calling object. This token can only be used by object that created it.");
-            return m_bench_desc;
-        }
-        const std::vector<hebench::APIBridge::WorkloadParam> &getWorkloadParams(const void *p_caller) const
-        {
-            if (p_caller != m_p_caller)
-                throw std::invalid_argument("Invalid calling object. This token can only be used by object that created it.");
-            return m_w_params;
-        }
-        const void *getCaller(const FriendKeyAccess &) const { return m_p_caller; }
+        IBenchmarkDescriptor *getDescriptor() { return m_p_caller; }
+        const BenchmarkDescription::Backend &getBackendDescription() const { return m_backend_desc; }
+        const BenchmarkDescription::Configuration &getBenchmarkConfiguration() const { return m_config; }
+        const BenchmarkDescription::Description &getDescription() const { return m_description; }
 
     private:
-        const void *m_p_caller;
-        hebench::APIBridge::Handle m_h_desc;
-        hebench::APIBridge::BenchmarkDescriptor m_bench_desc;
-        std::vector<hebench::APIBridge::WorkloadParam> m_w_params;
-        BenchmarkConfig m_config;
+        IBenchmarkDescriptor *m_p_caller;
+        BenchmarkDescription::Backend m_backend_desc;
+        BenchmarkDescription::Configuration m_config;
+        BenchmarkDescription::Description m_description;
     };
 
 public:
-    IBenchmarkDescription()          = default;
-    virtual ~IBenchmarkDescription() = default;
+    IBenchmarkDescriptor()          = default;
+    virtual ~IBenchmarkDescriptor() = default;
 
     /**
      * @brief Determines if the represented benchmark can perform the workload described by
-     * a specified HEBench benchmark descriptor and the workload parameters.
-     * @param[out] description Structure to receive the text description of
-     * the matched benchmark. Fields will not be valid if no match is found.
+     * a specified HEBench benchmark descriptor and configuration.
      * @param[in] engine Engine requesting the matching.
-     * @param[in] h_desc Handle to descriptor to which compare.
-     * @param[in] w_params Arguments for the workload parameters.
+     * @param[in] backend_desc Backend descriptor to match.
+     * @param[in] config Configuration of benchmark to match.
      * @returns A valid token representing the matched benchmark if the benchmark corresponding
-     * to this `IBenchmarkDescription` object is compatible with the specified \p h_desc
-     * and can perform the described workload.
+     * to this `IBenchmarkDescription` object is compatible with and can perform the described
+     * workload.
      * @returns `null` otherwise.
      * @details
      * The token returned by this method can be passed to createBenchmark() to instantiate
-     * the actual benchmark.
+     * the actual benchmark. All fields in the returned token must be fully and correctly set
+     * and can be used to describe the benchmark.
      *
      * This method is used by `BenchmarkFactory::createBenchmark()` to select
      * the appropriate benchmark to create based on the descriptor and the
      * workload parameters.
      */
     virtual DescriptionToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
-                                                           const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                           const hebench::APIBridge::Handle &h_desc,
-                                                           const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const = 0;
+                                                           const BenchmarkDescription::Backend &backend_desc,
+                                                           const BenchmarkDescription::Configuration &config) const = 0;
 
     /**
-     * @brief Creates the IBenchmark object that can perform the workload specified by the
-     * HEBench benchmark descriptor.
+     * @brief Creates the represented IBenchmark object that can perform the workload
+     * specified by the HEBench benchmark descriptor.
      * @param[in] p_engine The engine creating the benchmark.
-     * @param[in] description_token Description token representing the benchmark to create,
+     * @param[in] description_token Description token describing the benchmark to create,
      * as matched by matchBenchmarkDescriptor().
      * @return Pointer to object of class derived from `IBenchmark` that can perform the
      * specified workload or `null` on unknown error.
      * @details
-     * This method can throw instances of `std::exception` to communicate errors to caller
-     * instead of returning `null`.
+     * Instead of returning `null`, this method may also throw instances of `std::exception`
+     * to communicate errors to caller with better error descriptions.
      *
      * This method constructs an object of type derived from IBenchmark, performs any
      * pending initialization on the fully constructed object, and returns a pointer to it.
@@ -203,7 +136,7 @@ public:
      * @sa destroyBenchmark()
      */
     virtual PartialBenchmark *createBenchmark(std::shared_ptr<Engine> p_engine,
-                                              DescriptionToken::Ptr p_description_token) = 0;
+                                              const DescriptionToken &description_token) = 0;
     /**
      * @brief Destroys an object returned by `createBenchmark()`.
      * @param[in] p_bench Pointer to object to clean up.
@@ -216,14 +149,12 @@ protected:
      * @brief Creates a DescriptionToken object associated to this IBenchmarkDescription object
      * using the specified benchmark description.
      */
-    DescriptionToken::Ptr createToken(const BenchmarkConfig &config,
-                                      const hebench::APIBridge::Handle &h_desc,
-                                      const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                      const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const;
+    DescriptionToken::Ptr createToken(const BenchmarkDescription::Backend &backend_desc,
+                                      const BenchmarkDescription::Configuration &config,
+                                      const BenchmarkDescription::Description &text_desc) const;
 
 private:
     DescriptionToken::FriendKeyCreation m_key_creation;
-    //DescriptionToken::FriendKeyAccess m_key_access;
 };
 
 /**
@@ -235,7 +166,7 @@ private:
  *
  * This class provides a default implementation to
  * `IBenchmarkDescription::matchBenchmarkDescriptor()`. This implementation calls
- * `PartialBenchmarkDescription::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &)`,
+ * `PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &)`,
  * and then, only if `true` is returned, it fills out the `Description` structure with
  * general information about the matched benchmark; `completeDescription()` is called
  * afterwards for clients to add or modify the general description.
@@ -243,56 +174,67 @@ private:
  * Clients need to implement:
  * - `IBenchmarkDescription::createBenchmark()`
  * - `IBenchmarkDescription::destroyBenchmark()`
- * - `PartialBenchmarkDescription::matchBenchmarkDescriptor()`
- * - `PartialBenchmarkDescription::completeDescription()`
+ * - `PartialBenchmarkDescriptor::matchBenchmarkDescriptor()`
+ * - `PartialBenchmarkDescriptor::completeWorkloadDescription()`
  */
-class PartialBenchmarkDescription : public IBenchmarkDescription
+class PartialBenchmarkDescriptor : public IBenchmarkDescriptor
 {
 public:
-    DISABLE_COPY(PartialBenchmarkDescription)
-    DISABLE_MOVE(PartialBenchmarkDescription)
+    DISABLE_COPY(PartialBenchmarkDescriptor)
+    DISABLE_MOVE(PartialBenchmarkDescriptor)
 private:
-    IL_DECLARE_CLASS_NAME(PartialBenchmarkDescription)
+    IL_DECLARE_CLASS_NAME(PartialBenchmarkDescriptor)
 
 public:
     /**
      * @brief Extracts the batch sizes for a workload from a specified HEBench API
      * benchmark descriptor.
      * @param[out] sample_sizes Array with \p param_count elements to receive the sample
-     * sizes for each operation parameter.
+     * sizes for each operation parameter. This is the final value to be used during testing.
      * @param[in] param_count Number of parameters for the workload operation.
      * @param[in] default_batch_size If a batch size is set to 0 in the descriptor,
      * this value will be used as default instead.
      * @param[in] bench_desc HEBench API benchmark descriptor from which to extract the
      * workload batch sizes.
+     * @param[in] default_sample_size_fallback Fallback sample size for when none is
+     * specified in \p bench_desc or \p default_sample_sizes . Must be greater than `0`.
      * @return The batch size for the result of the operation.
+     * @details For an operation parameter the sample size priority is:
+     *
+     * 1. backend specified
+     * 2. benchmark specific in config file
+     * 3. global config file
+     * 4. workload specification
+     *
+     * If any of these is `0`, then the next down the list is used. Workload specification
+     * must always be greater than `0`. Workload specification sizes are always supported.
+     * Sample sizes from any other sources are requests and may be satisfied based on
+     * actual dataset size.
      */
     static std::uint64_t computeSampleSizes(std::uint64_t *sample_sizes,
                                             std::size_t param_count,
-                                            std::uint64_t default_sample_size,
-                                            const hebench::APIBridge::BenchmarkDescriptor &bench_desc);
+                                            const std::vector<std::uint64_t> &default_sample_sizes,
+                                            const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                            std::uint64_t default_sample_size_fallback = 1);
 
 public:
-    PartialBenchmarkDescription();
-    ~PartialBenchmarkDescription() override;
+    PartialBenchmarkDescriptor();
+    ~PartialBenchmarkDescriptor() override;
 
     /**
      * @brief Implementation of IBenchmarkDescription::matchBenchmarkDescriptor().
      * @details Clients should not override this method.
      *
      * This method calls the internal overload
-     * PartialBenchmarkDescription::matchBenchmarkDescriptor()
-     * which clients must implement. If this overload returns a non-empty string, then method
-     * PartialBenchmarkDescription::completeDescription() is called with a general description
-     * of the matched benchmark already filled out to complete the description with
-     * any extra information specific to the workload. It is recommended that clients
-     * override completeDescription() to add extra information on top of the default
-     * description.
+     * PartialBenchmarkDescriptor::matchBenchmarkDescriptor()
+     * which clients must implement. If this overload returns true, then method
+     * PartialBenchmarkDescriptor::completeWorkloadDescription() is called to complete
+     * the description with information specific to the workload.
+     * @sa PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &, const std::vector<hebench::APIBridge::WorkloadParam> &) const
      */
     DescriptionToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
-                                                   const BenchmarkConfig &bench_config,
-                                                   const hebench::APIBridge::Handle &h_desc,
-                                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+                                                   const BenchmarkDescription::Backend &backend_desc,
+                                                   const BenchmarkDescription::Configuration &config) const override;
 
 protected:
     static std::unordered_set<std::size_t> getCipherParamPositions(std::uint32_t cipher_param_mask);
@@ -301,50 +243,74 @@ protected:
 
 protected:
     /**
+     * @brief Bundles values that need to be filled by a workload during
+     * `completeWorkloadDescription()`.
+     * @sa completeWorkloadDescription()
+     */
+    struct WorkloadDescriptionOutput
+    {
+        /**
+         * @brief Number of parameters for the represented workload operation.
+         */
+        std::size_t operation_params_count;
+        /**
+         * @brief Human-readable friendly name for the represented workload to be used for
+         * its description on the report.
+         */
+        std::string workload_name;
+        /**
+         * @brief Workload specific information to be added to the report header.
+         * @details If this is not the empty string, it will be appended in the report to
+         * a pre-generated header in CSV format.
+         */
+        std::string workload_header;
+    };
+
+    /**
      * @brief Determines if the represented benchmark can perform the workload described by
      * a specified HEBench benchmark descriptor and workload parameters.
      * @param[in] bench_desc Descriptor to which compare.
      * @param[in] w_params Arguments for the workload parameters.
-     * @return Human-readable friendly name for the matched workload to be used for its
-     * description on report or empty string if no match was found.
+     * @returns true if the represented benchmark can perform the specified described workload.
+     * @returns false if no match was found.
      * @details
      * This method is used by `BenchmarkFactory::createBenchmark()` to select
      * the appropriate benchmark to create based on the descriptor.
      */
-    virtual std::string matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                                 const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const = 0;
+    virtual bool matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                          const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const = 0;
 
     /**
-     * @brief Completes filling out the Description for the specified descriptor.
-     * @param[in,out] description Structure to contain the text description of
-     * the matched benchmark. This is pre-filled with general benchmark description.
-     * The purpose of this call is to add or modify the description with any extra
-     * data that is workload specific.
+     * @brief Completes the description for the matched benchmark.
+     * @param[out] output Structure to receive the completed description.
      * @param[in] engine Engine that requested the matching.
-     * @param[in] bench_desc HEBench API descriptor to be described.
-     * @param[in] w_params Arguments for the workload parameters.
-     * @throws std::invalid_argument if fields in \p bench_desc are unsuported or invalid.
+     * @param[in] backend_desc Backend descriptor to be described.
+     * @param[in] config Configuration for the benchmark being described.
+     * @throws std::invalid_argument if fields in \p backend_desc or \p config are not
+     * supported or invalid.
      * @details This method will only be called if
-     * `PartialBenchmarkDescription::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &)`
+     * `PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &, const std::vector<hebench::APIBridge::WorkloadParam> &)`
      * returns `true`.
      *
-     * This method receives a pre-initialized and pre-filled Description structure in
-     * \p description. All fields will be filled out with the general description of
-     * the benchmark based on the data from \p bench_desc. The purpose of this method is
-     * to complete the description of the CSV header and/or workload name with any
-     * information specific to this workload.
+     * All fields in \p config are valid. All fields in \p backend_desc are valid, except
+     * for `operation_params_count` which is expected to be returned by this method. Use these
+     * values to complete the description in the \p output.
      *
-     * If no other information needs to be added, this implementation can return immediately.
+     * This method must fill out all fields in the \p output structure. Field `workload_header`
+     * may be set to empty string, but `workload_name` and `operation_params_count` must be
+     * set to the correct values.
      *
-     * An example header pre-filled and received by this method has the form:
+     * If extra header information returned in `workload_header` is not empty, it will be
+     * appended in the report to a pre-generated header in CSV format. The following is an
+     * example of a pre-generated header:
      *
      * @code
      * Specifications,
      * , Encryption,
      * , , Scheme, CKKS
      * , , Security, 128 bits
-     * , , Poly mod degree, 8192          <--- This is example extra description returned by
-     * , , Primes, 3                      <--- backend
+     * , , Poly mod degree, 8192
+     * , , Primes, 3
      *
      * , Category, Latency
      * , , Warmup iterations, 2
@@ -355,16 +321,18 @@ protected:
      * , , Encrypted parameters, All
      * @endcode
      *
-     * Clients overriding this method can append extra description to the header after
-     * this point or just create a new header entirely. Workload name and path are
-     * also pre-filled out.
+     * \p output`.workload_header` will be appended in the next line immediately after this.
      */
-    virtual void completeDescription(const Engine &engine,
-                                     DescriptionToken::Ptr pre_token) const = 0;
+    virtual void completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                             const Engine &engine,
+                                             const BenchmarkDescription::Backend &backend_desc,
+                                             const BenchmarkDescription::Configuration &config) const = 0;
 
 private:
     void describe(const Engine &engine,
-                  DescriptionToken::Ptr pre_token) const;
+                  BenchmarkDescription::Backend &backend_desc,
+                  BenchmarkDescription::Configuration &config,
+                  BenchmarkDescription::Description &text_desc) const;
 };
 
 /**
@@ -373,22 +341,6 @@ private:
  * directly from the workload category benchmark classes BenchmarkLatency, BenchmarkOffline,
  * etc. If more control or specific processing other than the generic category execution
  * is needed, extending from PartialBenchmark offers more flexibility.
- *
- * <b>Execution flow:</b>
- *
- * During execution of a single benchmark, Test Harness will call `IBenchmark::create()`
- * with parameters to select and create the right benchmark.
- *
- * During benchmark creation, dataset loading or generation compatible with the benchmark
- * is expected to occur.
- *
- * From the benchmark object created, Test Harness calls obj->run(TimingReport &).
- *
- * After the benchmark run completes without exceptions, the TimingReport gets formated,
- * summarized and writen to files in the location specified by obj->getDescriptorPath().
- * If this location is relative, a root location will be prepended to it as specified by
- * process command line arguments. This path does not need to exist (it will be created
- * automatically or Test Harness will terminate if an error occurs).
  */
 class IBenchmark
 {
@@ -435,7 +387,6 @@ public:
 
     virtual std::weak_ptr<Engine> getEngine() const          = 0;
     virtual const hebench::APIBridge::Handle &handle() const = 0;
-    //virtual std::string getExtraDescription() const          = 0;
 
 protected:
     IBenchmark() = default;
@@ -475,7 +426,6 @@ public:
 
     std::weak_ptr<Engine> getEngine() const override { return m_p_engine; }
     const hebench::APIBridge::Handle &handle() const override { return m_handle; }
-    const hebench::APIBridge::BenchmarkDescriptor &getDescriptor() const { return m_descriptor; }
     /**
      * @brief An ID to identify the first event during the benchmark run.
      * @return ID of first event of the benchmark run.
@@ -505,15 +455,15 @@ public:
 
     /**
      * @brief Initializes the partial benchmark members.
-     * @param[in] description The text description generated for this benchmark.
      * @details This method is provided to allow clients to perform polymorphic
-     * initialization outside of the class contructor before the backend benchmark
-     * is initialized.
+     * initialization outside of the class constructor before the backend benchmark
+     * is initialized. Unless an initialized backend benchmark is required, this is
+     * a good spot to perform dataset generation or loading for the benchmark to execute.
      *
      * This method is called automatically during creation and initialization
      * of the benchmark.
      */
-    virtual void init(const IBenchmarkDescription::Description &description) = 0;
+    virtual void init() = 0;
     /**
      * @brief Initializes backend benchmark.
      * @details HEBench API calls are performed here in order to initialize the
@@ -524,10 +474,10 @@ public:
      * @brief Called automatically during initialization after the backend has
      * been initialized.
      * @details This method is provided to allow clients to perform polymorphic
-     * initialization outside of the class contructor after the backend benchmark
+     * initialization outside of the class constructor after the backend benchmark
      * has been initialized, if needed.
      *
-     * Derived classes MUST call base implementation as first step when overriding,
+     * Derived classes MUST call this base implementation as first step when overriding,
      * otherwise, `checkInitializationState()` will throw exceptions.
      *
      * This method is called automatically during creation and initialization
@@ -550,29 +500,28 @@ public:
      * @endcode
      *
      * If any existing default base implementation of these methods provided by
-     * PartialBenchmark has not been called (for those, then this method will fail
-     * and the exception will be thrown.
+     * PartialBenchmark has not been called, then this method will fail and the exception
+     * will be thrown.
      * @sa init(), initBackend(), postInit()
      */
     void checkInitializationState(const FriendPrivateKey &) const;
 
 protected:
     /**
-     * @brief Allows read-only access to this benchmark descriptor.
+     * @brief Allows read-only access to this benchmark backend description.
      */
-    const hebench::APIBridge::BenchmarkDescriptor &m_descriptor;
+    const BenchmarkDescription::Backend &getBackendDescription() const { return m_backend_desc; }
     /**
-     * @brief Allows read-only access to the workloads parameters
-     * used for this benchmark.
+     * @brief Allows read-only access to this benchmark configuration.
      */
-    const std::vector<hebench::APIBridge::WorkloadParam> &m_params;
+    const BenchmarkDescription::Configuration &getBenchmarkConfiguration() const { return m_config; }
     /**
-     * @brief Allows read-only access to the benchmark configuration data.
+     * @brief Allows read-only access to this benchmark text description.
      */
-    const IBenchmarkDescription::BenchmarkConfig &m_benchmark_configuration;
+    const BenchmarkDescription::Description &getDescription() const { return m_text_description; }
 
     PartialBenchmark(std::shared_ptr<Engine> p_engine,
-                     const IBenchmarkDescription::DescriptionToken &description_token);
+                     const IBenchmarkDescriptor::DescriptionToken &description_token);
 
     /**
      * @brief Validates whether the specified HEBench API return code represents a
@@ -588,15 +537,13 @@ protected:
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;
 
 private:
-    void internalInit(const IBenchmarkDescription::DescriptionToken &description_token);
+    void internalInit(const IBenchmarkDescriptor::DescriptionToken &description_token);
 
-    IBenchmarkDescription::DescriptionToken::FriendKeyAccess m_key_adk; // friend key to access description token
     std::shared_ptr<Engine> m_p_engine;
     hebench::APIBridge::Handle m_handle;
-    hebench::APIBridge::Handle m_h_descriptor;
-    hebench::APIBridge::BenchmarkDescriptor m_benchmark_descriptor;
-    std::vector<hebench::APIBridge::WorkloadParam> m_workload_params;
-    IBenchmarkDescription::BenchmarkConfig m_bench_config;
+    BenchmarkDescription::Backend m_backend_desc;
+    BenchmarkDescription::Configuration m_config;
+    BenchmarkDescription::Description m_text_description;
     std::uint32_t m_current_event_id;
     bool m_b_constructed;
     bool m_b_initialized;

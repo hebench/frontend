@@ -18,7 +18,7 @@ namespace hebench {
 namespace Utilities {
 
 /**
- * @brief Converts a string to directoy name friendly.
+ * @brief Converts a string to directory name friendly.
  * @param[in] s String to convert.
  * @param[in] to_lowercase Specifies whether to return all lowercase.
  * @return A string that can be used as a directory name.

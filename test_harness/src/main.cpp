@@ -48,7 +48,7 @@ struct ProgramConfig
     static constexpr const char *DefaultRootPath      = ".";
 
     void initializeConfig(const hebench::ArgsParser &parser);
-    static std::ostream &showBenchmarkDefaults(std::ostream &os, const hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig &bench_config);
+    std::ostream &showBenchmarkDefaults(std::ostream &os);
     std::ostream &showConfig(std::ostream &os) const;
     static std::ostream &showVersion(std::ostream &os);
 };
@@ -104,12 +104,10 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     parser.getValue<decltype(b_show_run_overview)>(b_show_run_overview, "--run_overview", true);
 }
 
-std::ostream &ProgramConfig::showBenchmarkDefaults(std::ostream &os, const hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig &bench_config)
+std::ostream &ProgramConfig::showBenchmarkDefaults(std::ostream &os)
 {
     os << "Benchmark defaults:" << std::endl
-       << "    Random seed: " << bench_config.random_seed << std::endl
-       << "    Default minimum test time: " << bench_config.default_min_test_time_ms << " ms" << std::endl
-       << "    Default sample size: " << bench_config.default_sample_size << std::endl;
+       << "    Random seed: " << random_seed << std::endl;
     return os;
 }
 
@@ -123,15 +121,10 @@ std::ostream &ProgramConfig::showConfig(std::ostream &os) const
     else
     {
         os
-            //<< "    Random seed: " << random_seed << std::endl
             << "    Validate results: " << (b_validate_results ? "Yes" : "No") << std::endl
             << "    Report delay (ms): " << report_delay_ms << std::endl
             << "    Report Root Path: " << report_root_path << std::endl
-            << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl
-            //           << "    Benchmark defaults:" << std::endl
-            //           << "        Default minimum test time: " << min_test_time_ms << " ms" << std::endl
-            //           << "        Default sample size: " << default_sample_size << std::endl
-            ;
+            << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl;
     } // end if
     os << "    Run configuration file: ";
     if (config_file.empty())
@@ -217,11 +210,13 @@ std::string toDoubleVariableFrac(double x, int up_to_digits_after_dot)
 }
 
 void generateSummary(const hebench::TestHarness::Engine &engine,
-                     const hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig bench_config,
-                     const std::vector<hebench::TestHarness::BenchmarkRequest> &benchmarks_ran,
+                     const std::vector<hebench::Utilities::BenchmarkRequest> &benchmarks_ran,
                      const std::string &input_root_path, const std::string &output_root_path,
                      bool do_stdout_summary = true)
 {
+    // Generates summary files from report and, if requested, a condensed version
+    // summarizing each benchmark result is displayed to stdout.
+
     constexpr int ScreenColSize  = 80;
     constexpr int AveWallColSize = ScreenColSize / 8;
     constexpr int AveCPUColSize  = ScreenColSize / 8;
@@ -238,107 +233,98 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
         std::cout << std::setfill('=') << std::setw(ScreenColSize) << std::left << "=" << std::endl;
     } // end if
 
-    std::size_t bench_total = 0;
     for (std::size_t bench_i = 0; bench_i < benchmarks_ran.size(); ++bench_i)
     {
-        for (std::size_t params_i = 0; params_i < benchmarks_ran[bench_i].sets_w_params.size(); ++params_i)
+        hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr description_token =
+            engine.describeBenchmark(benchmarks_ran[bench_i].index, benchmarks_ran[bench_i].configuration);
+
+        // retrieve the correct input and output paths
+        std::filesystem::path report_filename = description_token->getDescription().path;
+        std::filesystem::path report_path;
+        std::filesystem::path output_path;
+
+        if (report_filename.is_absolute())
         {
-            hebench::TestHarness::BenchmarkFactory::BenchmarkToken::Ptr description_token =
-                engine.describeBenchmark(bench_config,
-                                         benchmarks_ran[bench_i].benchmark_index,
-                                         benchmarks_ran[bench_i].sets_w_params[params_i]);
+            report_path = report_filename;
+            output_path = report_filename;
+        } // end if
+        else
+        {
+            report_path = input_root_path / report_filename;
+            output_path = output_root_path / report_filename;
+        } // end else
 
-            // retrieve the correct input and output paths
-            std::filesystem::path report_filename = description_token->description.path;
-            std::filesystem::path report_path;
-            std::filesystem::path output_path;
+        // generate output directory if it doesn't exits
+        std::filesystem::create_directories(output_path);
 
-            if (report_filename.is_absolute())
+        // complete the paths to the input and output files
+        report_path /= hebench::TestHarness::FileNameNoExtReport;
+        report_path += ".csv";
+        output_path /= hebench::TestHarness::FileNameNoExtSummary;
+        output_path += ".csv";
+
+        if (do_stdout_summary)
+        {
+            ss = std::stringstream();
+            ss << (bench_i + 1) << ". " << report_filename.generic_string();
+            std::cout << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << ss.str().substr(0, BenchNameColSize) << " | ";
+        } // end if
+
+        try
+        {
+            // load input report
+            hebench::TestHarness::Report::cpp::TimingReport report =
+                hebench::TestHarness::Report::cpp::TimingReport::loadReportFromCSVFile(report_path);
+            // generate summary
+            if (report.getEventCount() > 0)
             {
-                report_path = report_filename;
-                output_path = report_filename;
-            } // end if
-            else
-            {
-                report_path = input_root_path / report_filename;
-                output_path = output_root_path / report_filename;
-            } // end else
+                // output summary to file
+                hebench::TestHarness::Report::TimingReportEventC tre;
+                std::string csv_report = report.generateSummaryCSV(tre);
+                hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
 
-            // generate output directory if it doesn't exits
-            std::filesystem::create_directories(output_path);
-
-            // complete the paths to the input and output files
-            report_path /= hebench::TestHarness::FileNameNoExtReport;
-            report_path += ".csv";
-            output_path /= hebench::TestHarness::FileNameNoExtSummary;
-            output_path += ".csv";
-
-            if (do_stdout_summary)
-            {
-                ss = std::stringstream();
-                ss << (bench_total + 1) << ". " << report_filename.generic_string();
-                std::cout << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << ss.str().substr(0, BenchNameColSize) << " | ";
-            } // end if
-
-            try
-            {
-                // load input report
-                hebench::TestHarness::Report::cpp::TimingReport report =
-                    hebench::TestHarness::Report::cpp::TimingReport::loadReportFromCSVFile(report_path);
-                // generate summary
-                if (report.getEventCount() > 0)
-                {
-                    // output summary to file
-                    hebench::TestHarness::Report::TimingReportEventC tre;
-                    std::string csv_report = report.generateSummaryCSV(tre);
-                    hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
-
-                    // output overview of summary to stdout
-                    if (do_stdout_summary)
-                    {
-                        hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
-                        double elapsed_time_secs;
-
-                        elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                        hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
-                        ss = std::stringstream();
-                        ss << timing_prefix.symbol << "s";
-                        std::cout << std::setw(AveWallColSize) << std::right
-                                  << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveWallColSize)
-                                  << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
-
-                        elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                        hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
-                        ss = std::stringstream();
-                        ss << timing_prefix.symbol << "s";
-                        std::cout << std::setw(AveCPUColSize) << std::right
-                                  << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveCPUColSize)
-                                  << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
-                    } // end if
-                } // end if
-                else if (do_stdout_summary)
-                    std::cout << "Validation Failed" << std::endl;
-            }
-            catch (...)
-            {
+                // output overview of summary to stdout
                 if (do_stdout_summary)
-                    std::cout << "Load Failed" << std::endl;
-            }
-            if (do_stdout_summary)
-                std::cout << std::setfill('-') << std::setw(ScreenColSize) << std::left << "-" << std::endl;
+                {
+                    hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
+                    double elapsed_time_secs;
 
-            ++bench_total; // count the benchmark
-        } // end for
+                    elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                    ss = std::stringstream();
+                    ss << timing_prefix.symbol << "s";
+                    std::cout << std::setw(AveWallColSize) << std::right
+                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveWallColSize)
+                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
+
+                    elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                    ss = std::stringstream();
+                    ss << timing_prefix.symbol << "s";
+                    std::cout << std::setw(AveCPUColSize) << std::right
+                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveCPUColSize)
+                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
+                } // end if
+            } // end if
+            else if (do_stdout_summary)
+                std::cout << "Validation Failed" << std::endl;
+        }
+        catch (...)
+        {
+            if (do_stdout_summary)
+                std::cout << "Load Failed" << std::endl;
+        }
+        if (do_stdout_summary)
+            std::cout << std::setfill('-') << std::setw(ScreenColSize) << std::left << "-" << std::endl;
     } // end for
 }
 
 void generateSummary(const hebench::TestHarness::Engine &engine,
-                     const hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig bench_config,
-                     const std::vector<hebench::TestHarness::BenchmarkRequest> &benchmarks_ran,
+                     const std::vector<hebench::Utilities::BenchmarkRequest> &benchmarks_ran,
                      const std::string &input_root_path,
                      bool do_stdout_summary = true)
 {
-    generateSummary(engine, bench_config, benchmarks_ran, input_root_path, input_root_path, do_stdout_summary);
+    generateSummary(engine, benchmarks_ran, input_root_path, input_root_path, do_stdout_summary);
 }
 
 int main(int argc, char **argv)
@@ -350,7 +336,7 @@ int main(int argc, char **argv)
     std::cout << std::endl
               << hebench::Logging::GlobalLogger::log(true, "HEBench") << std::endl;
 
-    std::vector<hebench::TestHarness::BenchmarkRequest> benchmarks_to_run;
+    std::vector<hebench::Utilities::BenchmarkRequest> benchmarks_to_run;
     std::size_t total_runs = 0;
     std::vector<std::string> failed_benchmarks;
 
@@ -388,15 +374,11 @@ int main(int argc, char **argv)
         std::cout << IOS_MSG_OK << std::endl;
 
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;
-        std::shared_ptr<hebench::Utilities::BenchmarkConfiguration> p_bench_config =
-            std::make_shared<hebench::Utilities::BenchmarkConfiguration>(p_engine, config.backend_lib_path);
+        std::shared_ptr<hebench::Utilities::BenchmarkConfigurator> p_bench_config =
+            std::make_shared<hebench::Utilities::BenchmarkConfigurator>(p_engine, config.backend_lib_path);
         std::cout << IOS_MSG_DONE << std::endl;
 
         // default configuration for benchmarks
-        hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig bench_config;
-        bench_config.default_sample_size      = ProgramConfig::DefaultSampleSize; //config.default_sample_size;
-        bench_config.default_min_test_time_ms = ProgramConfig::DefaultMinTestTime; //config.min_test_time_ms;
-        bench_config.random_seed              = config.random_seed;
 
         if (config.b_dump_config)
         {
@@ -405,8 +387,7 @@ int main(int argc, char **argv)
                << config.config_file;
             std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
             p_bench_config->saveConfiguration(config.config_file,
-                                              p_bench_config->getDefaultConfiguration(),
-                                              bench_config);
+                                              p_bench_config->getDefaultConfiguration());
             std::cout << IOS_MSG_OK << std::endl;
 
             // default config dumped; program completed
@@ -426,17 +407,24 @@ int main(int argc, char **argv)
                 ss << "Loading benchmark configuration file:" << std::endl
                    << config.config_file;
                 std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-                benchmarks_to_run = p_bench_config->loadConfiguration(config.config_file, bench_config);
+                benchmarks_to_run = p_bench_config->loadConfiguration(config.config_file, config.random_seed);
             } // end else
+        } // end else
+
+        p_bench_config.reset(); // clean up benchmark configurator
+
+        if (!benchmarks_to_run.empty())
+        {
+            // start benchmarking if there are benchmarks to run
 
             ss = std::stringstream();
-            config.showBenchmarkDefaults(ss, bench_config);
+            config.showBenchmarkDefaults(ss);
             std::cout << std::endl
                       << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 
-            hebench::Utilities::RandomGenerator::setRandomSeed(bench_config.random_seed);
+            hebench::Utilities::RandomGenerator::setRandomSeed(config.random_seed);
 
-            total_runs = hebench::Utilities::BenchmarkConfiguration::countBenchmarks2Run(benchmarks_to_run);
+            total_runs = benchmarks_to_run.size();
             ss         = std::stringstream();
             ss << "Benchmarks to run: " << total_runs;
             std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
@@ -445,123 +433,125 @@ int main(int argc, char **argv)
             std::size_t run_i = 0;
             for (std::size_t bench_i = 0; bench_i < benchmarks_to_run.size(); ++bench_i)
             {
-                for (std::size_t params_i = 0; params_i < benchmarks_to_run[bench_i].sets_w_params.size(); ++params_i)
+                hebench::Utilities::BenchmarkRequest &benchmark_request = benchmarks_to_run[bench_i];
+                bool b_critical_error                                   = false;
+                std::string bench_path;
+                hebench::Utilities::TimingReportEx report;
+                try
                 {
-                    bool b_non_critical_error = false;
-                    std::string bench_path;
-                    hebench::Utilities::TimingReportEx report;
-                    try
-                    {
-                        ss = std::stringstream();
-                        ss << "(" << bench_i << ", " << params_i << ")";
-                        bench_path = ss.str();
-
-                        ss = std::stringstream();
-                        ss << " Progress: " << (run_i * 100 / total_runs) << "%" << std::endl
-                           << "           " << run_i << "/" << total_runs;
-                        std::cout << std::endl
-                                  << "==================" << std::endl
-                                  << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl
-                                  << "==================" << std::endl;
-
-                        if (config.report_delay_ms > 0)
-                            std::this_thread::sleep_for(std::chrono::milliseconds(config.report_delay_ms));
-
-                        // obtain the text description of the benchmark to print out
-                        hebench::TestHarness::BenchmarkFactory::BenchmarkToken::Ptr bench_token =
-                            p_engine->describeBenchmark(bench_config, benchmarks_to_run[bench_i].benchmark_index, benchmarks_to_run[bench_i].sets_w_params[params_i]);
-
-                        bench_path = bench_token->description.path;
-
-                        // print header
-
-                        // prints
-                        // ===========================
-                        //  Workload: <workload name>
-                        // ===========================
-                        std::string s_workload_name = "Workload: " + bench_token->description.workload_name;
-                        std::size_t fill_size       = s_workload_name.length() + 2;
-                        if (fill_size > 79)
-                            fill_size = 79;
-                        std::cout << std::endl
-                                  << std::setfill('=') << std::setw(fill_size) << "=" << std::endl
-                                  << " " << hebench::Logging::GlobalLogger::log(s_workload_name) << std::endl
-                                  << std::setw(fill_size) << "=" << std::setfill(' ') << std::endl;
-
-                        std::cout << std::endl
-                                  << bench_token->description.header << std::endl;
-
-                        // create the benchmark
-                        report.setHeader(bench_token->description.header);
-                        hebench::TestHarness::IBenchmark::Ptr p_bench = p_engine->createBenchmark(bench_token, report);
-
-                        hebench::TestHarness::IBenchmark::RunConfig run_config;
-                        run_config.b_validate_results = config.b_validate_results;
-
-                        // run the workload
-                        bool b_succeeded = p_bench->run(report, run_config);
-
-                        if (!b_succeeded)
-                        {
-                            std::cout << IOS_MSG_FAILED << hebench::Logging::GlobalLogger::log(bench_token->description.workload_name) << std::endl;
-                            failed_benchmarks.push_back(bench_path);
-                            report.clear(); // report event data is no longer valid for a failed run
-                        } // end if
-                    }
-                    catch (hebench::Common::ErrorException &err_num)
-                    {
-                        if (err_num.getErrorCode() == HEBENCH_ECODE_CRITICAL_ERROR)
-                            throw; // critical failure
-                        else
-                        {
-                            // no critical error: report and move on to the next benchmark
-
-                            b_non_critical_error = true;
-
-                            failed_benchmarks.push_back(bench_path);
-                            report.clear(); // report event data is no longer valid for a failed run
-
-                            ss = std::stringstream();
-                            ss << "Workload backend failed with message: " << std::endl
-                               << err_num.what();
-                            std::cout << std::endl
-                                      << IOS_MSG_ERROR << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-                        } // end else
-                    }
-
-                    // create the path to output report
-                    std::filesystem::path report_filename = bench_path;
-                    std::filesystem::path report_path     = (report_filename.is_absolute() ?
-                                                             report_filename :
-                                                             config.report_root_path / report_filename);
-
                     ss = std::stringstream();
-                    ss << "Saving report to: " << std::endl
-                       << report_path;
-                    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+                    ss << " Progress: " << (run_i * 100 / total_runs) << "%" << std::endl
+                       << "           " << run_i << "/" << total_runs;
+                    std::cout << std::endl
+                              << "==================" << std::endl
+                              << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl
+                              << "==================" << std::endl;
 
-                    // output CSV report
-                    report_filename = report_path;
-                    report_filename /= hebench::TestHarness::FileNameNoExtReport;
-                    report_filename += ".csv";
+                    if (config.report_delay_ms > 0)
+                        std::this_thread::sleep_for(std::chrono::milliseconds(config.report_delay_ms));
 
-                    if (b_non_critical_error)
+                    // obtain the text description of the benchmark to print out
+                    hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr bench_token =
+                        p_engine->describeBenchmark(benchmark_request.index, benchmark_request.configuration);
+
+                    bench_path = bench_token->getDescription().path; //description.path;
+
+                    // print header
+
+                    // prints
+                    // ===========================
+                    //  Workload: <workload name>
+                    // ===========================
+                    std::string s_workload_name = "Workload: " + bench_token->getDescription().workload_name;
+                    std::size_t fill_size       = s_workload_name.length() + 2;
+                    if (fill_size > 79)
+                        fill_size = 79;
+                    std::cout << std::endl
+                              << std::setfill('=') << std::setw(fill_size) << "=" << std::endl
+                              << " " << hebench::Logging::GlobalLogger::log(s_workload_name) << std::endl
+                              << std::setw(fill_size) << "=" << std::setfill(' ') << std::endl;
+
+                    std::cout << std::endl
+                              << bench_token->getDescription().header << std::endl;
+
+                    // create the benchmark
+                    report.setHeader(bench_token->getDescription().header);
+                    hebench::TestHarness::IBenchmark::Ptr p_bench = p_engine->createBenchmark(bench_token, report);
+
+                    hebench::TestHarness::IBenchmark::RunConfig run_config;
+                    run_config.b_validate_results = config.b_validate_results;
+
+                    // run the workload
+                    bool b_succeeded = p_bench->run(report, run_config);
+
+                    if (!b_succeeded)
                     {
-                        // delete any previous report in this location to signal failure
-                        if (std::filesystem::exists(report_filename)
-                            && std::filesystem::is_regular_file(report_filename))
-                            std::filesystem::remove(report_filename);
+                        std::cout << IOS_MSG_FAILED << hebench::Logging::GlobalLogger::log(bench_token->getDescription().workload_name) << std::endl;
+                        failed_benchmarks.push_back(bench_path);
+                        report.clear(); // report event data is no longer valid for a failed run
+                    } // end if
+                }
+                catch (hebench::Common::ErrorException &err_num)
+                {
+                    if (err_num.getErrorCode() == HEBENCH_ECODE_CRITICAL_ERROR)
+                    {
+                        b_critical_error = true;
+                        throw; // critical failure
                     } // end if
                     else
                     {
-                        std::filesystem::create_directories(report_path);
-                        report.save2CSV(report_filename);
+                        // no critical error: report and move on to the next benchmark
+
+                        b_critical_error = false;
+
+                        failed_benchmarks.push_back(bench_path);
+                        report.clear(); // report event data is no longer valid for a failed run
+
+                        ss = std::stringstream();
+                        ss << "Workload backend failed with message: " << std::endl
+                           << err_num.what();
+                        std::cout << std::endl
+                                  << IOS_MSG_ERROR << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
                     } // end else
+                }
+                catch (...)
+                {
+                    b_critical_error = true;
+                    throw; // critical failure
+                }
 
-                    std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log("Report saved.") << std::endl;
+                // create the path to output report
+                std::filesystem::path report_filename = bench_path;
+                std::filesystem::path report_path     = (report_filename.is_absolute() ?
+                                                         report_filename :
+                                                         config.report_root_path / report_filename);
 
-                    ++run_i;
-                } // end for
+                ss = std::stringstream();
+                ss << "Saving report to: " << std::endl
+                   << report_path;
+                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+
+                // output CSV report
+                report_filename = report_path;
+                report_filename /= hebench::TestHarness::FileNameNoExtReport;
+                report_filename += ".csv";
+
+                if (b_critical_error)
+                {
+                    // delete any previous report in this location to signal failure
+                    if (std::filesystem::exists(report_filename)
+                        && std::filesystem::is_regular_file(report_filename))
+                        std::filesystem::remove(report_filename);
+                } // end if
+                else
+                {
+                    std::filesystem::create_directories(report_path);
+                    report.save2CSV(report_filename);
+                } // end else
+
+                std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log("Report saved.") << std::endl;
+
+                ++run_i;
 
                 // benchmark cleaned up here automatically
             } // end for
@@ -579,7 +569,7 @@ int main(int argc, char **argv)
             std::cout << std::endl
                       << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating summary...") << std::endl
                       << std::endl;
-            generateSummary(*p_engine, bench_config, benchmarks_to_run,
+            generateSummary(*p_engine, benchmarks_to_run,
                             config.report_root_path, config.b_show_run_overview);
 
             // clean-up engine before final report (engine can clean up
@@ -617,7 +607,7 @@ int main(int argc, char **argv)
             ss = std::stringstream();
             ss << "Failed: " << failed_benchmarks.size();
             std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-        } // end else
+        } // end if
     }
     catch (hebench::ArgsParser::HelpShown &)
     {
