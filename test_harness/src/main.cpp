@@ -387,7 +387,8 @@ int main(int argc, char **argv)
                << config.config_file;
             std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
             p_bench_config->saveConfiguration(config.config_file,
-                                              p_bench_config->getDefaultConfiguration());
+                                              p_bench_config->getDefaultConfiguration(),
+                                              config.random_seed);
             std::cout << IOS_MSG_OK << std::endl;
 
             // default config dumped; program completed

@@ -419,7 +419,8 @@ BenchmarkConfigurator::BenchmarkConfigurator(std::weak_ptr<hebench::TestHarness:
 }
 
 void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
-                                              const std::vector<BenchmarkRequest> &bench_requests) const
+                                              const std::vector<BenchmarkRequest> &bench_requests,
+                                              std::uint64_t random_seed) const
 {
     std::shared_ptr<hebench::TestHarness::Engine> p_engine = m_wp_engine.lock();
     if (!p_engine)
@@ -491,7 +492,7 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
     ss << "Random seed to use when generating synthetic data for these benchmarks." << std::endl
        << "Type: unsigned int. Defaults to system time when not present.";
     out << YAML::Comment(ss.str())
-        << YAML::Key << "random_seed" << YAML::Value << 0;
+        << YAML::Key << "random_seed" << YAML::Value << random_seed;
     out << YAML::Newline << YAML::Newline;
 
     out << YAML::EndMap;

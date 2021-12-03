@@ -43,7 +43,8 @@ public:
                           const std::string s_backend = std::string());
 
     void saveConfiguration(const std::string &yaml_filename,
-                           const std::vector<BenchmarkRequest> &bench_configs) const;
+                           const std::vector<BenchmarkRequest> &bench_configs,
+                           std::uint64_t random_seed) const;
     /**
      * @brief Loads a configuration from a yaml file.
      * @param[in] yaml_filename
