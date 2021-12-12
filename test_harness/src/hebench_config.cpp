@@ -107,8 +107,20 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
     if (yaml_bench["default_min_test_time"].IsDefined())
         default_min_test_time_ms = yaml_bench["default_min_test_time"].as<decltype(default_min_test_time_ms)>();
 
-    if (yaml_bench["default_sample_sizes"].IsDefined() && yaml_bench["default_sample_sizes"].size() > 0)
+    if (yaml_bench["default_sample_sizes"].IsDefined())
     {
+        if (!yaml_bench["default_sample_sizes"].IsMap())
+        {
+            YAML::Mark yaml_mark = yaml_bench["default_sample_sizes"].Mark();
+            std::stringstream ss;
+            ss << "Value of field `default_sample_sizes` in ";
+            if (yaml_mark.is_null())
+                ss << "benchmark with ID " << benchmark_index;
+            else
+                ss << "line " << yaml_mark.line + 1;
+            ss << " must be a map matching operation parameter index to the corresponding sample size.";
+            throw std::runtime_error(ss.str());
+        } // end if
         for (auto it = yaml_bench["default_sample_sizes"].begin(); it != yaml_bench["default_sample_sizes"].end(); ++it)
         {
             // retrieve the sample size in format `index: size`
@@ -131,25 +143,25 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
             if (!yaml_bench["params"][param_i].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Parameter index " << param_i << " not found in benchmark with ID " << benchmark_index << ".";
+                ss << "workload parameter index " << param_i << " not found in benchmark with ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
             if (!yaml_bench["params"][param_i]["name"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"name\" not found for parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"name\" not found for workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
             if (!yaml_bench["params"][param_i]["type"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"type\" not found for parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"type\" not found for workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
             if (!yaml_bench["params"][param_i]["value"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"value\" not found for parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"value\" not found for workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
 
@@ -157,19 +169,19 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
             if (!yaml_param_value["from"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"from\" not found for \"value\" in parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"from\" not found for \"value\" in workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
             if (!yaml_param_value["to"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"to\" not found for \"value\" in parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"to\" not found for \"value\" in workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
             if (!yaml_param_value["step"].IsDefined())
             {
                 std::stringstream ss;
-                ss << "Field \"step\" not found for \"value\" in parameter index " << param_i << ", benchmark ID " << benchmark_index << ".";
+                ss << "Field \"step\" not found for \"value\" in workload parameter index " << param_i << ", benchmark ID " << benchmark_index << ", defined at line " << yaml_bench.Mark().line + 1 << ".";
                 throw std::runtime_error(ss.str());
             } // end if
 
@@ -535,8 +547,8 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
                                                                        std::uint64_t &random_seed) const
 {
     std::vector<BenchmarkRequest> retval;
-    std::uint64_t default_min_test_time_ms;
-    std::uint64_t default_sample_size;
+    std::uint64_t default_min_test_time_ms = 0;
+    std::uint64_t default_sample_size      = 0;
 
     std::shared_ptr<hebench::TestHarness::Engine> p_engine = m_wp_engine.lock();
     if (!p_engine)
