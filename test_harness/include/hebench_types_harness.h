@@ -33,26 +33,6 @@ using unique_ptr_custom_deleter = std::unique_ptr<T, std::function<void(T *)>>;
 constexpr const char *FileNameNoExtReport  = "report";
 constexpr const char *FileNameNoExtSummary = "summary";
 
-typedef std::vector<std::vector<hebench::APIBridge::WorkloadParam>> WorkloadArgumentsSets;
-/**
- * @brief Specifies the index of the benchmark as registered by backend and all
- * the workload parameters requested to benchmark.
- */
-struct BenchmarkRequest
-{
-    /**
-     * @brief Index of the benchmark as registered by backend.
-     */
-    std::size_t benchmark_index;
-    /**
-     * @brief All sets of arguments.
-     * @details
-     * - `sets_w_params[i]` is set `i`
-     * - `sets_w_params[i][j]` is argument for workload parameter `j` in set `i`
-     */
-    std::vector<std::vector<hebench::APIBridge::WorkloadParam>> sets_w_params;
-};
-
 } // namespace TestHarness
 } // namespace hebench
 

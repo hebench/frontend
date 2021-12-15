@@ -57,7 +57,7 @@ protected:
     };
 
     PartialBenchmarkCategory(std::shared_ptr<Engine> p_engine,
-                             const IBenchmarkDescription::DescriptionToken &description_token);
+                             const IBenchmarkDescriptor::DescriptionToken &description_token);
 
     /**
      * @brief Dataset to be used for operations previously initialized during

@@ -10,7 +10,7 @@
 #include <utility>
 #include <vector>
 
-#include "hebench_types_harness.h"
+#include "hebench_benchmark_description.h"
 #include "include/hebench_ibenchmark.h"
 #include "modules/logging/include/logging.h"
 
@@ -23,31 +23,44 @@ class Engine;
 namespace hebench {
 namespace Utilities {
 
+struct BenchmarkRequest
+{
+    std::size_t index;
+    hebench::TestHarness::BenchmarkDescription::Configuration configuration;
+};
+
 /**
  * @brief Provides facilities to configure the selection of benchmarks to run
  * based on the supported workloads from a loaded backend.
  */
-class BenchmarkConfiguration
+class BenchmarkConfigurator
 {
 private:
-    IL_DECLARE_CLASS_NAME(BenchmarkConfiguration)
+    IL_DECLARE_CLASS_NAME(BenchmarkConfigurator)
 
 public:
-    static std::size_t countBenchmarks2Run(const std::vector<hebench::TestHarness::BenchmarkRequest> &bench_config);
-    BenchmarkConfiguration(std::weak_ptr<hebench::TestHarness::Engine> wp_engine,
-                           const std::string s_backend = std::string());
+    BenchmarkConfigurator(std::weak_ptr<hebench::TestHarness::Engine> wp_engine,
+                          const std::string s_backend = std::string());
 
     void saveConfiguration(const std::string &yaml_filename,
-                           const std::vector<hebench::TestHarness::BenchmarkRequest> &bench_config,
-                           const hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig &default_bench_config) const;
-    std::vector<hebench::TestHarness::BenchmarkRequest> loadConfiguration(const std::string &yaml_filename,
-                                                                          hebench::TestHarness::IBenchmarkDescription::BenchmarkConfig &default_bench_config) const;
-    const std::vector<hebench::TestHarness::BenchmarkRequest> &getDefaultConfiguration() const { return m_default_benchmarks; }
+                           const std::vector<BenchmarkRequest> &bench_configs,
+                           std::uint64_t random_seed) const;
+    /**
+     * @brief Loads a configuration from a yaml file.
+     * @param[in] yaml_filename
+     * @param random_seed Reference where to store the random seed to use for the run.
+     * If no seed is specified in the configuration file, the value already in this
+     * variable is not modified.
+     * @return A list of all the benchmarks to run.
+     */
+    std::vector<BenchmarkRequest> loadConfiguration(const std::string &yaml_filename,
+                                                    std::uint64_t &random_seed) const;
+    const std::vector<BenchmarkRequest> &getDefaultConfiguration() const { return m_default_benchmarks; }
 
 private:
     std::weak_ptr<hebench::TestHarness::Engine> m_wp_engine;
     std::string m_s_backend;
-    std::vector<hebench::TestHarness::BenchmarkRequest> m_default_benchmarks;
+    std::vector<BenchmarkRequest> m_default_benchmarks;
 };
 
 } // namespace Utilities

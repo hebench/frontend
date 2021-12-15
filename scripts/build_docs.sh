@@ -30,13 +30,14 @@ pushd .
 if [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
     echo "HEBench documentation generator."
     echo "  Usage:"
-    echo "    script <output_dir> <api_bridge_tag> <path_to_doxygen>"
+    echo "    script [<output_dir> [<api_bridge_tag> [<path_to_doxygen>]]]"
     echo
     echo "  Positional arguments:"
     echo "    - output_dir: directory where the generated documentation will be stored."
     echo "        Documentation will come already inside a 'docs' directory."
     echo "        Defaults to '..'"
-    echo "    - api_bridge_tag: Tag to pull from API Bridge repo. Defaults to 'main'."
+    echo "    - api_bridge_tag: Tag to pull from API Bridge repo, or local directory"
+    echo "        where API Bridge has been cloned already. Defaults to 'main'."
     echo "    - path_to_doxygen: Directory where doxygen 1.9.1 is installed."
     echo "        Defaults to empty value (system wide)."
     echo

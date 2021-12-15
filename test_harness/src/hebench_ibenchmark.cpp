@@ -23,28 +23,30 @@
 namespace hebench {
 namespace TestHarness {
 
-IBenchmarkDescription::DescriptionToken::Ptr
-IBenchmarkDescription::createToken(const BenchmarkConfig &config,
-                                   const hebench::APIBridge::Handle &h_desc,
-                                   const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+IBenchmarkDescriptor::DescriptionToken::Ptr IBenchmarkDescriptor::createToken(const BenchmarkDescription::Backend &backend_desc,
+                                                                              const BenchmarkDescription::Configuration &config,
+                                                                              const BenchmarkDescription::Description &text_desc) const
 {
-    return DescriptionToken::Ptr(new DescriptionToken(this, config, h_desc, bench_desc, w_params, m_key_creation));
+    return DescriptionToken::Ptr(new DescriptionToken(*const_cast<IBenchmarkDescriptor *>(this),
+                                                      backend_desc,
+                                                      config,
+                                                      text_desc,
+                                                      m_key_creation));
 }
 
 //-----------------------------------
 // class PartialBenchmarkDescription
 //-----------------------------------
 
-PartialBenchmarkDescription::PartialBenchmarkDescription()
+PartialBenchmarkDescriptor::PartialBenchmarkDescriptor()
 {
 }
 
-PartialBenchmarkDescription::~PartialBenchmarkDescription()
+PartialBenchmarkDescriptor::~PartialBenchmarkDescriptor()
 {
 }
 
-std::unordered_set<std::size_t> PartialBenchmarkDescription::getCipherParamPositions(std::uint32_t cipher_param_mask)
+std::unordered_set<std::size_t> PartialBenchmarkDescriptor::getCipherParamPositions(std::uint32_t cipher_param_mask)
 {
     std::unordered_set<std::size_t> retval;
     std::bitset<sizeof(decltype(cipher_param_mask)) * 8> cipher_param_bits(cipher_param_mask);
@@ -54,7 +56,7 @@ std::unordered_set<std::size_t> PartialBenchmarkDescription::getCipherParamPosit
     return retval;
 }
 
-std::string PartialBenchmarkDescription::getCategoryName(hebench::APIBridge::Category category)
+std::string PartialBenchmarkDescriptor::getCategoryName(hebench::APIBridge::Category category)
 {
     std::string retval;
 
@@ -76,7 +78,7 @@ std::string PartialBenchmarkDescription::getCategoryName(hebench::APIBridge::Cat
     return retval;
 }
 
-std::string PartialBenchmarkDescription::getDataTypeName(hebench::APIBridge::DataType data_type)
+std::string PartialBenchmarkDescriptor::getDataTypeName(hebench::APIBridge::DataType data_type)
 {
     std::string retval;
 
@@ -106,14 +108,24 @@ std::string PartialBenchmarkDescription::getDataTypeName(hebench::APIBridge::Dat
     return retval;
 }
 
-std::uint64_t PartialBenchmarkDescription::computeSampleSizes(std::uint64_t *sample_sizes,
-                                                              std::size_t param_count,
-                                                              std::uint64_t default_sample_size,
-                                                              const hebench::APIBridge::BenchmarkDescriptor &bench_desc)
+std::uint64_t PartialBenchmarkDescriptor::computeSampleSizes(std::uint64_t *sample_sizes,
+                                                             std::size_t param_count,
+                                                             const std::vector<std::uint64_t> &default_sample_sizes,
+                                                             const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                                             std::uint64_t default_sample_size_fallback)
 {
+    if (bench_desc.category != hebench::APIBridge::Category::Offline)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid category. Only \"Offline\" category is supported."));
+    if (default_sample_size_fallback < 1)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Default sample size fallback must be a positive value."));
+
     std::uint64_t result_batch_size = 1;
     for (std::size_t param_i = 0; param_i < param_count; ++param_i)
     {
+        std::uint64_t default_sample_size =
+            default_sample_sizes.size() > param_i && default_sample_sizes[param_i] > 0 ?
+                default_sample_sizes[param_i] :
+                default_sample_size_fallback;
         sample_sizes[param_i] = (bench_desc.cat_params.offline.data_count[param_i] == 0 ?
                                      default_sample_size :
                                      bench_desc.cat_params.offline.data_count[param_i]);
@@ -122,46 +134,52 @@ std::uint64_t PartialBenchmarkDescription::computeSampleSizes(std::uint64_t *sam
     return result_batch_size;
 }
 
-IBenchmarkDescription::DescriptionToken::Ptr PartialBenchmarkDescription::matchBenchmarkDescriptor(const Engine &engine,
-                                                                                                   const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                                                                   const hebench::APIBridge::Handle &h_desc,
-                                                                                                   const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const
+IBenchmarkDescriptor::DescriptionToken::Ptr PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const Engine &engine,
+                                                                                                 const BenchmarkDescription::Backend &backend_desc,
+                                                                                                 const BenchmarkDescription::Configuration &config) const
 {
-    IBenchmarkDescription::DescriptionToken::Ptr retval;
+    IBenchmarkDescriptor::DescriptionToken::Ptr retval;
 
-    hebench::APIBridge::BenchmarkDescriptor bench_desc;
+    BenchmarkDescription::Backend final_backend_desc = backend_desc;
+    BenchmarkDescription::Configuration final_config = config;
+    const auto &w_params                             = final_config.w_params;
     std::uint64_t w_params_count, other;
-    engine.validateRetCode(hebench::APIBridge::getWorkloadParamsDetails(engine.handle(), h_desc, &w_params_count, &other));
+    engine.validateRetCode(hebench::APIBridge::getWorkloadParamsDetails(engine.handle(), final_backend_desc.handle, &w_params_count, &other));
     if (w_params_count != w_params.size())
     {
         std::stringstream ss;
         ss << "Invalid number of workload arguments. Expected " << w_params_count << ", but " << w_params.size() << " received.";
         throw std::runtime_error(IL_LOG_MSG_CLASS(ss.str()));
     } // end if
-    engine.validateRetCode(hebench::APIBridge::describeBenchmark(engine.handle(), h_desc, &bench_desc, nullptr));
 
-    std::string s_workload_name = matchBenchmarkDescriptor(bench_desc, w_params);
-    if (!s_workload_name.empty())
+    if (matchBenchmarkDescriptor(final_backend_desc.descriptor, w_params))
     {
-        retval                            = createToken(bench_config, h_desc, bench_desc, w_params);
-        retval->description.workload_name = s_workload_name;
-        describe(engine, retval);
+        // complete the benchmark specification
+        BenchmarkDescription::Description text_description;
+        describe(engine, final_backend_desc, final_config, text_description);
+        retval = createToken(final_backend_desc, final_config, text_description);
     } // end if
 
     return retval;
 }
 
-void PartialBenchmarkDescription::describe(const Engine &engine,
-                                           DescriptionToken::Ptr pre_token) const
+void PartialBenchmarkDescriptor::describe(const Engine &engine,
+                                          BenchmarkDescription::Backend &backend_desc,
+                                          BenchmarkDescription::Configuration &config,
+                                          BenchmarkDescription::Description &description) const
 {
-    Description &description                                       = pre_token->description;
-    hebench::APIBridge::Handle h_bench_desc                        = pre_token->getDescriptorHandle(this);
-    const hebench::APIBridge::BenchmarkDescriptor &bench_desc      = pre_token->getDescriptor(this);
-    const std::vector<hebench::APIBridge::WorkloadParam> &w_params = pre_token->getWorkloadParams(this);
+    hebench::APIBridge::Handle h_bench_desc                        = backend_desc.handle;
+    const hebench::APIBridge::BenchmarkDescriptor &bench_desc      = backend_desc.descriptor;
+    const std::vector<hebench::APIBridge::WorkloadParam> &w_params = config.w_params;
+
+    // obtain the values for the description that are specific to the workload
+    WorkloadDescriptionOutput completed_description;
+    completeWorkloadDescription(completed_description,
+                                engine, backend_desc, config);
 
     std::stringstream ss;
     std::filesystem::path ss_path;
-    std::string &s_workload_name = description.workload_name;
+    std::string &s_workload_name = completed_description.workload_name;
     std::string s_path_workload_name;
     std::string s_scheme_name   = engine.getSchemeName(bench_desc.scheme);
     std::string s_security_name = engine.getSecurityName(bench_desc.scheme, bench_desc.security);
@@ -196,8 +214,8 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
         } // end switch
     } // end for
     ss_path /= hebench::Utilities::convertToDirectoryName(ss.str()); // workload params
-    ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescription::getCategoryName(bench_desc.category));
-    ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescription::getDataTypeName(bench_desc.data_type));
+    ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescriptor::getCategoryName(bench_desc.category));
+    ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type));
     std::size_t max_non_zero = HEBENCH_MAX_CATEGORY_PARAMS;
     while (max_non_zero > 0 && bench_desc.cat_params.reserved[max_non_zero - 1] == 0)
         --max_non_zero;
@@ -213,7 +231,7 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
     // cipher/plain parameters
     ss = std::stringstream();
     std::unordered_set<std::size_t> cipher_param_pos =
-        PartialBenchmarkDescription::getCipherParamPositions(bench_desc.cipher_param_mask);
+        PartialBenchmarkDescriptor::getCipherParamPositions(bench_desc.cipher_param_mask);
     if (cipher_param_pos.empty())
         ss << "all_plain";
     else if (cipher_param_pos.size() >= sizeof(std::uint32_t) * 8)
@@ -241,7 +259,7 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
         ss << s_tmp;
     ss << std::endl
        << std::endl
-       << ", Category, " << PartialBenchmarkDescription::getCategoryName(bench_desc.category) << std::endl;
+       << ", Category, " << PartialBenchmarkDescriptor::getCategoryName(bench_desc.category) << std::endl;
     switch (bench_desc.category)
     {
     case hebench::APIBridge::Category::Latency:
@@ -274,7 +292,7 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
 
     ss << std::endl
        << ", Workload, " << s_workload_name << std::endl
-       << ", , Data type, " << PartialBenchmarkDescription::getDataTypeName(bench_desc.data_type) << std::endl
+       << ", , Data type, " << PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type) << std::endl
        << ", , Encrypted op parameters (index)";
     if (cipher_param_pos.empty())
         ss << ", None" << std::endl;
@@ -290,10 +308,18 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
         ss << std::endl;
     } // end else
 
-    description.header = ss.str();
-    description.path   = ss_path;
+    // append the extra header received from the workload
+    ss << completed_description.workload_header;
 
-    completeDescription(engine, pre_token);
+    // return the generated description
+
+    // make sure we have default sample sizes for every operation parameter
+    backend_desc.operation_params_count = completed_description.operation_params_count;
+    config.default_sample_sizes.resize(backend_desc.operation_params_count, 0);
+
+    description.workload_name = completed_description.workload_name;
+    description.header        = ss.str();
+    description.path          = ss_path;
 }
 
 //------------------------
@@ -301,10 +327,7 @@ void PartialBenchmarkDescription::describe(const Engine &engine,
 //------------------------
 
 PartialBenchmark::PartialBenchmark(std::shared_ptr<Engine> p_engine,
-                                   const IBenchmarkDescription::DescriptionToken &description_token) :
-    m_descriptor(m_benchmark_descriptor),
-    m_params(m_workload_params),
-    m_benchmark_configuration(m_bench_config),
+                                   const IBenchmarkDescriptor::DescriptionToken &description_token) :
     m_current_event_id(0),
     m_b_constructed(false),
     m_b_initialized(false)
@@ -328,13 +351,12 @@ PartialBenchmark::~PartialBenchmark()
     m_p_engine.reset(); // this object no longer prevents engine from being destroyed
 }
 
-void PartialBenchmark::internalInit(const IBenchmarkDescription::DescriptionToken &description_token)
+void PartialBenchmark::internalInit(const IBenchmarkDescriptor::DescriptionToken &description_token)
 {
     // cache description info about this benchmark
-    m_h_descriptor         = description_token.getDescriptorHandle(description_token.getCaller(m_key_adk));
-    m_benchmark_descriptor = description_token.getDescriptor(description_token.getCaller(m_key_adk));
-    m_workload_params      = description_token.getWorkloadParams(description_token.getCaller(m_key_adk));
-    m_bench_config         = description_token.getBenchmarkConfiguration(description_token.getCaller(m_key_adk));
+    m_backend_desc     = description_token.getBackendDescription();
+    m_config           = description_token.getBenchmarkConfiguration();
+    m_text_description = description_token.getDescription();
 }
 
 void PartialBenchmark::postInit()
@@ -349,14 +371,14 @@ void PartialBenchmark::initBackend(hebench::Utilities::TimingReportEx &out_repor
     hebench::Common::TimingReportEvent::Ptr p_timing_event;
 
     hebench::APIBridge::WorkloadParams params;
-    params.count  = m_workload_params.size();
-    params.params = m_workload_params.data();
+    params.count  = m_config.w_params.size();
+    params.params = m_config.w_params.data();
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing backend benchmark...") << std::endl;
     timer.start();
     validateRetCode(hebench::APIBridge::initBenchmark(m_p_engine->handle(),
-                                                      m_h_descriptor,
-                                                      m_workload_params.empty() ? nullptr : &params,
+                                                      this->getBackendDescription().handle,
+                                                      m_config.w_params.empty() ? nullptr : &params,
                                                       &m_handle));
     p_timing_event = timer.stop<DefaultTimeInterval>(getEventIDNext(), 1, nullptr);
     out_report.addEvent<DefaultTimeInterval>(p_timing_event, std::string("Initialization"));
@@ -372,7 +394,7 @@ void PartialBenchmark::initBackend(hebench::Utilities::TimingReportEx &out_repor
 
 void PartialBenchmark::checkInitializationState(const FriendPrivateKey &) const
 {
-    if (!m_b_initialized)
+    if (!m_b_constructed || !m_b_initialized)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Initialization incomplete. All initialization stages must be called: init(), initBackend(), postInit()."));
 }
 

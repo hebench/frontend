@@ -19,30 +19,32 @@ namespace TestHarness {
 namespace DotProduct {
 namespace Latency {
 
-class BenchmarkDescription final : public hebench::TestHarness::DotProduct::BenchmarkDescriptionCategory
+class BenchmarkDescriptor final : public hebench::TestHarness::DotProduct::BenchmarkDescriptorCategory
 {
 public:
-    DISABLE_COPY(BenchmarkDescription)
-    DISABLE_MOVE(BenchmarkDescription)
+    DISABLE_COPY(BenchmarkDescriptor)
+    DISABLE_MOVE(BenchmarkDescriptor)
 private:
-    IL_DECLARE_CLASS_NAME(DotProduct::Latency::BenchmarkDescription)
+    IL_DECLARE_CLASS_NAME(DotProduct::Latency::BenchmarkDescriptor)
 public:
     static constexpr std::uint32_t BenchmarkID      = 601;
     static constexpr std::uint64_t DefaultBatchSize = 1; // batch size for a parameter (always 1 for latency)
 
 public:
-    BenchmarkDescription()           = default;
-    ~BenchmarkDescription() override = default;
+    BenchmarkDescriptor()           = default;
+    ~BenchmarkDescriptor() override = default;
 
     hebench::TestHarness::PartialBenchmark *createBenchmark(std::shared_ptr<Engine> p_engine,
-                                                            DescriptionToken::Ptr p_description_token) override;
+                                                            const DescriptionToken &description_token) override;
     void destroyBenchmark(hebench::TestHarness::PartialBenchmark *p_bench) override;
 
 protected:
-    std::string matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                         const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
-    void completeDescription(const Engine &engine,
-                             DescriptionToken::Ptr pre_token) const override;
+    bool matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                  const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+    void completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                     const Engine &engine,
+                                     const BenchmarkDescription::Backend &backend_desc,
+                                     const BenchmarkDescription::Configuration &config) const override;
 
 private:
     static bool m_b_registered;
@@ -57,14 +59,14 @@ private:
     IL_DECLARE_CLASS_NAME(DotProduct::Latency::Benchmark)
 
 public:
-    friend class hebench::TestHarness::DotProduct::Latency::BenchmarkDescription;
+    friend class hebench::TestHarness::DotProduct::Latency::BenchmarkDescriptor;
 
     ~Benchmark() override = default;
 
 protected:
-    void init(const IBenchmarkDescription::Description &description) override;
+    void init() override;
     IDataLoader::Ptr getDataset() const override { return m_data; }
-    std::uint32_t getEventIDStart() const override { return BenchmarkDescription::BenchmarkID; }
+    std::uint32_t getEventIDStart() const override { return BenchmarkDescriptor::BenchmarkID; }
     bool validateResult(IDataLoader::Ptr dataset,
                         const std::uint64_t *param_data_pack_indices,
                         const std::vector<hebench::APIBridge::NativeDataBuffer *> &p_outputs,
@@ -74,7 +76,7 @@ private:
     DataGenerator::Ptr m_data;
 
     Benchmark(std::shared_ptr<Engine> p_engine,
-              const IBenchmarkDescription::DescriptionToken &description_token);
+              const IBenchmarkDescriptor::DescriptionToken &description_token);
 };
 
 } // namespace Latency

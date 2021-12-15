@@ -19,13 +19,13 @@ namespace hebench {
 namespace TestHarness {
 namespace LogisticRegression {
 
-class BenchmarkDescriptionCategory : public hebench::TestHarness::PartialBenchmarkDescription
+class BenchmarkDescriptorCategory : public hebench::TestHarness::PartialBenchmarkDescriptor
 {
 public:
-    DISABLE_COPY(BenchmarkDescriptionCategory)
-    DISABLE_MOVE(BenchmarkDescriptionCategory)
+    DISABLE_COPY(BenchmarkDescriptorCategory)
+    DISABLE_MOVE(BenchmarkDescriptorCategory)
 private:
-    IL_DECLARE_CLASS_NAME(LogisticRegression::BenchmarkDescriptionCategory)
+    IL_DECLARE_CLASS_NAME(LogisticRegression::BenchmarkDescriptorCategory)
 public:
     static constexpr const char *BaseWorkloadName         = "Logistic Regression";
     static constexpr std::uint64_t WorkloadParameterCount = 1; // number of parameters for this workload
@@ -36,12 +36,16 @@ public:
     static std::uint64_t fetchVectorSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params);
 
 public:
-    BenchmarkDescriptionCategory()           = default;
-    ~BenchmarkDescriptionCategory() override = default;
+    BenchmarkDescriptorCategory()           = default;
+    ~BenchmarkDescriptorCategory() override = default;
 
 protected:
-    std::string matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                         const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+    bool matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
+                                  const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const override;
+    void completeWorkloadDescription(WorkloadDescriptionOutput &output,
+                                     const Engine &engine,
+                                     const BenchmarkDescription::Backend &backend_desc,
+                                     const BenchmarkDescription::Configuration &config) const override;
 };
 
 class DataGenerator : public hebench::TestHarness::PartialDataLoader
@@ -74,8 +78,8 @@ public:
     ~DataGenerator() override = default;
 
 private:
-    static constexpr std::size_t InputDim0  = BenchmarkDescriptionCategory::OpParameterCount;
-    static constexpr std::size_t OutputDim0 = BenchmarkDescriptionCategory::OpResultCount;
+    static constexpr std::size_t InputDim0  = BenchmarkDescriptorCategory::OpParameterCount;
+    static constexpr std::size_t OutputDim0 = BenchmarkDescriptorCategory::OpResultCount;
 
     DataGenerator() = default;
     void init(PolynomialDegree polynomial_degree,

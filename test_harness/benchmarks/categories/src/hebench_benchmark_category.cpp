@@ -82,7 +82,7 @@ hebench::APIBridge::ErrorCode PartialBenchmarkCategory::RAIIHandle::destroy()
 //--------------------------------
 
 PartialBenchmarkCategory::PartialBenchmarkCategory(std::shared_ptr<Engine> p_engine,
-                                                   const IBenchmarkDescription::DescriptionToken &description_token) :
+                                                   const IBenchmarkDescriptor::DescriptionToken &description_token) :
     PartialBenchmark(p_engine, description_token)
 {
 }

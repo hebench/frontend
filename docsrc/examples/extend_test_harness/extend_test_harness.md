@@ -47,7 +47,7 @@ There are two ways to extend the Test Harness with a new workload. Which one is 
     * ```hebench::TestHarness::BenchmarkLatency``` for [Latency](extend_test_harness_l.md)
     * ```hebench::TestHarness::BenchmarkOffline``` for [Offline](extend_test_harness_o.md)
 
-See the corresponding documentation on extending from each and explanation of the default flow for each category as implemented by these classes.
+    The `run()` method has already been implemented in each of these classes to follow the default measuring methodology for the category. See the corresponding documentation on extending from each and explanation of the default flow for each category as implemented by these classes.
 
 ### 4. Make Test Harness aware of the new workload.
 
@@ -55,12 +55,12 @@ Once the workload is implemented, the final step is to make the Test Harness awa
 
 1. Describe the workload.
 
-    To do so, first create a workload description class that derives from interface `hebench::TestHarness::PartialBenchmarkDescription` (from header `hebench_benchmark_factory.h`) and implement all of its <b>abstract</b> methods following their interface documentation:
+    To do so, first create a workload description class that derives from interface `hebench::TestHarness::PartialBenchmarkDescriptor` (from header `hebench_ibenchmark.h`) and implement all of its <b>abstract</b> methods following their interface documentation:
     
-    * `hebench::TestHarness::IBenchmarkDescription::createBenchmark()`
-    * `hebench::TestHarness::IBenchmarkDescription::destroyBenchmark()`
-    * `hebench::TestHarness::PartialBenchmarkDescription::matchBenchmarkDescriptor()`
-    * `hebench::TestHarness::PartialBenchmarkDescription::completeDescription()`
+    * `hebench::TestHarness::IBenchmarkDescriptor::createBenchmark()`
+    * `hebench::TestHarness::IBenchmarkDescriptor::destroyBenchmark()`
+    * `hebench::TestHarness::PartialBenchmarkDescriptor::matchBenchmarkDescriptor()`
+    * `hebench::TestHarness::PartialBenchmarkDescriptor::completeWorkloadDescription()`
     
     Inside `createBenchmark()`, the benchmark object should be constructed and returned. The object's initialization methods will be called after construction automatically, and thus, they should not be called manually by our implementation.
     
