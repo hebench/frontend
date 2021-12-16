@@ -58,6 +58,25 @@ endif()
 
 # TODO: switch to using find_package
 
+MACRO (TARGET_LINK_LIBRARIES_WHOLE_ARCHIVE target vis)
+  IF (WIN32)
+    FOREACH (arg IN LISTS ARGN)
+      SET_TARGET_PROPERTIES(
+        ${target} PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:${lib}"
+      )
+    ENDFOREACH ()
+  ELSE ()
+    IF (APPLE)
+      SET(LINK_FLAGS "-Wl,-all_load")
+      SET(UNDO_FLAGS "-Wl,-noall_load")
+    ELSE ()
+      SET(LINK_FLAGS "-Wl,--whole-archive")
+      SET(UNDO_FLAGS "-Wl,--no-whole-archive")
+    ENDIF ()
+    TARGET_LINK_LIBRARIES(${target} ${vis} ${LINK_FLAGS} ${ARGN} ${UNDO_FLAGS})
+  ENDIF ()
+ENDMACRO ()
+
 # finding pre-installed from provided, or pulling from remote if not
 if(${_HEADER_ONLY})
     set(${_COMPONENT_NAME}_LIB_FOUND TRUE)
@@ -88,5 +107,5 @@ if (${_HEADER_ONLY})
     target_include_directories(${_LINK_TO} PUBLIC ${${_COMPONENT_NAME}_INCLUDE_DIR})
 else()
     target_include_directories(${_LINK_TO} PUBLIC ${${_COMPONENT_NAME}_INCLUDE_DIR})
-    target_link_libraries(${_LINK_TO} PUBLIC "-Wl,--whole-archive" ${_COMPONENT_LIB_NAME} "-Wl,--no-whole-archive")
+    TARGET_LINK_LIBRARIES_WHOLE_ARCHIVE(${_LINK_TO} PUBLIC ${_COMPONENT_LIB_NAME})
 endif()
