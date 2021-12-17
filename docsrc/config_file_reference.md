@@ -10,12 +10,17 @@ A configuration file contains a list of benchmarks to run and parameters to use 
 A configuration file is a YAML file with the following syntax:
 
 ```yaml
-default_min_test_time: <min_test_time_ms>
-default_sample_size: <sample_size>
+default_min_test_time: <fallback_min_test_time_ms>
+default_sample_size: <fallback_sample_size>
 random_seed: <seed>
 
 benchmark:
   - ID: <benchmark_id>
+    default_min_test_time: <min_test_time_ms>
+    default_sample_sizes:
+      0: <sample_size>
+      1: <sample_size>
+      ...
     params:
       0:
         name: <param_name>
@@ -33,6 +38,11 @@ benchmark:
           step: <value_step>
       ...
   - ID: <benchmark_id>
+    default_min_test_time: <min_test_time_ms>
+    default_sample_sizes:
+      0: <sample_size>
+      1: <sample_size>
+      ...
     params:
       0:
         name: <param_name>
@@ -56,22 +66,34 @@ benchmark:
 
 The configuration file can have settings for certain default behaviors. These are optional.
 
-- `default_min_test_time`: Specifies the default minimum test time in *milliseconds*. If missing, it defaults to `0`.
-For **Latency** tests that support flexible test times, this is the minimum time for which they will run. As always, regardless of the value specified, all latency tests will run, at least, two iterations.
+- `default_min_test_time` - type: `uint64`. Specifies the default minimum test time in *milliseconds* for a benchmark.
+
+    For **Latency** tests that support flexible test times, this is the minimum time for which they will run. As always, regardless of the value specified, all latency tests will run, at least, two iterations.
 **Offline** tests will run through the whole dataset, at least, once. If this minimum test time hasn't elapsed by the end of the run, a new run is executed. This behavior continues until the test time elapses.
 
-- `default_sample_size`: Specifies the number of samples to be used for operation parameters in **Offline** tests that support flexible sample size. Defaults to `0` if missing.
-Offline benchmarks can directly specify the sample size for each operation parameter, or indicate which parameters support flexible sample sizes.
+- `default_sample_size` - type: `uint64`. Specifies the number of samples to be used for an operation parameter in **Offline** tests that support flexible sample size. Inside the benchmark description, this setting specifies the sample size for an operand in the workload operation by index (missing indices, or values of `0` will cause the configuration to use the global fallback value).
+
+    Offline benchmarks can directly specify the sample size for each operation parameter, or indicate which parameters support flexible sample sizes.
 All workloads define a default sample size if none is specified for flexible parameters. When this setting is missing or set to `0`, indicates that these pre-defined workload sample sizes are to be used for flexible parameters.
 
-- `random_seed`: type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
+- `random_seed` - type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
 
+<br/>
+The actual value used for a benchmark for `default_min_test_time` and `default_sample_size` is based on where it is specified first in the priority list. The priority is:
+
+1. Backend specified.
+2. Benchmark specific in config file.
+3. Global config file.
+4. Workload specification.
+5. Global specification.
+
+If any of these is `0` or is missing, then the next down the list is used. For sample sizes, workload specification must always be greater than `0` as there is no global default specification for sample sizes.
 
 ### Benchmark descriptions
 
 Top level `benchmark` key contains a list. It must exist in the configuration file. An element of this list specifies a benchmark to run and its description.
 
-A benchmark description is composed by `ID` and `params`.
+A benchmark description is composed by `ID`, `default_min_test_time`, `default_sample_sizes` and `params`.
 
 A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Front end during initialization.
 
@@ -125,7 +147,7 @@ For example, if a backend exported configuration looks like below:
 ```yaml
 default_min_test_time: 0
 default_sample_size: 0
-random_seed: 1679203945
+random_seed: 0
 
 benchmark:
 
@@ -134,6 +156,11 @@ benchmark:
 # Descriptor:
 #   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
   - ID: 3
+    default_min_test_time: 0
+    default_sample_size:
+      0: 0
+      1: 0
+      2: 0
     params:
       0:
         name: n

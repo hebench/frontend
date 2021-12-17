@@ -35,7 +35,7 @@ template <typename T>
 * @param[in] b Pointer to start of second array to compare.
 * @param[in] count Number of elements in each array.
 * @param[in] pct Per-one for comparison: this is percent divided by 100.
-* @return A vector of uint64 where each element in this vector is the index of the
+* @return A vector of `uint64` where each element in this vector is the index of the
 * values in \p a and \p b that were not within \p pct * 100 of each other. The return
 * vector is empty if all values were within range of each other.
 * @details Parameter \p a must hold, at least, \p count elements, same as \p b.

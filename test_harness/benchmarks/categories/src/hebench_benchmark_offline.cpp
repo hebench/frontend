@@ -22,7 +22,7 @@ namespace hebench {
 namespace TestHarness {
 
 BenchmarkOffline::BenchmarkOffline(std::shared_ptr<Engine> p_engine,
-                                   const IBenchmarkDescription::DescriptionToken &description_token) :
+                                   const IBenchmarkDescriptor::DescriptionToken &description_token) :
     PartialBenchmarkCategory(p_engine, description_token)
 {
 }
@@ -33,16 +33,13 @@ BenchmarkOffline::~BenchmarkOffline()
 
 bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report, RunConfig &config)
 {
-    return run(out_report, getDataset(), m_benchmark_configuration, config);
+    return run(out_report, getDataset(), config);
 }
 
 bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
                            IDataLoader::Ptr p_dataset,
-                           const IBenchmarkDescription::BenchmarkConfig bench_config,
                            IBenchmark::RunConfig &run_config)
 {
-    (void)bench_config;
-
     std::cout << std::endl
               << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Starting test...") << std::endl;
 
@@ -83,7 +80,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
     // separate param packs in encrypted/plain
     std::vector<hebench::APIBridge::PackedData> packed_parameters(2);
     std::vector<std::vector<hebench::APIBridge::DataPack>> packed_parameters_data_packs(packed_parameters.size());
-    std::bitset<sizeof(std::uint32_t)> cipher_param_mask(m_descriptor.cipher_param_mask);
+    std::bitset<sizeof(std::uint32_t)> cipher_param_mask(this->getBackendDescription().descriptor.cipher_param_mask);
     for (std::size_t i = 0; i < param_packs.size(); ++i)
     {
         // determine if this parameter is encrypted
@@ -222,11 +219,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
     // operate
 
-    std::cout << IOS_MSG_INFO
-              << hebench::Logging::GlobalLogger::log("Starting offline test.")
-              << std::endl;
-
-    std::uint64_t min_test_time_ms = bench_config.default_min_test_time_ms;
+    std::uint64_t min_test_time_ms = this->getBenchmarkConfiguration().default_min_test_time_ms;
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Starting offline test.") << std::endl
               << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Minimum time: " + std::to_string(min_test_time_ms) + " ms") << std::endl;
@@ -512,7 +505,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
                 b_valid = validateResult(p_dataset, data_pack_indices.data(),
                                          outputs,
-                                         m_descriptor.data_type);
+                                         this->getBackendDescription().descriptor.data_type);
             }
             catch (std::exception &ex)
             {
@@ -538,7 +531,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
                 ss << std::endl;
                 logResult(ss, p_dataset, data_pack_indices.data(),
                           outputs,
-                          m_descriptor.data_type);
+                          this->getBackendDescription().descriptor.data_type);
                 out_report.appendFooter(ss.str());
             } // end else
 

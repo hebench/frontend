@@ -29,51 +29,20 @@ public:
 private:
     IL_DECLARE_CLASS_NAME(BenchmarkFactory)
 public:
-    /**
-     * @brief Contains an internal representation of a matched benchmark.
-     * @details This token is returned by matchBenchmarkDescriptor(), representing a
-     * successful match. Returned tokens can be used to instantiate the actual
-     * benchmarks they represent.
-     */
-    class BenchmarkToken
-    {
-    private:
-        BenchmarkToken(std::shared_ptr<IBenchmarkDescription> p_bmd,
-                       IBenchmarkDescription::DescriptionToken::Ptr p_bdt) :
-            m_p_bmd(p_bmd),
-            m_p_bdt(p_bdt), description(m_p_bdt->description)
-        {
-        }
-
-        std::shared_ptr<IBenchmarkDescription> m_p_bmd;
-        IBenchmarkDescription::DescriptionToken::Ptr m_p_bdt;
-
-    public:
-        friend class BenchmarkFactory;
-        typedef std::shared_ptr<BenchmarkToken> Ptr;
-
-        /**
-         * @brief Description of the benchmark matched.
-         * @details This can be used by caller to obtain description information about the
-         * matched benchmark.
-         */
-        const IBenchmarkDescription::Description &description;
-    };
-
     friend class Engine;
 
     /**
      * @brief Returns a token representing a benchmark that can perform the described
      * workload with specified parameters, if any.
-     * @param[in] engine Calling engine object.
-     * @param[in] h_desc HEBench handle to descriptor of the benchmark to perform.
-     * @param[in] w_params Parameters for the benchmark's workload.
-     * @return The token representing the matched benchmark, or `null` if no match is found.
+     * @param[in] engine Engine requesting the matching.
+     * @param[in] backend_desc Backend descriptor to match.
+     * @param[in] config Configuration of benchmark to match.
+     * @returns A valid token representing the matched benchmark.
+     * @returns `null` if no match was found.
      */
-    static BenchmarkToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
-                                                        const IBenchmarkDescription::BenchmarkConfig &bench_config,
-                                                        const hebench::APIBridge::Handle &h_desc,
-                                                        const std::vector<hebench::APIBridge::WorkloadParam> &w_params);
+    static IBenchmarkDescriptor::DescriptionToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
+                                                                                const BenchmarkDescription::Backend &backend_desc,
+                                                                                const BenchmarkDescription::Configuration &config);
     /**
      * @brief Registers a benchmark description object that represents one of the
      * supported workloads.
@@ -86,12 +55,10 @@ public:
      *
      * This method does not throw exceptions.
      */
-    static bool registerSupportedBenchmark(std::shared_ptr<IBenchmarkDescription> p_desc_obj);
+    static bool registerSupportedBenchmark(std::shared_ptr<IBenchmarkDescriptor> p_desc_obj);
 
 private:
-    static std::vector<std::shared_ptr<IBenchmarkDescription>> &getRegisteredBenchmarks();
-    static BenchmarkToken::Ptr createBenchmarkToken(std::shared_ptr<IBenchmarkDescription> p_bmd,
-                                                    IBenchmarkDescription::DescriptionToken::Ptr p_bdt);
+    static std::vector<std::shared_ptr<IBenchmarkDescriptor>> &getRegisteredBenchmarks();
     /**
      * @brief Instantiates the benchmark represented by the specified token.
      * @param p_engine Calling engine object.
@@ -106,7 +73,7 @@ private:
      * accessible only by friend class Engine.
      */
     static IBenchmark::Ptr createBenchmark(std::shared_ptr<Engine> p_engine,
-                                           BenchmarkToken::Ptr p_token,
+                                           IBenchmarkDescriptor::DescriptionToken::Ptr p_token,
                                            hebench::Utilities::TimingReportEx &out_report);
 
     BenchmarkFactory() = default;
