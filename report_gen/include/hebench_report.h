@@ -137,12 +137,12 @@ extern "C"
     /**
      * @brief generateSummaryCSV
      * @param p_report
-     * @param[out] p_main_event_summary TimingReportEventC struct where to store the
+     * @param[out] p_main_event_summary TimingReportEventSummaryC struct where to store the
      * summary of the main event.
      * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
      * @returns `true` on success.
      */
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content);
+    int32_t generateSummaryCSV(void *p_report, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
     /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.

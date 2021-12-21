@@ -530,7 +530,7 @@ extern "C"
         return retval;
     }
 
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content)
+    int32_t generateSummaryCSV(void *p_report, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content)
     {
         int32_t retval      = 0;
         char *p_csv_content = nullptr;
@@ -543,9 +543,12 @@ extern "C"
             std::stringstream ss;
             std::string s_csv_content;
 
-            ReportSummary::generateCSV(ss, *p_main_event_summary, *p);
-            s_csv_content = ss.str();
-            ss            = std::stringstream();
+            //ReportSummary::generateCSV(ss, *p_main_event_summary, *p);
+            ReportSummary report_summary(*p);
+            report_summary.generateCSV(ss);
+            *p_main_event_summary = report_summary.getMainEventSummary();
+            s_csv_content         = ss.str();
+            ss                    = std::stringstream();
 
             p_csv_content = new char[s_csv_content.length() + 1];
             if (!p_csv_content)

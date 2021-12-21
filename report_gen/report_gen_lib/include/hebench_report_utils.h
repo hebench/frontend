@@ -7,6 +7,8 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -56,7 +58,11 @@ class EventStats
 {
 public:
     EventStats() :
-        m_count(0), m_mean(0.0), m_m2(0.0) {}
+        m_count(0), m_mean(0.0), m_m2(0.0),
+        m_min(std::numeric_limits<double>::infinity()),
+        m_max(-std::numeric_limits<double>::infinity())
+    {
+    }
 
     void newEvent(double x)
     {
@@ -66,18 +72,17 @@ public:
         double d2 = x - m_mean;
 
         m_m2 = m_m2 + d * d2;
+
+        if (m_min > x)
+            m_min = x;
+        if (m_max < x)
+            m_max = x;
     }
 
-    std::size_t getCount() const
-    {
-        return m_count;
-    }
-
-    double getMean() const
-    {
-        return m_mean;
-    }
-
+    std::size_t getCount() const { return m_count; }
+    double getMin() const { return m_min; }
+    double getMax() const { return m_max; }
+    double getMean() const { return m_mean; }
     double getVariance() const
     {
         if (m_count < 2)
@@ -90,6 +95,8 @@ private:
     std::size_t m_count;
     double m_mean;
     double m_m2;
+    double m_min;
+    double m_max;
 };
 
 /**

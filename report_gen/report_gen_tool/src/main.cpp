@@ -34,9 +34,9 @@ int main(int argc, char **argv)
         } // end if
         else
         {
-            hebench::TestHarness::Report::TimingReportEventC tre;
+            hebench::TestHarness::Report::TimingReportEventSummaryC tre;
             std::cout << report.generateSummaryCSV(tre) << std::endl;
-            std::cout << "Main event: " << tre.event_type_id << std::endl;
+            std::cout << "Main event: " << tre.event_id << std::endl;
         } // end else
     }
     catch (std::exception &ex)

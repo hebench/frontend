@@ -279,7 +279,7 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
             if (report.getEventCount() > 0)
             {
                 // output summary to file
-                hebench::TestHarness::Report::TimingReportEventC tre;
+                hebench::TestHarness::Report::TimingReportEventSummaryC tre;
                 std::string csv_report = report.generateSummaryCSV(tre);
                 hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
 
@@ -289,7 +289,8 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
                     hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
                     double elapsed_time_secs;
 
-                    elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    //elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    elapsed_time_secs = tre.wall_time_ave;
                     hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
                     ss = std::stringstream();
                     ss << timing_prefix.symbol << "s";
@@ -297,7 +298,8 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
                               << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveWallColSize)
                               << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
 
-                    elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    //elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
+                    elapsed_time_secs = tre.cpu_time_ave;
                     hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
                     ss = std::stringstream();
                     ss << timing_prefix.symbol << "s";
