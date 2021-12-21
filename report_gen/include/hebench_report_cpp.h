@@ -14,8 +14,12 @@ namespace TestHarness {
 namespace Report {
 namespace cpp {
 
+class ReportSummary;
+
 class TimingReport
 {
+    friend class ReportSummary;
+
 private:
     static constexpr const char *m_private_class_name = "TimingReport";
 
@@ -73,7 +77,7 @@ public:
     void save2CSV(const std::string &filename);
     std::string convert2CSV();
 
-    std::string generateSummaryCSV(TimingReportEventC &main_event_summary);
+    std::string generateSummaryCSV(TimingReportEventSummaryC &main_event_summary);
 
     static TimingReport loadReportFromCSV(const std::string &s_csv_content);
     static TimingReport loadReportFromCSVFile(const std::string &filename);
@@ -104,6 +108,15 @@ public:
 
 private:
     void *m_lib_handle;
+};
+
+class ReportSummary
+{
+private:
+    static constexpr const char *m_private_class_name = "ReportSummary";
+
+public:
+    ReportSummary(const TimingReport &report);
 };
 
 } // namespace cpp

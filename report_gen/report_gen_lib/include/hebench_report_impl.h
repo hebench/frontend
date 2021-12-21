@@ -169,9 +169,23 @@ double TimingReport::computeElapsedCPUTime(const TimingReportEventC &event)
 class ReportSummary
 {
 public:
-    static void generateCSV(std::ostream &os,
-                            TimingReportEventC &main_event_summary,
-                            const TimingReport &report);
+    ReportSummary(const TimingReport &report);
+
+    const std::string &getHeader() const { return m_header; }
+    const std::string &getFooter() const { return m_footer; }
+
+    std::uint64_t getEventSummaryCount() const { return m_event_summaries.size(); }
+    const TimingReportEventSummaryC &getEventSummary(std::uint64_t index) const;
+    std::uint64_t getMainEventSummaryIndex() const { return m_main_event_index; }
+    const TimingReportEventSummaryC &getMainEventSummary() const;
+
+    void generateCSV(std::ostream &os);
+
+private:
+    std::string m_header;
+    std::string m_footer;
+    std::size_t m_main_event_index;
+    std::vector<std::shared_ptr<TimingReportEventSummaryC>> m_event_summaries;
 };
 
 } // namespace Report

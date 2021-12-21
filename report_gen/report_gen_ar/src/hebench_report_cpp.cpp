@@ -255,7 +255,7 @@ std::string TimingReport::convert2CSV()
     return retval;
 }
 
-std::string TimingReport::generateSummaryCSV(hebench::TestHarness::Report::TimingReportEventC &main_event_summary)
+std::string TimingReport::generateSummaryCSV(hebench::TestHarness::Report::TimingReportEventSummaryC &main_event_summary)
 {
     char *p_tmp = nullptr;
     if (!hebench::TestHarness::Report::generateSummaryCSV(m_lib_handle, &main_event_summary, &p_tmp))
