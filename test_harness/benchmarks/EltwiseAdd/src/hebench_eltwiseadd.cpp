@@ -170,20 +170,29 @@ void DataGeneratorHelper::vectorEltwiseAdd(hebench::APIBridge::DataType data_typ
 // class DataGenerator
 //---------------------
 
-DataGenerator::Ptr DataGenerator::create(std::uint64_t vector_size,
-                                         std::uint64_t batch_size_a,
-                                         std::uint64_t batch_size_b,
-                                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
+                                   std::uint64_t batch_size_a,
+                                   std::uint64_t batch_size_b,
+                                   hebench::APIBridge::DataType data_type)
 {
-    DataGenerator::Ptr retval = DataGenerator::Ptr(new DataGenerator());
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
     retval->init(vector_size, batch_size_a, batch_size_b, data_type);
     return retval;
 }
 
-void DataGenerator::init(std::uint64_t vector_size,
-                         std::uint64_t batch_size_a,
-                         std::uint64_t batch_size_b,
-                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(const std::string &dataset_filename,
+                                   std::uint64_t expected_vector_size,
+                                   hebench::APIBridge::DataType data_type)
+{
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
+    retval->init(dataset_filename, expected_vector_size, data_type);
+    return retval;
+}
+
+void DataLoader::init(std::uint64_t vector_size,
+                      std::uint64_t batch_size_a,
+                      std::uint64_t batch_size_b,
+                      hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for vector element-wise addition:
     // C = A + B
@@ -208,7 +217,8 @@ void DataGenerator::init(std::uint64_t vector_size,
     allocate(buffer_sizes, // sizes (in bytes) for each input vector
              InputDim0, // number of input vectors
              buffer_sizes + InputDim0, // sizes (in bytes) for each output vector
-             OutputDim0); // number of output vectors
+             OutputDim0,
+             true); // number of output vectors
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -246,6 +256,12 @@ void DataGenerator::init(std::uint64_t vector_size,
     } // end for
 
     // all data has been generated at this point
+}
+
+void DataLoader::init(const std::string &dataset_filename,
+                      std::uint64_t expected_vector_size,
+                      hebench::APIBridge::DataType data_type)
+{
 }
 
 } // namespace EltwiseAdd

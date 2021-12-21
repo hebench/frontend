@@ -136,9 +136,9 @@ void Benchmark::init()
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading workload data...") << std::endl;
 
     timer.start();
-    m_data         = DataGenerator::create(vector_size,
-                                   batch_sizes[0], batch_sizes[1],
-                                   this->getBackendDescription().descriptor.data_type);
+    m_data         = DataLoader::create(vector_size,
+                                batch_sizes[0], batch_sizes[1],
+                                this->getBackendDescription().descriptor.data_type);
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();

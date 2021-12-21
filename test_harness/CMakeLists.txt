@@ -92,6 +92,7 @@ list(APPEND ${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_factory.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_description.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_config.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_dataset_loader.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_engine.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_ibenchmark.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_idata_loader.h"

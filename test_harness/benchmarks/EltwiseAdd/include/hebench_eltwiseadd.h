@@ -52,32 +52,42 @@ protected:
                                      const BenchmarkDescription::Configuration &config) const override;
 };
 
-class DataGenerator : public hebench::TestHarness::PartialDataLoader
+class DataLoader : public hebench::TestHarness::PartialDataLoader
 {
 public:
-    DISABLE_COPY(DataGenerator)
-    DISABLE_MOVE(DataGenerator)
+    DISABLE_COPY(DataLoader)
+    DISABLE_MOVE(DataLoader)
 private:
     IL_DECLARE_CLASS_NAME(EltwiseAdd::DataGenerator)
 
 public:
-    typedef std::shared_ptr<DataGenerator> Ptr;
+    typedef std::shared_ptr<DataLoader> Ptr;
 
-    static DataGenerator::Ptr create(std::uint64_t vector_size,
-                                     std::uint64_t batch_size_a,
-                                     std::uint64_t batch_size_b,
-                                     hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(std::uint64_t vector_size,
+                                  std::uint64_t batch_size_a,
+                                  std::uint64_t batch_size_b,
+                                  hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(const std::string &dataset_filename,
+                                  std::uint64_t expected_vector_size,
+                                  std::uint64_t max_batch_size_a,
+                                  std::uint64_t max_batch_size_b,
+                                  hebench::APIBridge::DataType data_type);
 
-    ~DataGenerator() override {}
+    ~DataLoader() override {}
 
 private:
     static constexpr std::size_t InputDim0  = 2;
     static constexpr std::size_t OutputDim0 = 1;
 
-    DataGenerator() {}
+    DataLoader() {}
     void init(std::uint64_t vector_size,
               std::uint64_t batch_size_a,
               std::uint64_t batch_size_b,
+              hebench::APIBridge::DataType data_type);
+    void init(const std::string &dataset_filename,
+              std::uint64_t expected_vector_size,
+              std::uint64_t max_batch_size_a,
+              std::uint64_t max_batch_size_b,
               hebench::APIBridge::DataType data_type);
 };
 
