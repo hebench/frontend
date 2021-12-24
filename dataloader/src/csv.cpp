@@ -30,6 +30,7 @@ struct icsvstream : std::istringstream
     icsvstream(Args &&... args) :
         std::istringstream(std::forward<Args>(args)...)
     {
+        exceptions(std::ifstream::failbit);
         imbue(loc);
     }
 };
@@ -45,10 +46,21 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
         std::getline(ifs, line);
     while (nlines-- and std::getline(ifs, line))
     {
+        std::cerr << "Reading line: " << line << std::endl;
         icsvstream ils(line);
         std::vector<T> w;
         std::istream_iterator<T> isit(ils);
-        std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+        try
+        {
+            std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+        }
+        catch (const std::ios_base::failure &e)
+        {
+            if (!ils.eof())
+                throw;
+        }
+        if (v.size() and w.size() != v.back().size())
+            throw std::length_error("Inconsistent number of values read from line");
         v.push_back(w);
     }
 }
@@ -57,10 +69,13 @@ template <typename T, typename E>
 ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename, std::uint64_t max_loaded_size)
 {
     ExternalDataset<T> eds;
+    std::cerr << "Opening: " << filename << std::endl;
     std::ifstream ifs(filename, std::ifstream::in);
+    ifs.exceptions(std::ifstream::badbit);
     std::string metaline;
     while (std::getline(ifs, metaline))
     {
+        std::cerr << "Reading control line: " << metaline << std::endl;
         if (metaline.at(0) == '#' or metaline.size() == 0)
             continue;
         icsvstream iss(metaline);
@@ -85,14 +100,19 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
                 std::string fname;
                 size_t from_line = 1, num_lines = 0;
                 ils >> fname >> from_line >> num_lines;
-                std::string path = filename.substr(0, filename.find_last_of("/\\") + 1) + fname;
+                std::string path(fname);
+                if (fname[0] != '/')
+                    path = filename.substr(0, filename.find_last_of("/\\") + 1) + fname;
+                std::cerr << "Opening data " << path << std::endl;
                 std::ifstream ifs_csv(path, std::ifstream::in);
+                ifs_csv.exceptions(std::ifstream::badbit);
                 loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1);
                 ifs_csv.close();
             }
         }
         if (kind == "local")
         {
+            std::cerr << "Reading local data" << std::endl;
             loadcsvdatafile(ifs, v, nlines, 0);
         }
     }

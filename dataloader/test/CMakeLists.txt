@@ -9,5 +9,8 @@ enable_testing()
 add_executable(test_csv "test_csv.cpp")
 target_link_libraries(test_csv PRIVATE dataloader)
 add_test(NAME test_csv COMMAND test_csv)
+set_tests_properties(test_csv PROPERTIES
+    REQUIRED_FILES "data/input_int.csv;data/input_float.csv"    
+)
 
-file(COPY "data" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ./data DESTINATION ./)
