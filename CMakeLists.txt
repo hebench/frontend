@@ -71,6 +71,7 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_BINARY_DIR}/third-party)
 add_subdirectory(common-lib)
 add_subdirectory(report_gen)
 add_subdirectory(dynamic_lib_load)
+add_subdirectory(dataloader)
 
 ## APIBridge
 set(_COMPONENT_NAME "API_BRIDGE")
