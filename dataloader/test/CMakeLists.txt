@@ -10,7 +10,7 @@ add_executable(test_csv "test_csv.cpp")
 target_link_libraries(test_csv PRIVATE dataloader)
 add_test(NAME test_csv COMMAND test_csv)
 set_tests_properties(test_csv PROPERTIES
-    REQUIRED_FILES "data/input_int.csv;data/input_float.csv"    
+    REQUIRED_FILES "data/input_int.csv;data/input_float.csv;data/model.csv"    
 )
 
 file(COPY ./data DESTINATION ./)
