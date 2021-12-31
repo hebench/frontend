@@ -13,17 +13,17 @@ Logistic regression - 16 features:
 File name: lr16.csv 
 ```
 # This is just a comment 
-input, 0, 1 
-csv, model.csv, 2, 1 
-input, 1, 1 
-csv, model.csv, 3, 1 
-input, 2, 5 
+input, 1, 1, csv
+model.csv, 2, 1 
+input, 2, 1, csv
+model.csv, 3, 1 
+input, 3, 5, local 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
-output, 0, 5 
+output, 1, 5, local
 0.000911051 
 0.000911051 
 0.000911051 
@@ -64,7 +64,7 @@ The size of each sample vector for the input component must match, or an excepti
  
 ## csv 
 Loads from a csv filename where each row is a comma-separated list of numbers (doubles) representing a sample. Path can be relative to parent file, or absolute. 
-<sample_i>: <file_name>,<from_line>, <num_lines> 
+<file_name>,<from_line>, <num_lines> 
 ### <file_name> 
 is the path to the file to load. Its content is assumed to be csv. Path can be relative to parent file, or absolute.  
 ### <from_line> 
