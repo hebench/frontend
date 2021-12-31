@@ -182,10 +182,12 @@ DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
 
 DataLoader::Ptr DataLoader::create(const std::string &dataset_filename,
                                    std::uint64_t expected_vector_size,
+                                   std::uint64_t max_batch_size_a,
+                                   std::uint64_t max_batch_size_b,
                                    hebench::APIBridge::DataType data_type)
 {
     DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
-    retval->init(dataset_filename, expected_vector_size, data_type);
+    retval->init(dataset_filename, expected_vector_size, max_batch_size_a, max_batch_size_b, data_type);
     return retval;
 }
 
@@ -203,22 +205,17 @@ void DataLoader::init(std::uint64_t vector_size,
         batch_size_b,
         batch_size_a * batch_size_b
     };
-    // initialize base data (data packs)
-    PartialDataLoader::init(InputDim0, batch_sizes, OutputDim0);
 
     // compute buffer size in bytes for each vector
-    std::uint64_t buffer_sizes[InputDim0 + OutputDim0];
-    for (std::size_t i = 0; i < InputDim0 + OutputDim0; ++i)
-    {
-        buffer_sizes[i] = vector_size * PartialDataLoader::sizeOf(data_type);
-    } // end for
+    std::vector<std::uint64_t> buffer_sizes(InputDim0 + OutputDim0, vector_size);
 
-    // allocate memory for each vector buffer
-    allocate(buffer_sizes, // sizes (in bytes) for each input vector
-             InputDim0, // number of input vectors
-             buffer_sizes + InputDim0, // sizes (in bytes) for each output vector
-             OutputDim0,
-             true); // number of output vectors
+    PartialDataLoader::init(data_type,
+                            InputDim0, // number of input parameters
+                            batch_sizes, // samples per parameter
+                            buffer_sizes.data(), // vector size for each parameter
+                            OutputDim0, // number of result components
+                            buffer_sizes.data() + InputDim0, // number of result samples
+                            true); // allocate memory for ground truth?
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -260,8 +257,32 @@ void DataLoader::init(std::uint64_t vector_size,
 
 void DataLoader::init(const std::string &dataset_filename,
                       std::uint64_t expected_vector_size,
+                      std::uint64_t max_batch_size_a,
+                      std::uint64_t max_batch_size_b,
                       hebench::APIBridge::DataType data_type)
 {
+    // Load and initialize the data for vector element-wise addition:
+    // C = A + B
+
+    // number of samples in each input parameter and output
+    std::size_t batch_sizes[InputDim0 + OutputDim0] = {
+        max_batch_size_a,
+        max_batch_size_b,
+        max_batch_size_a * max_batch_size_b
+    };
+
+    // compute buffer size in bytes for each vector
+    std::vector<std::uint64_t> buffer_sizes(InputDim0 + OutputDim0, expected_vector_size);
+
+    PartialDataLoader::init(dataset_filename, data_type,
+                            InputDim0,
+                            batch_sizes,
+                            buffer_sizes.data(),
+                            OutputDim0,
+                            buffer_sizes.data() + InputDim0);
+
+    // at this point all NativeDataBuffers have been allocated, pointed to the correct locations
+    // and filled with data from the specified dataset file
 }
 
 } // namespace EltwiseAdd

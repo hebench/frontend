@@ -148,10 +148,10 @@ void Benchmark::init()
 
     timer.start();
     // generates random matrices for input and generates (computes) ground truth
-    m_data         = DataGenerator::create(mat_dims[0].first, mat_dims[0].second, // M0
-                                   mat_dims[1].second, // M1
-                                   batch_sizes[0], batch_sizes[1],
-                                   this->getBackendDescription().descriptor.data_type);
+    m_data         = DataLoader::create(mat_dims[0].first, mat_dims[0].second, // M0
+                                mat_dims[1].second, // M1
+                                batch_sizes[0], batch_sizes[1],
+                                this->getBackendDescription().descriptor.data_type);
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();

@@ -472,11 +472,19 @@ int main(int argc, char **argv)
                               << " " << hebench::Logging::GlobalLogger::log(s_workload_name) << std::endl
                               << std::setw(fill_size) << "=" << std::setfill(' ') << std::endl;
 
+                    report.setHeader(bench_token->getDescription().header);
+                    if (!bench_token->getBenchmarkConfiguration().dataset_filename.empty())
+                    {
+                        std::stringstream ss;
+                        ss << "Dataset, \"" << bench_token->getBenchmarkConfiguration().dataset_filename << "\"" << std::endl;
+                        report.appendHeader(ss.str());
+                    } // end if
+
                     std::cout << std::endl
-                              << bench_token->getDescription().header << std::endl;
+                              //<< bench_token->getDescription().header << std::endl;
+                              << report.getHeader() << std::endl;
 
                     // create the benchmark
-                    report.setHeader(bench_token->getDescription().header);
                     hebench::TestHarness::IBenchmark::Ptr p_bench = p_engine->createBenchmark(bench_token, report);
 
                     hebench::TestHarness::IBenchmark::RunConfig run_config;

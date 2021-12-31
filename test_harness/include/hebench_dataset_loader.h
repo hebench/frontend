@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace hebench {
-namespace TestHarness {
+namespace DataLoader {
 
 template <typename T>
 struct ExternalDataset
@@ -72,27 +72,12 @@ public:
 
 // template implementations
 
-template <typename T, typename E>
-inline ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename,
-                                                                   std::uint64_t max_loaded_size)
-{
-    ExternalDataset<T> retval;
+template class ExternalDatasetLoader<int32_t>;
+template class ExternalDatasetLoader<int64_t>;
+template class ExternalDatasetLoader<float>;
+template class ExternalDatasetLoader<double>;
 
-    // dummy value
-    return retval;
-}
-
-template <typename T, typename E>
-inline void ExternalDatasetLoader<T, E>::exportToCSV(const std::string &filename,
-                                                     //const IBenchmarkDescriptor::DescriptionToken &bench_desc,
-                                                     const ExternalDataset<T> &dataset)
-{
-    // DO NOT IMPLEMENT
-
-    throw std::runtime_error("Not implemented");
-}
-
-} // namespace TestHarness
+} // namespace DataLoader
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_DatasetLoader_H_0596d40a3cce4b108a81595c50eb286d

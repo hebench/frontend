@@ -2,15 +2,88 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
+#include <cassert>
 #include <chrono>
 #include <stdexcept>
 
 #include "../include/datagen_helper.h"
+#include "include/hebench_utilities.h"
 
 namespace hebench {
 namespace TestHarness {
 
 std::mutex DataGeneratorHelper::m_mtx_rand;
+
+//-------------------------
+// class DataLoaderCompute
+//-------------------------
+
+IDataLoader::ResultDataPtr DataLoaderCompute::getResultFor(const std::uint64_t *param_data_pack_indices)
+{
+    if (!this->isInitialized())
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
+    ResultDataPtr p_retval;
+
+    if (this->hasResults())
+    {
+        p_retval = PartialDataLoader::getResultFor(param_data_pack_indices);
+    } // end if
+    else
+    {
+        std::uint64_t r_i = getResultIndex(param_data_pack_indices);
+        std::shared_ptr<std::vector<std::shared_ptr<hebench::APIBridge::DataPack>>> p_tmp_packs =
+            std::make_shared<std::vector<std::shared_ptr<hebench::APIBridge::DataPack>>>(getResultTempDataPacks());
+        std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> &tmp_packs = *p_tmp_packs;
+        std::vector<hebench::APIBridge::NativeDataBuffer *> result(tmp_packs.size());
+        for (std::size_t result_component_i = 0; result_component_i < result.size(); ++result_component_i)
+        {
+            assert(tmp_packs[result_component_i]
+                   && tmp_packs[result_component_i]->buffer_count > 0
+                   && tmp_packs[result_component_i]->p_buffers
+                   && tmp_packs[result_component_i]->p_buffers[0].p
+                   && tmp_packs[result_component_i]->p_buffers[0].size > 0);
+            result[result_component_i] = &(tmp_packs[result_component_i]->p_buffers[0]);
+        } // end for
+        computeResult(result, param_data_pack_indices, getDataType());
+
+        p_retval = ResultDataPtr(new ResultData());
+        p_retval->result.assign(result.begin(), result.end());
+        p_retval->sample_index = r_i;
+        p_retval->reserved0    = p_tmp_packs;
+    } // end if
+
+    return p_retval;
+}
+
+//---------------------------
+// class DataGeneratorHelper
+//---------------------------
+
+template <class T>
+inline void DataGeneratorHelper::generateRandomVectorU(T *result, std::uint64_t elem_count,
+                                                       T min_val, T max_val)
+{
+    std::uniform_real_distribution<double> rnd(min_val, max_val);
+    for (std::uint64_t i = 0; i < elem_count; ++i)
+    {
+        std::lock_guard<std::mutex> lock(m_mtx_rand);
+        result[i] = static_cast<T>(rnd(hebench::Utilities::RandomGenerator::get()));
+    } // end for
+}
+
+template <class T>
+inline void DataGeneratorHelper::generateRandomVectorN(T *result, std::uint64_t elem_count,
+                                                       T mean, T stddev)
+{
+    std::normal_distribution<double> rnd(mean, stddev);
+    for (std::uint64_t i = 0; i < elem_count; ++i)
+    {
+        std::lock_guard<std::mutex> lock(m_mtx_rand);
+        result[i] = static_cast<T>(rnd(hebench::Utilities::RandomGenerator::get()));
+    } // end for
+}
 
 void DataGeneratorHelper::generateRandomVectorU(hebench::APIBridge::DataType data_type,
                                                 void *result, std::uint64_t elem_count,

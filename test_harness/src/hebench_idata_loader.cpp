@@ -243,8 +243,8 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
     if (expected_output_dim <= 0)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid output dimensions: 'expected_output_dim' must be positive."));
 
-    ExternalDataset<T> dataset          = ExternalDatasetLoader<T>::loadFromCSV(filename, 0);
-    std::size_t max_output_sample_count = 1;
+    hebench::DataLoader::ExternalDataset<T> dataset = hebench::DataLoader::ExternalDatasetLoader<T>::loadFromCSV(filename, 0);
+    std::size_t max_output_sample_count             = 1;
 
     // validate loaded data
 
@@ -279,7 +279,7 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
         throw std::runtime_error(IL_LOG_MSG_CLASS("Loaded output dimensions do not match the dimensions of the result for the operation."));
     for (std::size_t output_dim_i = 0; output_dim_i < dataset.outputs.size(); ++output_dim_i)
     {
-        const std::vector<std::vector<T>> &output_component = dataset.outputs[output_dim_i];
+        std::vector<std::vector<T>> &output_component = dataset.outputs[output_dim_i];
         if (output_component.size() < max_output_sample_count)
         {
             // must have a ground truth for each combination of inputs
@@ -360,6 +360,13 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
 // class PartialDataLoader
 //-------------------------
 
+PartialDataLoader::PartialDataLoader() :
+    m_data_type(hebench::APIBridge::DataType::Int32),
+    m_b_is_output_allocated(false),
+    m_b_initialized(false)
+{
+}
+
 void PartialDataLoader::init(hebench::APIBridge::DataType data_type,
                              std::size_t input_dim,
                              const std::size_t *input_sample_count_per_dim,
@@ -398,6 +405,9 @@ void PartialDataLoader::init(hebench::APIBridge::DataType data_type,
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown 'data_type'."));
         break;
     } // end switch
+
+    m_data_type     = data_type;
+    m_b_initialized = true;
 }
 
 void PartialDataLoader::init(const std::string &filename,
@@ -460,6 +470,8 @@ void PartialDataLoader::allocate(const std::uint64_t *input_buffer_sizes,
         ss << "Invalid null `output_buffer_sizes`.";
         throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
     } // end if
+
+    m_b_is_output_allocated = allocate_output;
 
     // cache batch sizes
     std::vector<std::uint64_t> input_batch_sizes(m_input_data.size());
@@ -555,16 +567,26 @@ void PartialDataLoader::allocate(const std::uint64_t *input_buffer_sizes,
     // all data has been allocated and pointed to at this point
 }
 
-std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> PartialDataLoader::getResultTempDataPacks() const
+std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> PartialDataLoader::getResultTempDataPacks(std::uint64_t result_index) const
 {
+    if (!m_b_initialized)
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
     std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> retval(m_output_data.size());
 
-    for (std::size_t result_component_i = 0; result_component_i < retval.size(); ++result_component_i)
+    for (std::size_t result_component_i = 0; result_component_i < m_output_data.size(); ++result_component_i)
     {
         if (!m_output_data[result_component_i]
-            || !retval[result_component_i]->p_buffers
-            || retval[result_component_i]->buffer_count <= 0)
+            || !m_output_data[result_component_i]->p_buffers)
             throw std::logic_error(IL_LOG_MSG_CLASS("Description for output component " + std::to_string(result_component_i) + " is not initialized."));
+        if (result_index >= m_output_data[result_component_i]->buffer_count)
+        {
+            std::stringstream ss;
+            ss << "Out of range `result_index`."
+               << " Expected value less than " << m_output_data[result_component_i]->buffer_count << ", but "
+               << result_index << " received.";
+            throw std::out_of_range(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
         retval[result_component_i] =
             std::shared_ptr<hebench::APIBridge::DataPack>(new hebench::APIBridge::DataPack(),
                                                           [](hebench::APIBridge::DataPack *p) {
@@ -583,12 +605,11 @@ std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> PartialDataLoader::ge
                                                                   delete p;
                                                               } // end if
                                                           });
-        retval[result_component_i]->param_position   = result_component_i;
-        retval[result_component_i]->buffer_count     = 1;
-        retval[result_component_i]->p_buffers        = new hebench::APIBridge::NativeDataBuffer();
-        hebench::APIBridge::NativeDataBuffer &buffer = *retval[result_component_i]->p_buffers;
-        buffer                                       = retval[result_component_i]->p_buffers[0];
-        buffer.p                                     = new std::int8_t[buffer.size];
+        retval[result_component_i]->param_position = result_component_i;
+        retval[result_component_i]->buffer_count   = 1;
+        retval[result_component_i]->p_buffers      = new hebench::APIBridge::NativeDataBuffer[retval[result_component_i]->buffer_count];
+        retval[result_component_i]->p_buffers[0]   = m_output_data[result_component_i]->p_buffers[result_index];
+        retval[result_component_i]->p_buffers[0].p = new std::int8_t[retval[result_component_i]->p_buffers[0].size];
     } // end for
 
     return retval;
@@ -596,6 +617,9 @@ std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> PartialDataLoader::ge
 
 const hebench::APIBridge::DataPack &PartialDataLoader::getParameterData(std::uint64_t param_position) const
 {
+    if (!m_b_initialized)
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
     if (!m_input_data.at(param_position))
         throw std::runtime_error(IL_LOG_MSG_CLASS("Invalid null element accessed at 'param_position'."));
 
@@ -604,33 +628,49 @@ const hebench::APIBridge::DataPack &PartialDataLoader::getParameterData(std::uin
 
 const hebench::APIBridge::DataPack &PartialDataLoader::getResultData(std::uint64_t param_position) const
 {
+    if (!m_b_initialized)
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
     if (!m_output_data.at(param_position))
         throw std::runtime_error(IL_LOG_MSG_CLASS("Invalid null element accessed at 'param_position'."));
 
     return *m_output_data.at(param_position);
 }
 
-std::vector<const hebench::APIBridge::NativeDataBuffer *>
-PartialDataLoader::getResultFor(const std::uint64_t *param_data_pack_indices)
+IDataLoader::ResultDataPtr PartialDataLoader::getResultFor(const std::uint64_t *param_data_pack_indices)
 {
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> retval;
-    std::uint64_t r_i = getResultIndex(param_data_pack_indices);
+    if (!m_b_initialized)
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
+    ResultDataPtr p_retval                                            = ResultDataPtr(new ResultData());
+    std::vector<const hebench::APIBridge::NativeDataBuffer *> &retval = p_retval->result;
+    std::uint64_t r_i                                                 = getResultIndex(param_data_pack_indices);
+    p_retval->sample_index                                            = r_i;
 
     retval.resize(getResultCount());
     for (std::size_t result_component_i = 0; result_component_i < retval.size(); ++result_component_i)
     {
         const hebench::APIBridge::DataPack &result_component = getResultData(result_component_i);
-        assert(result_component.param_position == result_component_i);
-        retval[result_component_i] =
-            result_component.p_buffers + (result_component.buffer_count > r_i ? r_i : 0);
-        assert(retval[result_component_i]);
+        assert((result_component.buffer_count == 0 || result_component.p_buffers)
+               && result_component.param_position == result_component_i);
+        if (r_i >= result_component.buffer_count)
+        {
+            std::stringstream ss;
+            ss << "Unexpected error! Result sample " << r_i << " for result component " << result_component_i << " not found.";
+            throw std::logic_error(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+        retval[result_component_i] = result_component.p_buffers + r_i;
+        //result_component.p_buffers + (result_component.buffer_count > r_i ? r_i : 0);
     } // end for
 
-    return retval;
+    return p_retval;
 }
 
-std::uint64_t PartialDataLoader::getResultIndex(const std::uint64_t *param_data_pack_indices)
+std::uint64_t PartialDataLoader::getResultIndex(const std::uint64_t *param_data_pack_indices) const
 {
+    if (!m_b_initialized)
+        throw std::logic_error(IL_LOG_MSG_CLASS("Not initialized."));
+
     if (!param_data_pack_indices)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null argument 'param_data_pack_indices'."));
 
@@ -642,7 +682,12 @@ std::uint64_t PartialDataLoader::getResultIndex(const std::uint64_t *param_data_
     {
         assert(getParameterData(param_i).param_position == param_i);
         if (param_data_pack_indices[param_i] >= getParameterData(param_i).buffer_count)
-            throw std::out_of_range(IL_LOG_MSG_CLASS("Index out of range: 'param_data_pack_indices['" + std::to_string(param_i) + "] == " + std::to_string(param_data_pack_indices[param_i]) + ". Expected value less than " + std::to_string(getParameterData(param_i).buffer_count) + "."));
+        {
+            std::stringstream ss;
+            ss << "Index out of range: 'param_data_pack_indices['" << param_i << "] == " << param_data_pack_indices[param_i] << ". "
+               << "Expected value less than " << getParameterData(param_i).buffer_count << ".";
+            throw std::out_of_range(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
         retval = param_data_pack_indices[param_i] + getParameterData(param_i).buffer_count * retval;
     } // end for
 

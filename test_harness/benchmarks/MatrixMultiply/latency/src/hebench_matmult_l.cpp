@@ -138,11 +138,23 @@ void Benchmark::init()
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading workload data...") << std::endl;
 
     timer.start();
-    // generates random matrices for input and generates (computes) ground truth
-    m_data         = DataGenerator::create(mat_dims[0].first, mat_dims[0].second, // M0
-                                   mat_dims[1].second, // M1
-                                   batch_sizes[0], batch_sizes[1],
-                                   this->getBackendDescription().descriptor.data_type);
+    if (this->getBenchmarkConfiguration().dataset_filename.empty())
+    {
+        // generates random matrices for input and generates (computes) ground truth
+        m_data = DataLoader::create(mat_dims[0].first, mat_dims[0].second, // M0
+                                    mat_dims[1].second, // M1
+                                    batch_sizes[0], batch_sizes[1],
+                                    this->getBackendDescription().descriptor.data_type);
+    } // end if
+    else
+    {
+        // load matrices for input and ground truth from file
+        m_data = DataLoader::create(mat_dims[0].first, mat_dims[0].second, // M0
+                                    mat_dims[1].second, // M1
+                                    batch_sizes[0], batch_sizes[1],
+                                    this->getBackendDescription().descriptor.data_type,
+                                    this->getBenchmarkConfiguration().dataset_filename);
+    } // end else
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();

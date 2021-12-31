@@ -105,8 +105,12 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
     if (outputs.size() != dataset->getResultCount())
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid number of outputs: 'outputs'."));
 
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> truths =
-        dataset->getResultFor(param_data_pack_indices);
+    IDataLoader::ResultDataPtr ptr_truths = dataset->getResultFor(param_data_pack_indices);
+    const std::vector<const hebench::APIBridge::NativeDataBuffer *> &truths =
+        ptr_truths->result;
+
+    // TODO:
+#pragma message("This should go over all elements of truth and outputs")
 
     if (!truths.empty() && !outputs.empty() && truths.front())
     {
@@ -186,13 +190,36 @@ void PartialBenchmarkCategory::logResult(std::ostream &os,
 {
     std::stringstream ss;
 
+    // validate dataset and param_data_pack_indices
+    if (!dataset)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `dataset`."));
+    if (!param_data_pack_indices)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `param_data_pack_indices`."));
+    for (std::size_t param_i = 0; param_i < dataset->getParameterCount(); ++param_i)
+    {
+        if (param_data_pack_indices[param_i] >= dataset->getParameterData(param_i).buffer_count)
+        {
+            std::stringstream ss;
+            ss << "Index out of range `param_data_pack_indices[" << param_i << "]` = " << param_data_pack_indices[param_i] << ". "
+               << "Expected less than " << dataset->getParameterData(param_i).buffer_count << ".";
+            throw std::out_of_range(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+        if (!dataset->getParameterData(param_i).p_buffers)
+        {
+            std::stringstream ss;
+            ss << "Invalid empty DataPack buffer in IDataLoader `dataset` for parameter " << param_i << ".";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+    } // end for
+
     os << "Number of parameters, " << dataset->getParameterCount() << std::endl
        << "Number of result components (expected), " << dataset->getResultCount() << std::endl
        << "Number of result components (received), " << outputs.size() << std::endl
        << std::endl;
 
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> truths =
-        dataset->getResultFor(param_data_pack_indices);
+    IDataLoader::ResultDataPtr ptr_truths = dataset->getResultFor(param_data_pack_indices);
+    const std::vector<const hebench::APIBridge::NativeDataBuffer *> &truths =
+        ptr_truths->result;
 
     // param_data_pack_indices already validated by previous call
 
