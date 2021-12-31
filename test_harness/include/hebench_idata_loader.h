@@ -30,6 +30,21 @@ public:
     template <typename T>
     using unique_ptr_custom_deleter = hebench::TestHarness::unique_ptr_custom_deleter<T>;
 
+    struct ResultData
+    {
+        /**
+         * @brief Points to the `NativeDataBuffer` s containing the result sample for
+         * an input sample.
+         */
+        std::vector<const hebench::APIBridge::NativeDataBuffer *> result;
+        /**
+         * @brief Index of the result sample.
+         */
+        std::uint64_t sample_index;
+        std::shared_ptr<void> reserved0; // use for RAII if needed
+    };
+    typedef std::shared_ptr<ResultData> ResultDataPtr;
+
     typedef std::shared_ptr<IDataLoader> Ptr;
 
     virtual ~IDataLoader() {}
@@ -109,11 +124,12 @@ public:
      * @brief getResultFor
      * @param[in] param_data_pack_indices Collection of indices for data sample to
      * use inside each parameter pack. Number of elements pointed must be, at least,
-     * `parameterCount()`.
-     * @return Returns the ground-truth result corresponding to the specified parameter
-     * indices.
-     * @throw std::out_of_range if any index is out of range.
+     * `getParameterCount()`.
+     * @return Returns a non-null pointer ResultData containing the ground-truth result
+     * corresponding to the specified parameter indices.
+     * @throws std::out_of_range if any index is out of range.
      * @throws std::invalid_argument if \p param_data_pack_indices is null.
+     * @throws instance of std::exception on any other error.
      * @details The shape of result is always 2D: [n = getResultCount(), ?], so, the result
      * for an operation is
      * @code
@@ -122,7 +138,7 @@ public:
      * where r_i is the index of the `NativeDataBuffer`s for the result in the second dimension.
      * @sa getResultIndex()
      */
-    virtual std::vector<const hebench::APIBridge::NativeDataBuffer *> getResultFor(const std::uint64_t *param_data_pack_indices) = 0;
+    virtual ResultDataPtr getResultFor(const std::uint64_t *param_data_pack_indices) = 0;
     /**
      * @brief Computes the index of the result NativeDataBuffer given the indices
      * of the input data.
@@ -186,7 +202,7 @@ public:
      * For complete details, see \ref results_order .
      * @sa hebench::APIBridge::Category::Offline
      */
-    virtual std::uint64_t getResultIndex(const std::uint64_t *param_data_pack_indices) = 0;
+    virtual std::uint64_t getResultIndex(const std::uint64_t *param_data_pack_indices) const = 0;
 
     /**
      * @brief Total data loaded by this loader in bytes.
@@ -232,8 +248,8 @@ public:
     const hebench::APIBridge::DataPack &getParameterData(std::uint64_t param_position) const override;
     std::uint64_t getResultCount() const override { return m_output_data.size(); }
     const hebench::APIBridge::DataPack &getResultData(std::uint64_t param_position) const override;
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> getResultFor(const std::uint64_t *param_data_pack_indices) override;
-    std::uint64_t getResultIndex(const std::uint64_t *param_data_pack_indices) override;
+    ResultDataPtr getResultFor(const std::uint64_t *param_data_pack_indices) override;
+    std::uint64_t getResultIndex(const std::uint64_t *param_data_pack_indices) const override;
     std::uint64_t getTotalDataLoaded() const override { return m_raw_buffer.size(); }
     /**
      * @brief Retrieves whether buffers to contain output data have been allocated or not.
@@ -250,9 +266,11 @@ public:
      * @sa init(), getResultTempDataPacks()
      */
     bool hasResults() const { return m_b_is_output_allocated; }
+    bool isInitialized() const { return m_b_initialized; }
+    hebench::APIBridge::DataType getDataType() const { return m_data_type; }
 
 protected:
-    PartialDataLoader() {}
+    PartialDataLoader();
     /**
      * @brief Initializes dimensions of inputs and outputs. No allocation is performed.
      * @param[in] data_type Data type of elements contained in the samples for this dataset.
@@ -325,20 +343,75 @@ protected:
     /**
      * @brief Retrieves a pre-allocated result providing memory space to store
      * a single operation result sample.
+     * @param[in] result_index Result sample index on which to base the pre-allocated
+     * buffers.
      * @return Pre-allocated collection of `DataPack`. All fields in the Data packs and
      * contained `NativeDataBuffer` are valid. Do not assign new values to any fields.
      * @throws std::logic_error if this method is called before `init()` has been called.
+     * @throws std::out_of_range if `result_index` out of range.
      * @details This method must be called after `init()` has been called.
      *
      * Clients can use the memory pointed to by the contained `NativeDataBuffer`
-     * to store the values of the corresponding result sample.
+     * to store the values of the corresponding result sample. Technically, buffers allocated
+     * for every possible `result_index` should have the same capacity, thus, requesting
+     * allocation for result `0` should work for all results.
      *
      * Allocation occurs every time this method is called.
      *
      * Returned Data packs and associated buffers will be automatically cleaned up when
      * out of scope and no other copies are available.
      */
-    std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> getResultTempDataPacks() const;
+    std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> getResultTempDataPacks(std::uint64_t result_index) const;
+    /**
+     * @brief Retrieves a pre-allocated result providing memory space to store
+     * a single operation result sample.
+     * @param[in] param_data_pack_indices For each operation parameter, this array
+     * indicates the sample index to use for the operation.
+     * Must contain, at least, `getParameterCount()` elements.
+     * @return Pre-allocated collection of `DataPack`. All fields in the Data packs and
+     * contained `NativeDataBuffer` are valid. Do not assign new values to any fields.
+     * @throws std::logic_error if this method is called before `init()` has been called.
+     * @throws std::out_of_range if values in `param_data_pack_indices` fall out of range.
+     * @details This method must be called after `init()` has been called.
+     *
+     * Clients can use the memory pointed to by the contained `NativeDataBuffer`
+     * to store the values of the corresponding result sample. Technically, buffers allocated
+     * for every possible result sample should have the same capacity, thus, requesting
+     * allocation for first result sample should work for all results.
+     *
+     * Allocation occurs every time this method is called.
+     *
+     * Returned Data packs and associated buffers will be automatically cleaned up when
+     * out of scope and no other copies are available.
+     */
+    std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> getResultTempDataPacks(const std::uint64_t *param_data_pack_indices) const
+    {
+        return getResultTempDataPacks(getResultIndex(param_data_pack_indices));
+    }
+    /**
+     * @brief Retrieves a pre-allocated result providing memory space to store
+     * a single operation result sample.
+     * @return Pre-allocated collection of `DataPack`. All fields in the Data packs and
+     * contained `NativeDataBuffer` are valid. Do not assign new values to any fields.
+     * @throws std::logic_error if this method is called before `init()` has been called.
+     * @details This method must be called after `init()` has been called.
+     *
+     * Clients can use the memory pointed to by the contained `NativeDataBuffer`
+     * to store the values of the corresponding result sample. The returned allocation
+     * is appropriate to store the first result sample of the operation based on the
+     * first input sample. Technically, buffers allocated
+     * for every possible result sample should have the same capacity, thus, requesting
+     * allocation for first result sample should work for all results.
+     *
+     * Allocation occurs every time this method is called.
+     *
+     * Returned Data packs and associated buffers will be automatically cleaned up when
+     * out of scope and no other copies are available.
+     */
+    std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> getResultTempDataPacks() const
+    {
+        return getResultTempDataPacks(0UL);
+    }
 
 private:
     /**
@@ -372,7 +445,9 @@ private:
     std::vector<unique_ptr_custom_deleter<hebench::APIBridge::DataPack>> m_output_data;
     // RAII storage for native data buffers
     std::vector<std::uint8_t> m_raw_buffer; // used to store all the data in contiguous memory
+    hebench::APIBridge::DataType m_data_type;
     bool m_b_is_output_allocated;
+    bool m_b_initialized;
 };
 
 } // namespace TestHarness
