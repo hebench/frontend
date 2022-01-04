@@ -1,5 +1,5 @@
 # CSV Format for Input Datasets 
-This format specifies a 3-dimsensional tensor object for input and output. A control line indexes into the first index. Each sample line under the control line becomes the second index. The third index is the individual samples on each line. A control line may specify that the lines below are either 'local' data in the file itself, or a link to an external csv file. In the case of multiple csv files, or multiple control lines for the same index, the lines are concatenated.
+This format specifies a 3-dimensional tensor object for input parameters and output results. A control line specifies the zero-based first parameter index. Each sample line under the control line becomes the second index. The third index is the individual samples on each line. A control line may specify that the lines below are either 'local' data in the file itself, or a link to an external csv file. In the case of multiple csv files, or multiple control lines for the same index, the lines are concatenated.
 ## Control line format
 ```
 <input|output>, <operation_input_param_index>, <num_lines>, <local|csv>
@@ -13,17 +13,17 @@ Logistic regression - 16 features:
 File name: lr16.csv 
 ```
 # This is just a comment 
-input, 1, 1, csv
+input, 0, 1, csv
 model.csv, 2, 1 
-input, 2, 1, csv
+input, 1, 1, csv
 model.csv, 3, 1 
-input, 3, 5, local 
+input, 2, 5, local 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
 -15, 14, -13, 12, -11, 10, -9, 8, -7, 6, -5, 4, -3, 2, -1, 0 
-output, 1, 5, local
+output, 0, 5, local
 0.000911051 
 0.000911051 
 0.000911051 

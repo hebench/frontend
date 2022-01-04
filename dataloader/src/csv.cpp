@@ -87,9 +87,9 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
             u = &eds.inputs;
         if (tag == "output")
             u = &eds.outputs;
-        if (ix > u->size())
-            u->resize(ix);
-        std::vector<std::vector<T>> &v = u->at(ix - 1);
+        if (ix >= u->size())
+            u->resize(ix + 1);
+        std::vector<std::vector<T>> &v = u->at(ix);
         if (kind == "csv")
         {
             while (nlines--)
