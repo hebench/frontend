@@ -35,5 +35,17 @@ int main(int, char **)
               && ds.outputs[0][0][0] == std::stof("0.000911051")))
             exit(-1);
     }
+    {
+        ExternalDatasetLoader<float> dl;
+        try
+        {
+            auto ds = dl.loadFromCSV("data/input_bad.csv");
+            exit(-1); //should not get to here
+        }
+        catch (std::ios_base::failure e)
+        {
+            std::cerr << "caught: " << e.what() << std::endl;
+        }
+    }
     exit(0);
 }
