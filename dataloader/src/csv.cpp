@@ -36,16 +36,19 @@ struct icsvstream : std::istringstream
 };
 
 std::locale icsvstream::loc = std::locale(std::locale(), new icsvstream::csv_ws());
-;
 
 template <typename T>
-static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0)
+static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0, size_t lnum = 0, std::string fpath = "")
 {
     std::string line;
     while (skip--)
+    {
+        ++lnum;
         std::getline(ifs, line);
+    }
     while (nlines-- and std::getline(ifs, line))
     {
+        ++lnum;
         std::cerr << "Reading line: " << line << std::endl;
         icsvstream ils(line);
         std::vector<T> w;
@@ -57,7 +60,12 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
         catch (const std::ios_base::failure &e)
         {
             if (!ils.eof())
-                throw;
+            {
+                //throw; // preserves error type and attributes
+                std::ostringstream oss;
+                oss << e.what() << " in " << fpath << ":" << lnum << std::endl;
+                throw std::ios_base::failure(oss.str(), e.code());
+            }
         }
         if (v.size() and w.size() != v.back().size())
             throw std::length_error("Inconsistent number of values read from line");
@@ -68,6 +76,7 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
 template <typename T, typename E>
 ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename, std::uint64_t max_loaded_size)
 {
+    size_t lnum = 0;
     ExternalDataset<T> eds;
     std::cerr << "Opening: " << filename << std::endl;
     std::ifstream ifs(filename, std::ifstream::in);
@@ -75,6 +84,7 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     std::string metaline;
     while (std::getline(ifs, metaline))
     {
+        ++lnum;
         std::cerr << "Reading control line: " << metaline << std::endl;
         if (metaline.at(0) == '#' or metaline.size() == 0)
             continue;
@@ -106,14 +116,15 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
                 std::cerr << "Opening data " << path << std::endl;
                 std::ifstream ifs_csv(path, std::ifstream::in);
                 ifs_csv.exceptions(std::ifstream::badbit);
-                loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1);
+                loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1, 0, path);
                 ifs_csv.close();
             }
         }
         if (kind == "local")
         {
             std::cerr << "Reading local data" << std::endl;
-            loadcsvdatafile(ifs, v, nlines, 0);
+            loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
+            lnum += nlines;
         }
     }
     ifs.close();
