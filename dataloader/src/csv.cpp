@@ -63,7 +63,8 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             {
                 //throw; // preserves error type and attributes
                 std::ostringstream oss;
-                oss << e.what() << " in " << fpath << ":" << lnum << std::endl;
+                size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
+                oss << e.what() << " in " << fpath << ":" << lnum << ":" << ofs << std::endl;
                 throw std::ios_base::failure(oss.str(), e.code());
             }
         }
