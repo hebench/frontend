@@ -118,8 +118,10 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
         std::vector<std::vector<std::vector<T>>> *u;
         if (tag == "input")
             u = &eds.inputs;
-        if (tag == "output")
+        else if (tag == "output")
             u = &eds.outputs;
+        else
+            throw std::runtime_error("parse error: <tag> must be \"input\" or \"output\"");
         if (ix >= u->size())
             u->resize(ix + 1);
         std::vector<std::vector<T>> &v = u->at(ix);
