@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "interface.h"
+#include <cxxabi.h>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <sstream>
 #include <string>
+#include <typeinfo>
 
 namespace hebench {
 namespace dataloader {
@@ -64,7 +66,9 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
                 //throw; // preserves error type and attributes
                 std::ostringstream oss;
                 size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
-                oss << e.what() << " in " << fpath << ":" << lnum << ":" << ofs << std::endl;
+                int status;
+                oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\""
+                    << " at " << fpath << ":" << lnum << ":" << ofs << std::endl;
                 throw std::ios_base::failure(oss.str(), e.code());
             }
         }
@@ -72,6 +76,24 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             throw std::length_error("Inconsistent number of values read from line");
         v.push_back(w);
     }
+}
+
+template <typename T>
+icsvstream &operator>>(icsvstream &in, T &arg)
+{
+    std::istringstream *iss = &in;
+    try
+    {
+        (*iss) >> arg; // superclass read data into argument
+    }
+    catch (const std::ios_base::failure &e)
+    {
+        std::ostringstream oss;
+        int status;
+        oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\"";
+        throw std::ios_base::failure(oss.str(), e.code());
+    }
+    return in;
 }
 
 template <typename T, typename E>
