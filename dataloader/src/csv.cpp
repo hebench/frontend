@@ -145,12 +145,14 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
                 ifs_csv.close();
             }
         }
-        if (kind == "local")
+        else if (kind == "local")
         {
             std::cerr << "Reading local data" << std::endl;
             loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
             lnum += nlines;
         }
+        else
+            throw std::runtime_error("parse error: <kind> must be \"local\" or \"csv\"");
     }
     ifs.close();
     return eds;
