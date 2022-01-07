@@ -9,8 +9,9 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "../include/hebench_idata_loader.h"
 #include "include/hebench_dataset_loader.h"
+
+#include "../include/hebench_idata_loader.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -255,6 +256,14 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
     for (std::size_t input_dim_i = 0; input_dim_i < dataset.inputs.size(); ++input_dim_i)
     {
         std::vector<std::vector<T>> &input_component = dataset.inputs[input_dim_i];
+        if (input_component.size() < max_input_sample_count_per_dim[input_dim_i])
+        {
+            std::stringstream ss;
+            ss << "Insufficient data loaded for operation input parameter " << input_dim_i << ". "
+               << "Expected " << max_input_sample_count_per_dim[input_dim_i] << " samples, but "
+               << input_component.size() << " found.";
+            throw std::runtime_error(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
         if (input_component.size() > max_input_sample_count_per_dim[input_dim_i])
             // discard excess data
             input_component.resize(max_input_sample_count_per_dim[input_dim_i]);
@@ -448,6 +457,9 @@ void PartialDataLoader::init(const std::string &filename,
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown 'data_type'."));
         break;
     } // end switch
+
+    m_data_type     = data_type;
+    m_b_initialized = true;
 }
 
 void PartialDataLoader::allocate(const std::uint64_t *input_buffer_sizes,

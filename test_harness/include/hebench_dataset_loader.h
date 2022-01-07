@@ -6,7 +6,6 @@
 #define _HEBench_Harness_DatasetLoader_H_0596d40a3cce4b108a81595c50eb286d
 
 #include <cstdint>
-#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>

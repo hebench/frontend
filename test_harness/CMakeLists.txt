@@ -11,10 +11,6 @@ set(${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/categories/include/hebench_benchmark_offline.h"
     )
 
-#list(APPEND ${PROJECT_NAME}_HEADERS
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/datagen_helper/include/inl/datagen_helper.inl"
-#    )
-
 set(${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/datagen_helper/src/datagen_helper.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/categories/src/hebench_benchmark_category.cpp"
@@ -22,57 +18,57 @@ set(${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/categories/src/hebench_benchmark_offline.cpp"
     )
 
-## Logisitc Regression Inference
-#list(APPEND ${PROJECT_NAME}_HEADERS
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/include/hebench_logreg.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/latency/include/hebench_logreg_l.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/offline/include/hebench_logreg_o.h"
-#    )
+# Logisitc Regression Inference
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/include/hebench_logreg.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/latency/include/hebench_logreg_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/offline/include/hebench_logreg_o.h"
+    )
 
-#list(APPEND ${PROJECT_NAME}_SOURCES
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/src/hebench_logreg.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/latency/src/hebench_logreg_l.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/offline/src/hebench_logreg_o.cpp"
-#    )
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/src/hebench_logreg.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/latency/src/hebench_logreg_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/LogisticRegression/offline/src/hebench_logreg_o.cpp"
+    )
 
-## DotProduct
-#list(APPEND ${PROJECT_NAME}_HEADERS
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/include/hebench_dotproduct.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/latency/include/hebench_dotproduct_l.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/offline/include/hebench_dotproduct_o.h"
-#    )
+# DotProduct
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/include/hebench_dotproduct.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/latency/include/hebench_dotproduct_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/offline/include/hebench_dotproduct_o.h"
+    )
 
-#list(APPEND ${PROJECT_NAME}_SOURCES
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/src/hebench_dotproduct.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/latency/src/hebench_dotproduct_l.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/offline/src/hebench_dotproduct_o.cpp"
-#    )
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/src/hebench_dotproduct.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/latency/src/hebench_dotproduct_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/DotProduct/offline/src/hebench_dotproduct_o.cpp"
+    )
 
-## EltwiseMult
-#list(APPEND ${PROJECT_NAME}_HEADERS
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/include/hebench_eltwisemult.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/latency/include/hebench_eltwisemult_l.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/offline/include/hebench_eltwisemult_o.h"
-#    )
+# EltwiseMult
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/include/hebench_eltwisemult.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/latency/include/hebench_eltwisemult_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/offline/include/hebench_eltwisemult_o.h"
+    )
 
-#list(APPEND ${PROJECT_NAME}_SOURCES
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/src/hebench_eltwisemult.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/latency/src/hebench_eltwisemult_l.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/offline/src/hebench_eltwisemult_o.cpp"
-#    )
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/src/hebench_eltwisemult.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/latency/src/hebench_eltwisemult_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseMult/offline/src/hebench_eltwisemult_o.cpp"
+    )
 
-## EltwiseAdd
-#list(APPEND ${PROJECT_NAME}_HEADERS
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/include/hebench_eltwiseadd.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/latency/include/hebench_eltwiseadd_l.h"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/offline/include/hebench_eltwiseadd_o.h"
-#    )
+# EltwiseAdd
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/include/hebench_eltwiseadd.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/latency/include/hebench_eltwiseadd_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/offline/include/hebench_eltwiseadd_o.h"
+    )
 
-#list(APPEND ${PROJECT_NAME}_SOURCES
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/src/hebench_eltwiseadd.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/latency/src/hebench_eltwiseadd_l.cpp"
-#    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/offline/src/hebench_eltwiseadd_o.cpp"
-#    )
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/src/hebench_eltwiseadd.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/latency/src/hebench_eltwiseadd_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/EltwiseAdd/offline/src/hebench_eltwiseadd_o.cpp"
+    )
 
 # MatMult
 list(APPEND ${PROJECT_NAME}_HEADERS

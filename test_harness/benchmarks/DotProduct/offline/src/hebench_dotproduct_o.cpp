@@ -139,14 +139,29 @@ void Benchmark::init()
                                             this->getBackendDescription().descriptor,
                                             sample_size_fallback);
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating workload...") << std::endl;
-
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading workload data...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 
     timer.start();
-    m_data         = DataGenerator::create(vector_size,
-                                   batch_sizes[0], batch_sizes[1],
-                                   this->getBackendDescription().descriptor.data_type);
+    if (this->getBenchmarkConfiguration().dataset_filename.empty())
+    {
+        // generates random vectors for input and generates (computes) ground truth
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating data...") << std::endl;
+        m_data = DataLoader::create(vector_size,
+                                    batch_sizes[0], batch_sizes[1],
+                                    this->getBackendDescription().descriptor.data_type);
+    } // end if
+    else
+    {
+        std::stringstream ss;
+        ss << "Loading data from external dataset: " << std::endl
+           << "              \"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+        // load vectors for input and ground truth from file
+        m_data = DataLoader::create(vector_size,
+                                    batch_sizes[0], batch_sizes[1],
+                                    this->getBackendDescription().descriptor.data_type,
+                                    this->getBenchmarkConfiguration().dataset_filename);
+    } // end else
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();

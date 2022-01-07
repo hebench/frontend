@@ -6,7 +6,6 @@
 #include <sstream>
 
 #include "../include/hebench_eltwiseadd.h"
-#include "benchmarks/datagen_helper/include/datagen_helper.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -123,6 +122,12 @@ private:
     template <class T>
     static void vectorEltwiseAdd(T *result, const T *a, const T *b, std::uint64_t elem_count)
     {
+        if (!result)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `result`"));
+        if (!a)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `a`"));
+        if (!b)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `b`"));
         std::transform(a, a + elem_count, // a[0..elem_count]
                        b, // b[0..elem_count]
                        result, // result[0..elem_count]
@@ -180,14 +185,14 @@ DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
     return retval;
 }
 
-DataLoader::Ptr DataLoader::create(const std::string &dataset_filename,
-                                   std::uint64_t expected_vector_size,
+DataLoader::Ptr DataLoader::create(std::uint64_t expected_vector_size,
                                    std::uint64_t max_batch_size_a,
                                    std::uint64_t max_batch_size_b,
-                                   hebench::APIBridge::DataType data_type)
+                                   hebench::APIBridge::DataType data_type,
+                                   const std::string &dataset_filename)
 {
     DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
-    retval->init(dataset_filename, expected_vector_size, max_batch_size_a, max_batch_size_b, data_type);
+    retval->init(expected_vector_size, max_batch_size_a, max_batch_size_b, data_type, dataset_filename);
     return retval;
 }
 
@@ -207,14 +212,15 @@ void DataLoader::init(std::uint64_t vector_size,
     };
 
     // compute buffer size in bytes for each vector
-    std::vector<std::uint64_t> buffer_sizes(InputDim0 + OutputDim0, vector_size);
+    std::vector<std::uint64_t> sample_vector_sizes(InputDim0 + OutputDim0, vector_size);
+    m_vector_size = vector_size;
 
     PartialDataLoader::init(data_type,
                             InputDim0, // number of input parameters
                             batch_sizes, // samples per parameter
-                            buffer_sizes.data(), // vector size for each parameter
+                            sample_vector_sizes.data(), // vector size for each parameter
                             OutputDim0, // number of result components
-                            buffer_sizes.data() + InputDim0, // number of result samples
+                            sample_vector_sizes.data() + InputDim0, // number of result samples
                             true); // allocate memory for ground truth?
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
@@ -255,11 +261,11 @@ void DataLoader::init(std::uint64_t vector_size,
     // all data has been generated at this point
 }
 
-void DataLoader::init(const std::string &dataset_filename,
-                      std::uint64_t expected_vector_size,
+void DataLoader::init(std::uint64_t expected_vector_size,
                       std::uint64_t max_batch_size_a,
                       std::uint64_t max_batch_size_b,
-                      hebench::APIBridge::DataType data_type)
+                      hebench::APIBridge::DataType data_type,
+                      const std::string &dataset_filename)
 {
     // Load and initialize the data for vector element-wise addition:
     // C = A + B
@@ -272,17 +278,32 @@ void DataLoader::init(const std::string &dataset_filename,
     };
 
     // compute buffer size in bytes for each vector
-    std::vector<std::uint64_t> buffer_sizes(InputDim0 + OutputDim0, expected_vector_size);
+    std::vector<std::uint64_t> sample_vector_sizes(InputDim0 + OutputDim0, expected_vector_size);
+    m_vector_size = expected_vector_size;
 
     PartialDataLoader::init(dataset_filename, data_type,
                             InputDim0,
                             batch_sizes,
-                            buffer_sizes.data(),
+                            sample_vector_sizes.data(),
                             OutputDim0,
-                            buffer_sizes.data() + InputDim0);
+                            sample_vector_sizes.data() + InputDim0);
 
     // at this point all NativeDataBuffers have been allocated, pointed to the correct locations
     // and filled with data from the specified dataset file
+}
+
+void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type)
+{
+    // as protected method, parameters should be valid when called
+
+    // generate the output
+    DataGeneratorHelper::vectorEltwiseAdd(data_type,
+                                          result.front()->p, // C
+                                          this->getParameterData(0).p_buffers[param_data_pack_indices[0]].p, // A
+                                          this->getParameterData(1).p_buffers[param_data_pack_indices[1]].p, // B
+                                          m_vector_size);
 }
 
 } // namespace EltwiseAdd

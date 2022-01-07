@@ -201,9 +201,9 @@ void DataGeneratorHelper::matMul(hebench::APIBridge::DataType data_type,
     } // end switch
 }
 
-//---------------------
-// class DataGenerator
-//---------------------
+//------------------
+// class DataLoader
+//------------------
 
 DataLoader::Ptr DataLoader::create(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
                                    std::uint64_t batch_size_mat_a,
@@ -356,19 +356,6 @@ void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer 
                                hebench::APIBridge::DataType data_type)
 {
     // as protected method, parameters should be valid when called
-    // validate
-    //    if (result.empty())
-    //        throw std::invalid_argument(IL_LOG_MSG_CLASS("`result` cannot be empty."));
-    //    if (!param_data_pack_indices)
-    //        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `param_data_pack_indices`."));
-    //    for (std::size_t i = 0; i < this->getParameterCount(); ++i)
-    //        if (param_data_pack_indices[i] >= this->getParameterData(i).buffer_count)
-    //        {
-    //            std::stringstream ss;
-    //            ss << "`param_data_pack_indices[" << i << "]` out of range. Must be less than "
-    //               << this->getParameterData(i).buffer_count << ", but " << param_data_pack_indices[i] << " received.";
-    //            throw std::out_of_range(IL_LOG_MSG_CLASS(ss.str()));
-    //        } // end if
 
     // generate the output
     DataGeneratorHelper::matMul(data_type,

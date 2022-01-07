@@ -477,7 +477,7 @@ int main(int argc, char **argv)
                     {
                         std::stringstream ss;
                         ss << "Dataset, \"" << bench_token->getBenchmarkConfiguration().dataset_filename << "\"" << std::endl;
-                        report.appendHeader(ss.str());
+                        report.appendFooter(ss.str());
                     } // end if
 
                     std::cout << std::endl

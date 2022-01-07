@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "include/hebench_dataset_loader.h"
@@ -37,38 +38,55 @@ struct icsvstream : std::istringstream
 };
 
 std::locale icsvstream::loc = std::locale(std::locale(), new icsvstream::csv_ws());
-;
 
 template <typename T>
-static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0)
+static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0, size_t lnum = 0, std::string fpath = "")
 {
+    static constexpr const char *s_trim = " \t\n\r\f\v";
     std::string line;
     while (skip--)
+    {
+        ++lnum;
         std::getline(ifs, line);
+    }
     while (nlines-- and std::getline(ifs, line))
     {
+        ++lnum;
+        line.erase(0, line.find_first_not_of(s_trim));
+        line.erase(line.find_last_not_of(s_trim) + 1);
         std::cerr << "Reading line: " << line << std::endl;
-        icsvstream ils(line);
-        std::vector<T> w;
-        std::istream_iterator<T> isit(ils);
-        try
+        if (!line.empty() && line.front() != '#') // skip empty lines and comments
         {
-            std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
-        }
-        catch (const std::ios_base::failure &e)
-        {
-            if (!ils.eof())
-                throw;
-        }
-        if (v.size() and w.size() != v.back().size())
-            throw std::length_error("Inconsistent number of values read from line");
-        v.push_back(w);
+            icsvstream ils(line);
+            std::vector<T> w;
+            std::istream_iterator<T> isit(ils);
+            try
+            {
+                std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+            }
+            catch (const std::ios_base::failure &e)
+            {
+                if (!ils.eof())
+                {
+                    //throw; // preserves error type and attributes
+                    std::ostringstream oss;
+                    size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
+                    oss << e.what() << " in " << fpath << ":" << lnum << ":" << ofs;
+                    throw std::ios_base::failure(oss.str(), e.code());
+                }
+            }
+            if (v.size() and w.size() != v.back().size())
+                throw std::length_error("Inconsistent number of values read from line");
+            v.push_back(w);
+        } // end if
     }
 }
 
 template <typename T, typename E>
 ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename, std::uint64_t max_loaded_size)
 {
+    static constexpr const char *s_trim = " \t\n\r\f\v";
+    size_t lnum                         = 0;
     ExternalDataset<T> eds;
     std::cerr << "Opening: " << filename << std::endl;
     std::ifstream ifs(filename, std::ifstream::in);
@@ -76,21 +94,27 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     std::string metaline;
     while (std::getline(ifs, metaline))
     {
+        ++lnum;
         std::cerr << "Reading control line: " << metaline << std::endl;
+        metaline.erase(0, metaline.find_first_not_of(s_trim));
+        metaline.erase(metaline.find_last_not_of(s_trim) + 1);
         if (metaline.at(0) == '#' or metaline.size() == 0)
             continue;
         icsvstream iss(metaline);
         std::string tag, kind;
-        size_t ix, nlines;
+        std::size_t ix, nlines;
         iss >> tag >> ix >> nlines >> kind;
         std::vector<std::vector<std::vector<T>>> *u;
         if (tag == "input")
             u = &eds.inputs;
+        //else
         if (tag == "output")
             u = &eds.outputs;
-        if (ix > u->size())
-            u->resize(ix);
-        std::vector<std::vector<T>> &v = u->at(ix - 1);
+        //        else
+        //            throw std::runtime_error("Invalid tag in control line: \"" + tag + "\"");
+        if (ix >= u->size())
+            u->resize(ix + 1);
+        std::vector<std::vector<T>> &v = u->at(ix);
         if (kind == "csv")
         {
             while (nlines--)
@@ -107,14 +131,15 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
                 std::cerr << "Opening data " << path << std::endl;
                 std::ifstream ifs_csv(path, std::ifstream::in);
                 ifs_csv.exceptions(std::ifstream::badbit);
-                loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1);
+                loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1, 0, path);
                 ifs_csv.close();
             }
         }
         if (kind == "local")
         {
             std::cerr << "Reading local data" << std::endl;
-            loadcsvdatafile(ifs, v, nlines, 0);
+            loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
+            lnum += nlines;
         }
     }
     ifs.close();

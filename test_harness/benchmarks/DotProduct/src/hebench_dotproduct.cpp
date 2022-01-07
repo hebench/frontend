@@ -7,7 +7,6 @@
 #include <sstream>
 
 #include "../include/hebench_dotproduct.h"
-#include "benchmarks/datagen_helper/include/datagen_helper.h"
 #include "include/hebench_math_utils.h"
 
 namespace hebench {
@@ -126,6 +125,10 @@ private:
     template <class T>
     static void vectorDotProduct(T &result, const T *a, const T *b, std::uint64_t elem_count)
     {
+        if (!a)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `a`"));
+        if (!b)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `b`"));
         result = std::inner_product(a, a + elem_count, b, T());
     }
 };
@@ -169,24 +172,35 @@ void DataGeneratorHelper::vectorDotProduct(hebench::APIBridge::DataType data_typ
     } // end switch
 }
 
-//---------------------
-// class DataGenerator
-//---------------------
+//------------------
+// class DataLoader
+//------------------
 
-DataGenerator::Ptr DataGenerator::create(std::uint64_t vector_size,
-                                         std::uint64_t batch_size_a,
-                                         std::uint64_t batch_size_b,
-                                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
+                                   std::uint64_t batch_size_a,
+                                   std::uint64_t batch_size_b,
+                                   hebench::APIBridge::DataType data_type)
 {
-    DataGenerator::Ptr retval = DataGenerator::Ptr(new DataGenerator());
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
     retval->init(vector_size, batch_size_a, batch_size_b, data_type);
     return retval;
 }
 
-void DataGenerator::init(std::uint64_t vector_size,
-                         std::uint64_t batch_size_a,
-                         std::uint64_t batch_size_b,
-                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
+                                   std::uint64_t batch_size_a,
+                                   std::uint64_t batch_size_b,
+                                   hebench::APIBridge::DataType data_type,
+                                   const std::string &dataset_filename)
+{
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
+    retval->init(vector_size, batch_size_a, batch_size_b, data_type, dataset_filename);
+    return retval;
+}
+
+void DataLoader::init(std::uint64_t vector_size,
+                      std::uint64_t batch_size_a,
+                      std::uint64_t batch_size_b,
+                      hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for vector element-wise addition:
     // C = A . B
@@ -197,28 +211,28 @@ void DataGenerator::init(std::uint64_t vector_size,
         batch_size_b,
         batch_size_a * batch_size_b
     };
-    // initialize base data (data packs)
-    PartialDataLoader::init(InputDim0, batch_sizes, OutputDim0);
 
-    // compute buffer size in bytes for each vector
-    std::uint64_t buffer_sizes[InputDim0 + OutputDim0];
+    m_vector_size = vector_size;
+
+    // compute number of elements in each vector
+    std::uint64_t sample_vector_sizes[InputDim0 + OutputDim0];
     // input
     for (std::size_t i = 0; i < InputDim0; ++i)
     {
-        buffer_sizes[i] = vector_size * PartialDataLoader::sizeOf(data_type);
+        sample_vector_sizes[i] = vector_size;
     } // end for
     // output
     for (std::size_t i = InputDim0; i < InputDim0 + OutputDim0; ++i)
     {
         // an output vector has a single component (result of dot product)
-        buffer_sizes[i] = PartialDataLoader::sizeOf(data_type);
+        sample_vector_sizes[i] = 1;
     } // end for
 
     // allocate memory for each vector buffer
-    allocate(buffer_sizes, // sizes (in bytes) for each input vector
-             InputDim0, // number of input vectors
-             buffer_sizes + InputDim0, // sizes (in bytes) for each output vector
-             OutputDim0); // number of output vectors
+    PartialDataLoader::init(data_type,
+                            InputDim0, batch_sizes, sample_vector_sizes,
+                            OutputDim0, sample_vector_sizes + InputDim0,
+                            true);
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -256,6 +270,61 @@ void DataGenerator::init(std::uint64_t vector_size,
     } // end for
 
     // all data has been generated at this point
+}
+
+void DataLoader::init(std::uint64_t vector_size,
+                      std::uint64_t batch_size_a,
+                      std::uint64_t batch_size_b,
+                      hebench::APIBridge::DataType data_type,
+                      const std::string &dataset_filename)
+{
+    // Load/generate and initialize the data for vector element-wise addition:
+    // C = A . B
+
+    // number of samples in each input parameter and output
+    std::size_t batch_sizes[InputDim0 + OutputDim0] = {
+        batch_size_a,
+        batch_size_b,
+        batch_size_a * batch_size_b
+    };
+
+    m_vector_size = vector_size;
+
+    // compute number of elements in each vector
+    std::uint64_t sample_vector_sizes[InputDim0 + OutputDim0];
+    // input
+    for (std::size_t i = 0; i < InputDim0; ++i)
+    {
+        sample_vector_sizes[i] = vector_size;
+    } // end for
+    // output
+    for (std::size_t i = InputDim0; i < InputDim0 + OutputDim0; ++i)
+    {
+        // an output vector has a single component (result of dot product)
+        sample_vector_sizes[i] = 1;
+    } // end for
+
+    // allocate memory for each vector buffer
+    PartialDataLoader::init(dataset_filename, data_type,
+                            InputDim0, batch_sizes, sample_vector_sizes,
+                            OutputDim0, sample_vector_sizes + InputDim0);
+
+    // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
+    // and buffers loaded with data from dataset_filename
+}
+
+void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type)
+{
+    // as protected method, parameters should be valid when called
+
+    // generate the output
+    DataGeneratorHelper::vectorDotProduct(data_type,
+                                          result.front()->p, // C
+                                          getParameterData(0).p_buffers[param_data_pack_indices[0]].p, // A
+                                          getParameterData(1).p_buffers[param_data_pack_indices[1]].p, // B
+                                          m_vector_size);
 }
 
 } // namespace DotProduct

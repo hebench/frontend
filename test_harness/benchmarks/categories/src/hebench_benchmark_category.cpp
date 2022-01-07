@@ -110,7 +110,7 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
         ptr_truths->result;
 
     // TODO:
-#pragma message("This should go over all elements of truth and outputs")
+    //#pragma message("This should go over all elements of truth and outputs")
 
     if (!truths.empty() && !outputs.empty() && truths.front())
     {

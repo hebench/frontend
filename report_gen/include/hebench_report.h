@@ -24,7 +24,8 @@ extern "C"
      * @brief Appends text to existing header.
      * @param p_report
      * @param new_header
-     * @param new_line
+     * @param new_line If true a new line will be added after current header before
+     * appending \p new_header .
      * @returns `true` on success
      */
     int32_t appendReportHeader(void *p_report, const char *new_header, int32_t new_line);
@@ -32,7 +33,9 @@ extern "C"
      * @brief Prepends text to existing header.
      * @param p_report
      * @param new_header
-     * @param new_line
+     * @param new_line If true, \p new_header , followed by a new line, will be prepended
+     * to the current header. Otherwise, the current header will follow \p new_header
+     * immediately without a new line.
      * @returns `true` on success
      */
     int32_t prependReportHeader(void *p_report, const char *new_header, int32_t new_line);
@@ -43,7 +46,8 @@ extern "C"
      * @brief Appends text to existing footer.
      * @param p_report
      * @param new_footer
-     * @param new_line
+     * @param new_line If true a new line will be added after current footer before
+     * appending \p new_footer .
      * @returns `true` on success
      */
     int32_t appendReportFooter(void *p_report, const char *new_footer, int32_t new_line);
@@ -51,7 +55,9 @@ extern "C"
      * @brief Prepends text to existing footer.
      * @param p_report
      * @param new_footer
-     * @param new_line
+     * @param new_line If true, \p new_footer , followed by a new line, will be prepended
+     * to the current footer. Otherwise, the current footer will follow \p new_footer
+     * immediately without a new line.
      * @returns `true` on success
      */
     int32_t prependReportFooter(void *p_report, const char *new_footer, int32_t new_line);

@@ -62,10 +62,10 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     std::uint64_t vector_size                          = fetchVectorSize(config.w_params);
     hebench::APIBridge::BenchmarkDescriptor bench_desc = backend_desc.descriptor;
 
-    if (bench_desc.cat_params.offline.data_count[DataGenerator::Index_W] == 0)
-        bench_desc.cat_params.offline.data_count[DataGenerator::Index_W] = 1;
-    if (bench_desc.cat_params.offline.data_count[DataGenerator::Index_b] == 0)
-        bench_desc.cat_params.offline.data_count[DataGenerator::Index_b] = 1;
+    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_W] == 0)
+        bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
+    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_b] == 0)
+        bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
 
     std::uint64_t sample_size_fallback =
         config.fallback_default_sample_size > 0 ?
@@ -76,16 +76,16 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
                                                          config.default_sample_sizes,
                                                          bench_desc,
                                                          sample_size_fallback);
-    if (batch_sizes[DataGenerator::Index_W] != 1)
+    if (batch_sizes[DataLoader::Index_W] != 1)
     {
         ss = std::stringstream();
-        ss << "Batch size for feature vector 'W' must be 1, but " << batch_sizes[DataGenerator::Index_W] << " received.";
+        ss << "Batch size for feature vector 'W' must be 1, but " << batch_sizes[DataLoader::Index_W] << " received.";
         throw std::invalid_argument(ss.str());
     } // end if
-    if (batch_sizes[DataGenerator::Index_b] != 1)
+    if (batch_sizes[DataLoader::Index_b] != 1)
     {
         ss = std::stringstream();
-        ss << "Batch size for bias 'b' must be 1, but " << batch_sizes[DataGenerator::Index_b] << " received.";
+        ss << "Batch size for bias 'b' must be 1, but " << batch_sizes[DataLoader::Index_b] << " received.";
         throw std::invalid_argument(ss.str());
     } // end if
 
@@ -110,9 +110,9 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     } // end switch
     ss << "(W . X + b)" << std::endl
        << ", , , Elements, Batch size" << std::endl;
-    ss << ", , W, " << vector_size << ", " << batch_sizes[DataGenerator::Index_W] << std::endl;
-    ss << ", , b, 1, " << batch_sizes[DataGenerator::Index_b] << std::endl;
-    ss << ", , X, " << vector_size << ", " << batch_sizes[DataGenerator::Index_X] << std::endl;
+    ss << ", , W, " << vector_size << ", " << batch_sizes[DataLoader::Index_W] << std::endl;
+    ss << ", , b, 1, " << batch_sizes[DataLoader::Index_b] << std::endl;
+    ss << ", , X, " << vector_size << ", " << batch_sizes[DataLoader::Index_X] << std::endl;
     ss << ", , P(X), 1, " << result_batch_size << std::endl;
 
     output.workload_header = ss.str();
@@ -164,10 +164,10 @@ void Benchmark::init()
     std::stringstream ss;
 
     hebench::APIBridge::BenchmarkDescriptor bench_desc = this->getBackendDescription().descriptor;
-    if (bench_desc.cat_params.offline.data_count[DataGenerator::Index_W] == 0)
-        bench_desc.cat_params.offline.data_count[DataGenerator::Index_W] = 1;
-    if (bench_desc.cat_params.offline.data_count[DataGenerator::Index_b] == 0)
-        bench_desc.cat_params.offline.data_count[DataGenerator::Index_b] = 1;
+    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_W] == 0)
+        bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
+    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_b] == 0)
+        bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
 
     std::uint64_t sample_size_fallback =
         this->getBenchmarkConfiguration().fallback_default_sample_size > 0 ?
@@ -179,34 +179,50 @@ void Benchmark::init()
                                             bench_desc,
                                             sample_size_fallback);
 
-    assert(batch_sizes[DataGenerator::Index_W] == 1 && batch_sizes[DataGenerator::Index_b] == 1);
+    assert(batch_sizes[DataLoader::Index_W] == 1 && batch_sizes[DataLoader::Index_b] == 1);
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating workload...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading workload data...") << std::endl;
-
-    DataGenerator::PolynomialDegree pd;
-    switch (bench_desc.workload)
+    DataLoader::PolynomialDegree pd;
+    switch (this->getBackendDescription().descriptor.workload)
     {
     case hebench::APIBridge::Workload::LogisticRegression_PolyD3:
-        pd = DataGenerator::PolynomialDegree::PD3;
+        pd = DataLoader::PolynomialDegree::PD3;
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD5:
-        pd = DataGenerator::PolynomialDegree::PD5;
+        pd = DataLoader::PolynomialDegree::PD5;
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD7:
-        pd = DataGenerator::PolynomialDegree::PD7;
+        pd = DataLoader::PolynomialDegree::PD7;
         break;
     default:
-        pd = DataGenerator::PolynomialDegree::None;
+        pd = DataLoader::PolynomialDegree::None;
         break;
     } // end switch
 
     timer.start();
-    m_data         = DataGenerator::create(pd,
-                                   vector_size,
-                                   batch_sizes[DataGenerator::Index_X],
-                                   bench_desc.data_type);
+    if (this->getBenchmarkConfiguration().dataset_filename.empty())
+    {
+        // generates random values for input and generates (computes) ground truth
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating data...") << std::endl;
+        m_data = DataLoader::create(pd,
+                                    vector_size,
+                                    batch_sizes[DataLoader::Index_X],
+                                    this->getBackendDescription().descriptor.data_type);
+    } // end if
+    else
+    {
+        std::stringstream ss;
+        ss << "Loading data from external dataset: " << std::endl
+           << "              \"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+        // load values for input and ground truth from file
+        m_data = DataLoader::create(pd,
+                                    vector_size,
+                                    batch_sizes[DataLoader::Index_X],
+                                    this->getBackendDescription().descriptor.data_type,
+                                    this->getBenchmarkConfiguration().dataset_filename);
+    } // end else
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();
