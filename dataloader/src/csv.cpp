@@ -73,7 +73,11 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             }
         }
         if (v.size() and w.size() != v.back().size())
-            throw std::length_error("Inconsistent number of values read from line");
+        {
+            std::ostringstream ss;
+            ss << "Inconsistent number of values read from line " << lnum << ". Previous: " << v.back().size() << ". This: " << w.size();
+            throw std::length_error(ss.str());
+        }
         v.push_back(w);
     }
 }
@@ -121,7 +125,7 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
         else if (tag == "output")
             u = &eds.outputs;
         else
-            throw std::runtime_error("parse error: <tag> must be \"input\" or \"output\"");
+            throw std::runtime_error(std::string("parse error: <tag> must be \"input\" or \"output\". Got: ") + tag);
         if (ix >= u->size())
             u->resize(ix + 1);
         std::vector<std::vector<T>> &v = u->at(ix);
@@ -152,7 +156,7 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
             lnum += nlines;
         }
         else
-            throw std::runtime_error("parse error: <kind> must be \"local\" or \"csv\"");
+            throw std::runtime_error(std::string("parse error: <kind> must be \"local\" or \"csv\". Got: ") + kind);
     }
     ifs.close();
     return eds;
