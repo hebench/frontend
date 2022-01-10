@@ -532,19 +532,23 @@ void PartialDataLoader::allocate(const std::uint64_t *input_buffer_sizes,
     // point parameter start buffers to correct start location
     std::vector<std::uint8_t *> input_buffers(input_batch_sizes.size(), m_raw_buffer.data());
     for (std::uint64_t i = 1; i < input_batch_sizes.size(); ++i)
-        input_buffers[i] += i * input_buffer_sizes[i - 1] * input_batch_sizes[i - 1];
+        input_buffers[i] = input_buffers[i - 1] + input_buffer_sizes[i - 1] * input_batch_sizes[i - 1];
     if (!input_buffers.empty())
+    {
         // make sure we are pointing to the right location in the master buffer
         assert(input_buffers.front() == m_raw_buffer.data());
+    } // end if
     std::vector<std::uint8_t *> output_buffers;
     if (allocate_output)
     {
         output_buffers.resize(output_batch_sizes.size(), m_raw_buffer.data() + output_start);
         for (std::uint64_t i = 1; i < output_batch_sizes.size(); ++i)
-            output_buffers[i] += i * output_buffer_sizes[i - 1] * output_batch_sizes[i - 1];
+            output_buffers[i] = output_buffers[i - 1] + output_buffer_sizes[i - 1] * output_batch_sizes[i - 1];
         if (!output_buffers.empty())
+        {
             // make sure we are pointing to the right location in the master buffer
             assert(output_buffers.front() == m_raw_buffer.data() + output_start);
+        } //end if
     } // end if
 
     // point the NativeDataBuffers for each data sample to the correct memory location
