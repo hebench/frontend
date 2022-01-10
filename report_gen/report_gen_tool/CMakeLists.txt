@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 2.9)
 project(reportgen_tool)
 

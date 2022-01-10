@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 project(test_harness)
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_version.h.in" "${CMAKE_CURRENT_BINARY_DIR}/include/hebench_version.h.in1")
@@ -88,7 +91,7 @@ list(APPEND ${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_factory.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_description.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_config.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_dataset_loader.h"
+    #"${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_dataset_loader.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_engine.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_ibenchmark.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_idata_loader.h"
@@ -105,7 +108,7 @@ list(APPEND ${PROJECT_NAME}_HEADERS
 list(APPEND ${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_benchmark_factory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_config.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_dataset_loader.cpp"
+    #"${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_dataset_loader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_engine.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_ibenchmark.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_idata_loader.cpp"
@@ -127,6 +130,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
 # dynamic_lib_load
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../dynamic_lib_load/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_dynamic_lib_load)
+
+# dataset_loader
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_dataset_loader)
 
 # report generator
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../report_gen/include)

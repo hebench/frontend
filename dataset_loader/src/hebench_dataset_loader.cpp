@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-#include "include/hebench_dataset_loader.h"
+#include "hebench_dataset_loader.h"
 
 namespace hebench {
 namespace DataLoader {

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "include/hebench_dataset_loader.h"
+#include "hebench_dataset_loader.h"
 
 #include "../include/hebench_idata_loader.h"
 
