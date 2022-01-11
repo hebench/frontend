@@ -1,0 +1,22 @@
+# consectetur adipiscing
+input,0, 1,csv
+# load the whole file
+data.csv
+
+# Excepteur sint occaecat
+input,1,1,local
+2, 4, 6, 8
+
+input,1,1,csv
+# starting at line 1, load 1 non-comment, non-empty line as data
+data.csv, 1, 1
+
+output, 0, 3, csv
+# from input 0, 1
+result.csv, 2, 2
+
+# from input 0, 2
+result.csv, 4, 2
+
+# from input 0, 3
+result.csv, 6, 2
