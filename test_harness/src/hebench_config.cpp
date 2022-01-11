@@ -595,7 +595,7 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
     if (!p_engine)
         throw std::logic_error(IL_LOG_MSG_CLASS("Invalid internal state: engine object has been released."));
 
-    std::filesystem::path file_dir = std::filesystem::path(yaml_filename).parent_path();
+    std::filesystem::path file_dir = std::filesystem::path(yaml_filename).remove_filename();
     YAML::Node root                = YAML::LoadFile(yaml_filename);
 
     if (!root["benchmark"].IsDefined())

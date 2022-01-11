@@ -251,8 +251,12 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
 
     // inputs
     if (dataset.inputs.size() != expected_input_dim)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Loaded input dimensions do not match the number of parameters for the operation."));
-
+    {
+        std::stringstream ss;
+        ss << "Loaded input dimensions do not match the number of parameters for the operation. "
+           << "Expected " << expected_input_dim << ", but " << dataset.inputs.size() << "loaded.";
+        throw std::runtime_error(IL_LOG_MSG_CLASS(ss.str()));
+    } // end if
     for (std::size_t input_dim_i = 0; input_dim_i < dataset.inputs.size(); ++input_dim_i)
     {
         std::vector<std::vector<T>> &input_component = dataset.inputs[input_dim_i];
@@ -285,7 +289,12 @@ inline void PartialDataLoaderHelper<T>::loadFromFile(PartialDataLoader &data_loa
     // outputs
     if (!dataset.outputs.empty()
         && dataset.outputs.size() != expected_output_dim)
-        throw std::runtime_error(IL_LOG_MSG_CLASS("Loaded output dimensions do not match the dimensions of the result for the operation."));
+    {
+        std::stringstream ss;
+        ss << "Loaded output dimensions do not match the dimensions of the result for the operation. "
+           << "Expected " << expected_output_dim << ", but " << dataset.outputs.size() << "loaded.";
+        throw std::runtime_error(IL_LOG_MSG_CLASS(ss.str()));
+    } // end if
     for (std::size_t output_dim_i = 0; output_dim_i < dataset.outputs.size(); ++output_dim_i)
     {
         std::vector<std::vector<T>> &output_component = dataset.outputs[output_dim_i];
@@ -676,7 +685,6 @@ IDataLoader::ResultDataPtr PartialDataLoader::getResultFor(const std::uint64_t *
             throw std::logic_error(IL_LOG_MSG_CLASS(ss.str()));
         } // end if
         retval[result_component_i] = result_component.p_buffers + r_i;
-        //result_component.p_buffers + (result_component.buffer_count > r_i ? r_i : 0);
     } // end for
 
     return p_retval;

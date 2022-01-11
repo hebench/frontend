@@ -174,7 +174,7 @@ void Benchmark::init()
     {
         std::stringstream ss;
         ss << "Loading data from external dataset: " << std::endl
-           << "              \"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
+           << "\"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
         // load values for input and ground truth from file
         m_data = DataLoader::create(pd,

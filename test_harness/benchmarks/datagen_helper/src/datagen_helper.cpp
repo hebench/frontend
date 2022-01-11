@@ -36,6 +36,7 @@ IDataLoader::ResultDataPtr DataLoaderCompute::getResultFor(const std::uint64_t *
         std::shared_ptr<std::vector<std::shared_ptr<hebench::APIBridge::DataPack>>> p_tmp_packs =
             std::make_shared<std::vector<std::shared_ptr<hebench::APIBridge::DataPack>>>(getResultTempDataPacks());
         std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> &tmp_packs = *p_tmp_packs;
+        // point to the `NativeDataBuffer`s to contain the result
         std::vector<hebench::APIBridge::NativeDataBuffer *> result(tmp_packs.size());
         for (std::size_t result_component_i = 0; result_component_i < result.size(); ++result_component_i)
         {
@@ -46,12 +47,13 @@ IDataLoader::ResultDataPtr DataLoaderCompute::getResultFor(const std::uint64_t *
                    && tmp_packs[result_component_i]->p_buffers[0].size > 0);
             result[result_component_i] = &(tmp_packs[result_component_i]->p_buffers[0]);
         } // end for
+        // compute result and store in the pre-allocated buffers
         computeResult(result, param_data_pack_indices, getDataType());
 
         p_retval = ResultDataPtr(new ResultData());
-        p_retval->result.assign(result.begin(), result.end());
+        p_retval->result.assign(result.begin(), result.end()); // pointers to pre-allocated data
         p_retval->sample_index = r_i;
-        p_retval->reserved0    = p_tmp_packs;
+        p_retval->reserved0    = p_tmp_packs; // pre-allocated data as a RAII
     } // end if
 
     return p_retval;
