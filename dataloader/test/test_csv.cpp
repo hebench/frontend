@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "interface.h"
+#include <filesystem>
 #include <iostream>
 
 using namespace hebench::dataloader;
@@ -42,9 +43,34 @@ int main(int, char **)
             auto ds = dl.loadFromCSV("data/input_bad.csv");
             exit(-1); //should not get to here
         }
-        catch (std::ios_base::failure e)
+        catch (std::ios_base::failure &e)
         {
             std::cerr << "caught: " << e.what() << std::endl;
+        }
+    }
+    {
+        for (auto &f : std::filesystem::directory_iterator("data/correct"))
+        {
+            if (f.path().compare("data/correct/correct") < 0)
+            {
+                std::cerr << "Reading: " << f.path() << std::endl;
+                ExternalDatasetLoader<float> dl;
+                auto ds = dl.loadFromCSV(f.path());
+            }
+        }
+        for (auto &f : std::filesystem::directory_iterator("data/bad"))
+        {
+            std::cerr << "Reading: " << f.path() << std::endl;
+            ExternalDatasetLoader<float> dl;
+            try
+            {
+                auto ds = dl.loadFromCSV(f.path());
+                exit(-1); // should throw error before here
+            }
+            catch (std::exception &e)
+            {
+                std::cerr << "caught: " << e.what() << std::endl;
+            }
         }
     }
     exit(0);

@@ -52,6 +52,11 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
     {
         ++lnum;
         std::cerr << "Reading line: " << line << std::endl;
+        if (line.size() == 0 or line.at(0) == '#')
+        {
+            ++nlines;
+            continue;
+        }
         icsvstream ils(line);
         std::vector<T> w;
         std::istream_iterator<T> isit(ils);
@@ -79,6 +84,10 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             throw std::length_error(ss.str());
         }
         v.push_back(w);
+    }
+    if ((nlines + 1) != 0)
+    {
+        throw(std::length_error("Not enought lines read before end of file."));
     }
 }
 
@@ -113,7 +122,7 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     {
         ++lnum;
         std::cerr << "Reading control line: " << metaline << std::endl;
-        if (metaline.at(0) == '#' or metaline.size() == 0)
+        if (metaline.size() == 0 or metaline.at(0) == '#')
             continue;
         icsvstream iss(metaline);
         std::string tag, kind;
@@ -157,6 +166,14 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
         }
         else
             throw std::runtime_error(std::string("parse error: <kind> must be \"local\" or \"csv\". Got: ") + kind);
+    }
+    if (eds.outputs.size())
+    {
+        size_t n = 1;
+        for (auto &v : eds.inputs)
+            n *= v.size();
+        if (eds.outputs[0].size() != n)
+            throw std::length_error("Output size (" + std::to_string(eds.outputs[0].size()) + ") must be the product of the input sizes (" + std::to_string(n) + ").");
     }
     ifs.close();
     return eds;
