@@ -1,12 +1,14 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <cxxabi.h>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include <stdexcept>
 #include <string>
+#include <typeinfo>
 
 #include "hebench_dataset_loader.h"
 
@@ -15,6 +17,8 @@ namespace DataLoader {
 
 struct icsvstream : std::istringstream
 {
+    static constexpr const char *s_trim = " \t\n\r\f\v";
+
     struct csv_ws : std::ctype<char>
     {
         static const mask *make_table()
@@ -40,9 +44,10 @@ struct icsvstream : std::istringstream
 std::locale icsvstream::loc = std::locale(std::locale(), new icsvstream::csv_ws());
 
 template <typename T>
-static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0, size_t lnum = 0, std::string fpath = "")
+// returns actual number of lines read
+std::size_t loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0, size_t lnum = 0, std::string fpath = "")
 {
-    static constexpr const char *s_trim = " \t\n\r\f\v";
+    std::size_t retval = 0;
     std::string line;
     while (skip--)
     {
@@ -51,96 +56,152 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
     }
     while (nlines-- and std::getline(ifs, line))
     {
+        ++retval;
         ++lnum;
-        line.erase(0, line.find_first_not_of(s_trim));
-        line.erase(line.find_last_not_of(s_trim) + 1);
-        std::cerr << "Reading line: " << line << std::endl;
-        if (!line.empty() && line.front() != '#') // skip empty lines and comments
+        //std::cerr << "Reading line: " << line << std::endl;
+        line.erase(0, line.find_first_not_of(icsvstream::s_trim));
+        line.erase(line.find_last_not_of(icsvstream::s_trim) + 1);
+        if (line.size() == 0 or line.at(0) == '#')
         {
-            icsvstream ils(line);
-            std::vector<T> w;
-            std::istream_iterator<T> isit(ils);
-            try
+            ++nlines;
+            continue;
+        }
+        icsvstream ils(line);
+        std::vector<T> w;
+        std::istream_iterator<T> isit(ils);
+        try
+        {
+            std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+        }
+        catch (const std::ios_base::failure &e)
+        {
+            if (!ils.eof())
             {
-                std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+                //throw; // preserves error type and attributes
+                std::ostringstream oss;
+                size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
+                int status;
+                oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\""
+                    << " at " << fpath << ":" << lnum << ":" << ofs << std::endl;
+                throw std::ios_base::failure(oss.str(), e.code());
             }
-            catch (const std::ios_base::failure &e)
-            {
-                if (!ils.eof())
-                {
-                    //throw; // preserves error type and attributes
-                    std::ostringstream oss;
-                    size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
-                    oss << e.what() << " in " << fpath << ":" << lnum << ":" << ofs;
-                    throw std::ios_base::failure(oss.str(), e.code());
-                }
-            }
-            if (v.size() and w.size() != v.back().size())
-                throw std::length_error("Inconsistent number of values read from line");
-            v.push_back(w);
-        } // end if
+        }
+        if (v.size() and w.size() != v.back().size())
+        {
+            std::ostringstream ss;
+            ss << "Inconsistent number of values read from line " << lnum << ". Previous: " << v.back().size() << ". This: " << w.size();
+            throw std::length_error(ss.str());
+        }
+        v.push_back(w);
     }
+    if ((nlines + 1) != 0)
+    {
+        throw(std::length_error("Not enought lines read before end of file."));
+    }
+
+    return retval;
+}
+
+template <typename T>
+icsvstream &operator>>(icsvstream &in, T &arg)
+{
+    std::istringstream *iss = &in;
+    try
+    {
+        (*iss) >> arg; // superclass read data into argument
+    }
+    catch (const std::ios_base::failure &e)
+    {
+        std::ostringstream oss;
+        int status;
+        oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\"";
+        throw std::ios_base::failure(oss.str(), e.code());
+    }
+    return in;
 }
 
 template <typename T, typename E>
 ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename, std::uint64_t max_loaded_size)
 {
-    static constexpr const char *s_trim = " \t\n\r\f\v";
-    size_t lnum                         = 0;
+    size_t lnum = 0;
     ExternalDataset<T> eds;
-    std::cerr << "Opening: " << filename << std::endl;
+    //std::cerr << "Opening: " << filename << std::endl;
     std::ifstream ifs(filename, std::ifstream::in);
     ifs.exceptions(std::ifstream::badbit);
     std::string metaline;
     while (std::getline(ifs, metaline))
     {
         ++lnum;
-        std::cerr << "Reading control line: " << metaline << std::endl;
-        metaline.erase(0, metaline.find_first_not_of(s_trim));
-        metaline.erase(metaline.find_last_not_of(s_trim) + 1);
-        if (metaline.at(0) == '#' or metaline.size() == 0)
+        //std::cerr << "Reading control line: " << metaline << std::endl;
+        metaline.erase(0, metaline.find_first_not_of(icsvstream::s_trim));
+        metaline.erase(metaline.find_last_not_of(icsvstream::s_trim) + 1);
+        if (metaline.size() == 0 or metaline.at(0) == '#')
             continue;
         icsvstream iss(metaline);
         std::string tag, kind;
-        std::size_t ix, nlines;
+        size_t ix, nlines;
         iss >> tag >> ix >> nlines >> kind;
         std::vector<std::vector<std::vector<T>>> *u;
         if (tag == "input")
             u = &eds.inputs;
-        //else
-        if (tag == "output")
+        else if (tag == "output")
             u = &eds.outputs;
-        //        else
-        //            throw std::runtime_error("Invalid tag in control line: \"" + tag + "\"");
+        else
+        {
+            std::stringstream ss;
+            ss << "Parse error: <tag> must be \"input\" or \"output\". Got: " << tag << " at "
+               << filename << ":" << lnum;
+            throw std::runtime_error(ss.str());
+        }
         if (ix >= u->size())
             u->resize(ix + 1);
         std::vector<std::vector<T>> &v = u->at(ix);
         if (kind == "csv")
         {
-            while (nlines--)
+            std::string dataline;
+            while (nlines > 0 && std::getline(ifs, dataline))
             {
-                std::string dataline;
-                std::getline(ifs, dataline);
+                ++lnum;
+                dataline.erase(0, dataline.find_first_not_of(icsvstream::s_trim));
+                dataline.erase(dataline.find_last_not_of(icsvstream::s_trim) + 1);
+                if (dataline.empty() || dataline.front() == '#')
+                    continue;
                 icsvstream ils(dataline);
                 std::string fname;
                 size_t from_line = 1, num_lines = 0;
                 ils >> fname >> from_line >> num_lines;
-                std::string path(fname);
-                if (fname[0] != '/')
-                    path = filename.substr(0, filename.find_last_of("/\\") + 1) + fname;
-                std::cerr << "Opening data " << path << std::endl;
+                std::filesystem::path path = fname;
+                if (path.is_relative())
+                    path = std::filesystem::path(filename).remove_filename() / path;
+                path = std::filesystem::canonical(path);
+                //std::cerr << "Opening data " << path << std::endl;
                 std::ifstream ifs_csv(path, std::ifstream::in);
                 ifs_csv.exceptions(std::ifstream::badbit);
                 loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1, 0, path);
                 ifs_csv.close();
+                --nlines;
             }
         }
-        if (kind == "local")
+        else if (kind == "local")
         {
-            std::cerr << "Reading local data" << std::endl;
-            loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
-            lnum += nlines;
+            //std::cerr << "Reading local data" << std::endl;
+            lnum += loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
         }
+        else
+        {
+            std::stringstream ss;
+            ss << "Parse error: <kind> must be \"local\" or \"csv\". Got: " << kind << " at "
+               << filename << ":" << lnum;
+            throw std::runtime_error(ss.str());
+        }
+    }
+    if (eds.outputs.size())
+    {
+        size_t n = 1;
+        for (auto &v : eds.inputs)
+            n *= v.size();
+        if (eds.outputs[0].size() != n)
+            throw std::length_error("Output size (" + std::to_string(eds.outputs[0].size()) + ") must be the product of the input sizes (" + std::to_string(n) + ").");
     }
     ifs.close();
 
@@ -148,12 +209,12 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     if (max_loaded_size > 0)
     {
         std::uint64_t loaded_size = 0;
-        for (std::size_t input_component_i = 0; input_component_i < eds.inputs.size(); ++input_component_i)
-            for (std::size_t component_sample_i = 0; component_sample_i < eds.inputs[input_component_i].size(); ++component_sample_i)
-                loaded_size += (eds.inputs[input_component_i][component_sample_i].size() * sizeof(T));
-        for (std::size_t output_component_i = 0; output_component_i < eds.outputs.size(); ++output_component_i)
-            for (std::size_t component_sample_i = 0; component_sample_i < eds.outputs[output_component_i].size(); ++component_sample_i)
-                loaded_size += (eds.outputs[output_component_i][component_sample_i].size() * sizeof(T));
+        for (const auto &input_component : eds.inputs)
+            for (const auto &input_sample : input_component)
+                loaded_size += (input_sample.size() * sizeof(T));
+        for (const auto &output_component : eds.outputs)
+            for (const auto &output_sample : output_component)
+                loaded_size += (output_sample.size() * sizeof(T));
         if (loaded_size > max_loaded_size)
             throw std::runtime_error("Loaded size greater than maximum permitted. Maximum: "
                                      + std::to_string(max_loaded_size) + " bytes; loaded: "
