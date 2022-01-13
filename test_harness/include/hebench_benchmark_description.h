@@ -105,7 +105,8 @@ class Configuration
 {
 public:
     Configuration() :
-        default_min_test_time_ms(0)
+        default_min_test_time_ms(0),
+        fallback_default_sample_size(0)
     {
     }
 
@@ -130,7 +131,7 @@ public:
      * the file contents to a known format.
      *
      * Some benchmarks do not support external datasets, others require them, yet
-     * others support both. See the particular benchmark specification documentation
+     * others support both. See the particular workload definition documentation
      * for information on configuration feature support.
      */
     std::string dataset_filename;
