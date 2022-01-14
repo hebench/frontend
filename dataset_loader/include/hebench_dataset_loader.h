@@ -60,13 +60,6 @@ public:
      */
     static ExternalDataset<T> loadFromCSV(const std::string &filename,
                                           std::uint64_t max_loaded_size = 0);
-    /**
-     * @brief Exports a `ExternalDataset` structure to a csv file.
-     * NOT IMPLEMENTED YET
-     */
-    static void exportToCSV(const std::string &filename,
-                            //const IBenchmarkDescriptor::DescriptionToken &bench_desc,
-                            const ExternalDataset<T> &dataset);
 };
 
 // template implementations

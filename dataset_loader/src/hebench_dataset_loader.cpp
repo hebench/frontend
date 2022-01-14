@@ -58,7 +58,6 @@ std::size_t loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
     {
         ++retval;
         ++lnum;
-        //std::cerr << "Reading line: " << line << std::endl;
         line.erase(0, line.find_first_not_of(icsvstream::s_trim));
         line.erase(line.find_last_not_of(icsvstream::s_trim) + 1);
         if (line.size() == 0 or line.at(0) == '#')
@@ -125,14 +124,12 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
 {
     size_t lnum = 0;
     ExternalDataset<T> eds;
-    //std::cerr << "Opening: " << filename << std::endl;
     std::ifstream ifs(filename, std::ifstream::in);
     ifs.exceptions(std::ifstream::badbit);
     std::string metaline;
     while (std::getline(ifs, metaline))
     {
         ++lnum;
-        //std::cerr << "Reading control line: " << metaline << std::endl;
         metaline.erase(0, metaline.find_first_not_of(icsvstream::s_trim));
         metaline.erase(metaline.find_last_not_of(icsvstream::s_trim) + 1);
         if (metaline.size() == 0 or metaline.at(0) == '#')
@@ -174,7 +171,6 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
                 if (path.is_relative())
                     path = std::filesystem::path(filename).remove_filename() / path;
                 path = std::filesystem::canonical(path);
-                //std::cerr << "Opening data " << path << std::endl;
                 std::ifstream ifs_csv(path, std::ifstream::in);
                 ifs_csv.exceptions(std::ifstream::badbit);
                 loadcsvdatafile(ifs_csv, v, num_lines, from_line - 1, 0, path);
@@ -184,7 +180,6 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
         }
         else if (kind == "local")
         {
-            //std::cerr << "Reading local data" << std::endl;
             lnum += loadcsvdatafile(ifs, v, nlines, 0, lnum, filename);
         }
         else
@@ -224,12 +219,5 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     return eds;
 }
 
-template <typename T, typename E>
-void ExternalDatasetLoader<T, E>::exportToCSV(const std::string &filename, const ExternalDataset<T> &dataset)
-{
-    (void)filename;
-    (void)dataset;
-    throw std::runtime_error("Not implemented");
-}
 } // namespace DataLoader
 } // namespace hebench
