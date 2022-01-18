@@ -48,6 +48,150 @@ std::string convertToDirectoryName(const std::string &s, bool to_lowercase)
     return ss_retval.str();
 }
 
+UtilityPath::UtilityPath(bool is_single_path_dir) :
+    _is_single_path_dir(is_single_path_dir) {}
+
+bool UtilityPath::is_single_path_dir()
+{
+    return this->_is_single_path_dir;
+}
+
+inline void UtilityPath::update()
+{
+    if (this->_is_single_path_dir)
+    {
+        this->_fs_path = this->_ss_path.str();
+    }
+}
+
+UtilityPath::operator std::string()
+{
+    return this->_is_single_path_dir ? this->_ss_path.str() : std::string(this->_fs_path);
+}
+
+UtilityPath::operator std::filesystem::path()
+{
+    this->update();
+    return this->_fs_path;
+}
+
+UtilityPath &UtilityPath::operator=(UtilityPath &rhs)
+{
+    this->_is_single_path_dir = rhs.is_single_path_dir();
+    if (this->_is_single_path_dir)
+    {
+        this->_ss_path.str("");
+        this->_ss_path.clear();
+        this->_ss_path << std::string(rhs);
+    }
+    else
+    {
+        this->_fs_path = std::string(rhs);
+    }
+    return *this;
+}
+
+UtilityPath &UtilityPath::operator=(const std::string &rhs)
+{
+    if (this->_is_single_path_dir)
+    {
+        this->_ss_path.str("");
+        this->_ss_path.clear();
+        this->_ss_path << rhs;
+    }
+    else
+    {
+        this->_fs_path = rhs;
+    }
+    return *this;
+}
+
+void UtilityPath::operator/=(const std::string &rhs)
+{
+    if (this->_is_single_path_dir)
+    {
+        if (!this->_ss_path.str().empty())
+        {
+            this->_ss_path << "-";
+        }
+        this->_ss_path << rhs;
+    }
+    else
+    {
+        this->_fs_path /= rhs;
+    }
+}
+
+void UtilityPath::operator+=(const std::string &rhs)
+{
+    if (this->_is_single_path_dir)
+    {
+        this->_ss_path << rhs;
+    }
+    else
+    {
+        this->_fs_path += rhs;
+    }
+}
+
+bool UtilityPath::is_absolute()
+{
+    this->update();
+    return this->_fs_path.is_absolute();
+}
+
+bool UtilityPath::exists()
+{
+    this->update();
+    return std::filesystem::exists(this->_fs_path);
+}
+
+bool UtilityPath::is_regular_file()
+{
+    this->update();
+    return std::filesystem::is_regular_file(this->_fs_path);
+}
+
+bool UtilityPath::create_directories()
+{
+    if (this->_is_single_path_dir)
+    {
+        // No need to create dirs
+        return true;
+    }
+    return std::filesystem::create_directories(this->_fs_path);
+}
+
+int UtilityPath::remove()
+{
+    this->update();
+    return std::filesystem::remove(this->_fs_path);
+}
+
+std::ostream &operator<<(std::ostream &output, UtilityPath &report_path)
+{
+    output << std::string(report_path);
+    return output;
+}
+
+std::string operator/(std::string &lhs, UtilityPath &rhs)
+{
+    std::string result = lhs + std::string(rhs);
+    return result;
+}
+
+std::string operator/(const std::string &lhs, UtilityPath &rhs)
+{
+    std::string result = lhs + std::string(rhs);
+    return result;
+}
+
+std::string operator/(std::filesystem::path &lhs, UtilityPath &rhs)
+{
+    std::string result = std::string(lhs) + std::string(rhs);
+    return result;
+}
+
 std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src)
 {
     std::uint64_t retval = src.size() + 1;

@@ -178,7 +178,8 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
                                 engine, backend_desc, config);
 
     std::stringstream ss;
-    std::filesystem::path ss_path;
+    hebench::Utilities::UtilityPath ss_path = hebench::Utilities::UtilityPath(config.b_single_path_report);
+
     std::string &s_workload_name = completed_description.workload_name;
     std::string s_path_workload_name;
     std::string s_scheme_name   = engine.getSchemeName(bench_desc.scheme);
@@ -187,13 +188,17 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     // generate path
     ss = std::stringstream();
     if (!s_workload_name.empty())
+    {
         ss << s_workload_name << "_";
+    }
     else
+    {
         s_workload_name = std::to_string(static_cast<int>(bench_desc.workload));
+    }
     ss << std::to_string(static_cast<int>(bench_desc.workload));
     s_path_workload_name = hebench::Utilities::convertToDirectoryName(ss.str());
-    ss_path              = s_path_workload_name;
-    ss                   = std::stringstream();
+    ss_path /= s_path_workload_name;
+    ss = std::stringstream();
     ss << "wp";
     for (std::size_t i = 0; i < w_params.size(); ++i)
     {
@@ -246,7 +251,6 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     ss_path /= hebench::Utilities::convertToDirectoryName(s_scheme_name);
     ss_path /= hebench::Utilities::convertToDirectoryName(s_security_name);
     ss_path /= std::to_string(bench_desc.other);
-
     // generate header
     ss = std::stringstream();
     ss << "Specifications," << std::endl
@@ -319,7 +323,7 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
 
     description.workload_name = completed_description.workload_name;
     description.header        = ss.str();
-    description.path          = ss_path;
+    description.path          = std::string(ss_path);
 }
 
 //------------------------
