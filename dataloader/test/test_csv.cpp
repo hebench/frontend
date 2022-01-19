@@ -55,7 +55,7 @@ int main(int, char **)
             {
                 std::cerr << "Reading: " << f.path() << std::endl;
                 ExternalDatasetLoader<float> dl;
-                auto ds = dl.loadFromCSV(f.path());
+                auto ds = dl.loadFromCSV(f.path().string());
             }
         }
         for (auto &f : std::filesystem::directory_iterator("data/bad"))
@@ -64,7 +64,7 @@ int main(int, char **)
             ExternalDatasetLoader<float> dl;
             try
             {
-                auto ds = dl.loadFromCSV(f.path());
+                auto ds = dl.loadFromCSV(f.path().string());
                 exit(-1); // should throw error before here
             }
             catch (std::exception &e)
