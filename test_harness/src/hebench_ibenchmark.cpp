@@ -178,7 +178,7 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
                                 engine, backend_desc, config);
 
     std::stringstream ss;
-    hebench::Utilities::UtilityPath ss_path = hebench::Utilities::UtilityPath(config.b_single_path_report);
+    std::filesystem::path ss_path;
 
     std::string &s_workload_name = completed_description.workload_name;
     std::string s_path_workload_name;
@@ -197,8 +197,8 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     }
     ss << std::to_string(static_cast<int>(bench_desc.workload));
     s_path_workload_name = hebench::Utilities::convertToDirectoryName(ss.str());
-    ss_path /= s_path_workload_name;
-    ss = std::stringstream();
+    ss_path              = s_path_workload_name;
+    ss                   = std::stringstream();
     ss << "wp";
     for (std::size_t i = 0; i < w_params.size(); ++i)
     {
@@ -323,7 +323,18 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
 
     description.workload_name = completed_description.workload_name;
     description.header        = ss.str();
-    description.path          = std::string(ss_path);
+
+    if (!config.b_single_path_report)
+    {
+        description.path = ss_path;
+    }
+    else
+    {
+        std::string modified_ss_path = std::string(ss_path);
+        std::replace(modified_ss_path.begin(), modified_ss_path.end(),
+                     hebench::TestHarness::separator, hebench::TestHarness::hyphen);
+        description.path = modified_ss_path;
+    }
 }
 
 //------------------------
