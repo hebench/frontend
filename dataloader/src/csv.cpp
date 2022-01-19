@@ -48,15 +48,12 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
         ++lnum;
         std::getline(ifs, line);
     }
-    while (nlines-- and std::getline(ifs, line))
+    while (std::getline(ifs, line))
     {
         ++lnum;
         std::cerr << "Reading line: " << line << std::endl;
-        if (line.size() == 0 or line.at(0) == '#')
-        {
-            ++nlines;
+        if (line.size() == 0 or line.at(0) == '#') 
             continue;
-        }
         icsvstream ils(line);
         std::vector<T> w;
         std::istream_iterator<T> isit(ils);
@@ -84,8 +81,9 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             throw std::length_error(ss.str());
         }
         v.push_back(w);
+        if(nlines and --nlines==0) break;
     }
-    if ((nlines + 1) != 0)
+    if (nlines)
     {
         throw(std::length_error("Not enought lines read before end of file."));
     }
@@ -144,10 +142,19 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
             {
                 std::string dataline;
                 std::getline(ifs, dataline);
+                if(dataline.size()==0 or dataline.at(0)=='#'){
+                    ++nlines;continue;
+                }
                 icsvstream ils(dataline);
                 std::string fname;
                 size_t from_line = 1, num_lines = 0;
-                ils >> fname >> from_line >> num_lines;
+                ils >> fname;
+                try{
+                    ils >> from_line >> num_lines;
+                } catch (const std::ios_base::failure e){
+                    std::cerr<<"caught: "<<e.what()<<std::endl;
+                    if(!ils.eof()) throw;
+                }
                 std::string path(fname);
                 if (fname[0] != '/')
                     path = filename.substr(0, filename.find_last_of("/\\") + 1) + fname;
