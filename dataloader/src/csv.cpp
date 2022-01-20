@@ -15,29 +15,55 @@ namespace dataloader {
 
 struct icsvstream : std::istringstream
 {
-    struct csv_ws : std::ctype<char>
-    {
-        static const mask *make_table()
-        {
-            static std::vector<mask> v(classic_table(), classic_table() + table_size);
-            v[','] |= space;
-            //v[' '] &= ~space;
-            return &v[0];
-        }
-        csv_ws(std::size_t refs = 0) :
-            ctype(make_table(), false, refs) {}
-    };
-    static std::locale loc;
     template <class... Args>
     icsvstream(Args &&... args) :
         std::istringstream(std::forward<Args>(args)...)
     {
         exceptions(std::ifstream::failbit);
-        imbue(loc);
     }
 };
 
-std::locale icsvstream::loc = std::locale(std::locale(), new icsvstream::csv_ws());
+template <typename T>
+icsvstream &operator>>(icsvstream &in, T &arg)
+{
+    std::string s;
+    std::getline(in, s, ',');
+    std::istringstream iss(s);
+    iss.exceptions(std::ifstream::failbit);
+    try
+    {
+        iss >> arg;
+    }
+    catch (const std::ios_base::failure &e)
+    {
+        std::ostringstream oss;
+        int status;
+        oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\" from \"" << s << "\"";
+        throw std::ios_base::failure(oss.str(), e.code());
+    }
+    return in;
+}
+
+template <>
+icsvstream &operator>><std::string>(icsvstream &in, std::string &arg)
+{
+    char c;
+    while (std::isspace(c = in.get()))
+        ;
+    if (c == '"')
+    {
+        std::getline(in, arg, '"');
+        std::string s;
+        std::getline(in, s, ',');
+    }
+    else
+    {
+        in.unget();
+        std::getline(in, arg, ',');
+        arg.erase(arg.find_last_not_of(" \n\r\t") + 1);
+    }
+    return in;
+}
 
 template <typename T>
 static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, size_t nlines, size_t skip = 0, size_t lnum = 0, std::string fpath = "")
@@ -56,10 +82,15 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
             continue;
         icsvstream ils(line);
         std::vector<T> w;
-        std::istream_iterator<T> isit(ils);
+        //std::istream_iterator<T> isit(ils);
         try
         {
-            std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+            //std::copy(isit, std::istream_iterator<T>(), std::back_inserter(w));
+            T x;
+            while (!ils.eof() and ils >> x)
+            {
+                w.push_back(x);
+            }
         }
         catch (const std::ios_base::failure &e)
         {
@@ -69,8 +100,7 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
                 std::ostringstream oss;
                 size_t ofs = ils.rdbuf()->pubseekoff(0, std::ios_base::cur, std::ios_base::in);
                 int status;
-                oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\""
-                    << " at " << fpath << ":" << lnum << ":" << ofs << std::endl;
+                oss << e.what() << " at " << fpath << ":" << lnum << ":" << ofs << std::endl;
                 throw std::ios_base::failure(oss.str(), e.code());
             }
         }
@@ -88,24 +118,6 @@ static void loadcsvdatafile(std::ifstream &ifs, std::vector<std::vector<T>> &v, 
     {
         throw(std::length_error("Not enought lines read before end of file."));
     }
-}
-
-template <typename T>
-icsvstream &operator>>(icsvstream &in, T &arg)
-{
-    std::istringstream *iss = &in;
-    try
-    {
-        (*iss) >> arg; // superclass read data into argument
-    }
-    catch (const std::ios_base::failure &e)
-    {
-        std::ostringstream oss;
-        int status;
-        oss << e.what() << " in data type \"" << abi::__cxa_demangle(typeid(T).name(), 0, 0, &status) << "\"";
-        throw std::ios_base::failure(oss.str(), e.code());
-    }
-    return in;
 }
 
 template <typename T, typename E>
