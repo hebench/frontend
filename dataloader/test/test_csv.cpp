@@ -51,8 +51,8 @@ int main(int, char **)
     {
         for (auto &f : std::filesystem::directory_iterator("data/correct"))
         {
-            std::cerr<<"Opening:"<<f.path().filename().string()<<std::endl;
-            if (f.path().filename().string().substr(0,7) =="correct")
+            std::cerr << "Opening:" << f.path().filename().string() << std::endl;
+            if (f.path().filename().string().substr(0, 7) == "correct")
             {
                 std::cerr << "Reading: " << f.path() << std::endl;
                 ExternalDatasetLoader<float> dl;
