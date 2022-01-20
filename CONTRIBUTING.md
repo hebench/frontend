@@ -3,7 +3,7 @@
 All HEBench repos welcome pull requests from external contributors. In general, HEBench repositories require 3 steps for proper contribution:
 
 1. [Code Formatting](#formatting)
-2. [Coding Style Guidelines](codingstyle)
+2. [Coding Style Guidelines](#codingstyle)
 3. [Building & Running](#building-and-running)
 4. [Creating a Pull Request](#pull-request-template)
 
@@ -35,7 +35,7 @@ git add .  # assuming files were changed
 git commit # assuming files were changed
 ```
 
-## Coding Style Guidelines
+## Coding Style Guidelines <a name="codingstyle"></a>
 Code should match the following guidelines in order to maintain a consistent style across the project.
 
 ### Test class template example
