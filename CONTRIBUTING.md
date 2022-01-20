@@ -3,8 +3,9 @@
 All HEBench repos welcome pull requests from external contributors. In general, HEBench repositories require 3 steps for proper contribution:
 
 1. [Code Formatting](#formatting)
-2. [Building & Running](#building-and-running)
-3. [Creating a Pull Request](#pull-request-template)
+2. [Coding Style Guidelines](codingstyle)
+3. [Building & Running](#building-and-running)
+4. [Creating a Pull Request](#pull-request-template)
 
 See the [Installing Resources](#resources) section for details on installing/setting up all of the requirements below.
 
@@ -18,8 +19,8 @@ In general, when wanting to contribute code, users should expect to take the fol
 ## Code Formatting <a name="formatting"></a>
 
 ### Requirements
-- clang-format (tested with clang-format-9) 
-- pre-commit (tested with version 1.15.2) 
+- clang-format (tested with clang-format-9)
+- pre-commit (tested with version 1.15.2)
 - doxywizard (optional)
 
 ### Steps to Follow
@@ -33,6 +34,71 @@ git status # Check if any files were changed by pre-commit
 git add .  # assuming files were changed
 git commit # assuming files were changed
 ```
+
+## Coding Style Guidelines
+Code should match the following guidelines in order to maintain a consistent style across the project.
+
+### Test class template example
+
+example.h with coding style applied
+```cpp
+#ifndef __TESTCASE_H_
+#define __TESTCASE_H_
+
+namespace hebench {
+
+class TestCase
+{
+public:
+    static const int DefaultValue = 1;
+    TestCase();
+    /**
+     * @brief Sets a new size for input geometry.
+     * @param input_size[in] New input geometry size.
+     * @details If the \p input_size value is not positive, the input size
+     * will be reset to DefaultValue.
+     */
+    void setInputGeometry(int input_size);
+private:
+    int m_input_size;
+};
+}
+
+#endif
+```
+Test class example .cpp with coding style applied
+```cpp
+#include "example.h"
+
+namespace hebench {
+
+TestCase::TestCase() :
+    m_input_size(DefaultValue)
+{ }
+
+void TestCase::setInputGeometry(int input_size)
+{
+    // Set a new size for the input geometry.
+    // Must be greater than zero.
+    m_input_size = (input_size > 0 ? input_size : TestCase::DefaultValue);
+}
+
+}
+```
+### Indentation
+ - Spaces preferred for indentation.
+ - Indents must be 4 spaces wide if using spaces instead of tabs.
+
+### Naming Conventions
+ - Class, Structs, Enums, and other custom type names: CamelCase starting with UpperCase first letter
+ - Constants: Follow same rules as classes
+ - Defines: uppercase underscore style
+ - Function and method names: CamelCase starting with lowerCase first letter
+ - Member names: lowercase underscore style starting with m_ prefix
+ - Parameters and local variables: lowercase underscore style
+
+### Documentation Style
+Documenting classes, methods, members, etc., should follow Doxygen-style documentation.
 
 ## Building & Running <a name="building-and-running"></a>
 
@@ -119,7 +185,7 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /
 ```
 Ubuntu 20.04:
 ```bash
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9 
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
 sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 ```
 
@@ -127,4 +193,3 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
 ```bash
 sudo apt-get install git
 ```
-
