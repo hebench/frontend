@@ -113,7 +113,7 @@ Each repository in HEBench has build and run steps specific to the particular co
 ## Creating a Pull Request <a name="pull-request-template"></a>
 
 ### Requirements
-- Git 2.74+
+- Git 2.25+
 
 ### Steps to Follow
 All Pull Requests must follow the the provided [HEBench PR Template](https://github.com/hebench/frontend/blob/main/.github/PULL_REQUEST_TEMPLATE.md). When you go to create a [New Pull Request](https://github.com/hebench/frontend/compare), the template will be populated in the PR message. Please fill in the empty fields as required.
