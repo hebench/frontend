@@ -33,6 +33,7 @@ using unique_ptr_custom_deleter = std::unique_ptr<T, std::function<void(T *)>>;
 constexpr const char *FileNameNoExtReport  = "report";
 constexpr const char *FileNameNoExtSummary = "summary";
 
+// '\\' needs to be taken into account in case Windows is supported.
 constexpr char separator = '/';
 constexpr char hyphen    = '-';
 

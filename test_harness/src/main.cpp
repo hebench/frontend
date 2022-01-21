@@ -104,7 +104,7 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
 
     parser.getValue<decltype(b_show_run_overview)>(b_show_run_overview, "--run_overview", true);
 
-    b_single_path_report = parser.hasArgument("--single-path-report");
+    b_single_path_report = parser.hasArgument("--single_path_report");
 }
 
 std::ostream &ProgramConfig::showBenchmarkDefaults(std::ostream &os)
@@ -195,7 +195,7 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument("--version", 0, "",
                        "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
                        "   currently linked API Bridge version. Application exists after this.");
-    parser.addArgument("--single-path-report", "--single-path", 0, "",
+    parser.addArgument("--single_path_report", "--single_path", 0, "",
                        "   [OPTIONAL] Allows the user to choose if the benchmark's report (s) will be\n"
                        "   created in a single-level directory or not.");
     parser.parse(argc, argv);
