@@ -36,6 +36,7 @@ struct ProgramConfig
     std::filesystem::path config_file;
     bool b_dump_config;
     bool b_validate_results;
+    bool b_single_path_report;
     std::uint64_t random_seed;
     std::size_t report_delay_ms;
     std::filesystem::path report_root_path;
@@ -102,6 +103,8 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     }
 
     parser.getValue<decltype(b_show_run_overview)>(b_show_run_overview, "--run_overview", true);
+
+    b_single_path_report = parser.hasArgument("--single_path_report");
 }
 
 void ProgramConfig::showBenchmarkDefaults(std::ostream &os)
@@ -194,6 +197,9 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument("--version", 0, "",
                        "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
                        "   currently linked API Bridge version. Application exists after this.");
+    parser.addArgument("--single_path_report", "--single_path", 0, "",
+                       "   [OPTIONAL] Allows the user to choose if the benchmark's report (s) will be\n"
+                       "   created in a single-level directory or not.");
     parser.parse(argc, argv);
 }
 
@@ -256,13 +262,24 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
             output_path = output_root_path / report_filename;
         } // end else
 
-        // generate output directory if it doesn't exits
-        std::filesystem::create_directories(output_path);
+        // No need to create dir if single path is enabled.
+        if (!benchmarks_ran[bench_i].configuration.b_single_path_report)
+        {
+            // Generate output directory if it doesn't exits.
+            std::filesystem::create_directories(output_path);
 
-        // complete the paths to the input and output files
-        report_path /= hebench::TestHarness::FileNameNoExtReport;
+            // complete the paths to the input and output files
+            report_path /= hebench::TestHarness::FileNameNoExtReport;
+            output_path /= hebench::TestHarness::FileNameNoExtSummary;
+        }
+        else
+        {
+            // complete the paths to the input and output files
+            report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
+            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
+        }
+        // Adding the file extension
         report_path += ".csv";
-        output_path /= hebench::TestHarness::FileNameNoExtSummary;
         output_path += ".csv";
 
         if (do_stdout_summary)
@@ -436,8 +453,9 @@ int main(int argc, char **argv)
             std::size_t run_i = 0;
             for (std::size_t bench_i = 0; bench_i < benchmarks_to_run.size(); ++bench_i)
             {
-                hebench::Utilities::BenchmarkRequest &benchmark_request = benchmarks_to_run[bench_i];
-                bool b_critical_error                                   = false;
+                benchmarks_to_run[bench_i].configuration.b_single_path_report = config.b_single_path_report;
+                hebench::Utilities::BenchmarkRequest &benchmark_request       = benchmarks_to_run[bench_i];
+                bool b_critical_error                                         = false;
                 std::string bench_path;
                 hebench::Utilities::TimingReportEx report;
                 try
@@ -533,9 +551,9 @@ int main(int argc, char **argv)
 
                 // create the path to output report
                 std::filesystem::path report_filename = bench_path;
-                std::filesystem::path report_path     = (report_filename.is_absolute() ?
-                                                         report_filename :
-                                                         config.report_root_path / report_filename);
+                std::filesystem::path report_path     = report_filename.is_absolute() ?
+                                                        report_filename :
+                                                        config.report_root_path / report_filename;
 
                 ss = std::stringstream();
                 ss << "Saving report to: " << std::endl
@@ -544,19 +562,31 @@ int main(int argc, char **argv)
 
                 // output CSV report
                 report_filename = report_path;
-                report_filename /= hebench::TestHarness::FileNameNoExtReport;
+                if (!config.b_single_path_report)
+                {
+                    report_filename /= hebench::TestHarness::FileNameNoExtReport;
+                }
+                else
+                {
+                    report_filename += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
+                }
                 report_filename += ".csv";
 
                 if (b_critical_error)
                 {
                     // delete any previous report in this location to signal failure
-                    if (std::filesystem::exists(report_filename)
-                        && std::filesystem::is_regular_file(report_filename))
+                    if (std::filesystem::exists(report_filename) && std::filesystem::is_regular_file(report_filename))
+                    {
                         std::filesystem::remove(report_filename);
+                    }
                 } // end if
                 else
                 {
-                    std::filesystem::create_directories(report_path);
+                    // no need to create dirs if single path is enabled
+                    if (!config.b_single_path_report)
+                    {
+                        std::filesystem::create_directories(report_path);
+                    }
                     report.save2CSV(report_filename);
                 } // end else
 

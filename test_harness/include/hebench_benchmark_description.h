@@ -146,6 +146,10 @@ public:
      * @brief Set of arguments for workload parameters.
      */
     std::vector<hebench::APIBridge::WorkloadParam> w_params;
+    /**
+     * @brief Defines if the workload report will be created in a single-level directory
+     */
+    bool b_single_path_report;
 };
 
 class Description
