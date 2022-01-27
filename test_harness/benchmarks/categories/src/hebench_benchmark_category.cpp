@@ -110,88 +110,95 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
     std::vector<const hebench::APIBridge::NativeDataBuffer *> truths =
         dataset->getResultFor(param_data_pack_indices);
 
-    if (!truths.empty() && !outputs.empty())
+    // There's at least 1 element that requires processing.
+    if (!truths.empty() && !outputs.empty() && truths.front())
     {
-        std::vector<const hebench::APIBridge::NativeDataBuffer *>::iterator it_truths = truths.begin();
-        if (*it_truths)
+        std::size_t index = 0;
+        for (index = 0; retval && index < truths.size(); ++index)
         {
-            for (auto it_outputs = outputs.begin(); retval && it_truths != truths.end(); ++it_truths, ++it_outputs)
+            // in case outputs.size() < truths.size() an exception can be triggered
+            try
             {
-                if (!(*it_outputs))
+                if (!outputs.at(index))
                 {
-                    throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected null output component in: 'outputs'."));
+                    throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected null output component in: 'outputs[" + std::to_string(index) + "]'."));
                 }
+            }
+            catch (const std::out_of_range &out_of_range)
+            {
+                throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected out of range index output component in: 'outputs[" + std::to_string(index) + "]'."));
+            }
 
-                if ((*it_outputs)->size < (*it_truths)->size)
+            if (outputs.at(index)->size < truths.at(index)->size)
+            {
+                throw std::invalid_argument(IL_LOG_MSG_CLASS("Buffer in outputs is not large enough to contain the expected output: 'outputs[" + std::to_string(index) + "]'."));
+            }
+
+            std::uint64_t count = truths.at(index)->size / IDataLoader::sizeOf(data_type);
+            void *p_truth       = truths.at(index)->p;
+            void *p_output      = outputs.at(index)->p; // single output
+
+            // validate the results
+            switch (data_type)
+            {
+            case hebench::APIBridge::DataType::Int32:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int32_t *>(p_truth),
+                                                                 reinterpret_cast<const std::int32_t *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            case hebench::APIBridge::DataType::Int64:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int64_t *>(p_truth),
+                                                                 reinterpret_cast<const std::int64_t *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            case hebench::APIBridge::DataType::Float32:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const float *>(p_truth),
+                                                                 reinterpret_cast<const float *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            case hebench::APIBridge::DataType::Float64:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const double *>(p_truth),
+                                                                 reinterpret_cast<const double *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            default:
+                retval = false;
+                break;
+            } // end switch
+
+            // In case retval is set to false, it will break the for loop
+            retval = retval && is_valid.empty();
+        } // end for
+
+        if (!retval)
+        {
+            std::stringstream ss;
+            ss << "Result component " << index << "; elements not within 1% of each other, " << is_valid.size() << std::endl
+               << "Failed indices, ";
+            for (std::size_t i = 0; i < is_valid.size() && i < MaxErrorPrint; ++i)
+            {
+                ss << is_valid[i];
+                if (i + 1 < is_valid.size() && i + 1 < MaxErrorPrint)
                 {
-                    throw std::invalid_argument(IL_LOG_MSG_CLASS("Buffer in outputs is not large enough to contain the expected output: 'outputs'."));
+                    ss << ", ";
                 }
-
-                std::uint64_t count = (*it_truths)->size / IDataLoader::sizeOf(data_type);
-                void *p_truth       = (*it_truths)->p;
-                void *p_output      = (*it_outputs)->p; // single output
-
-                // validate the results
-                switch (data_type)
-                {
-                case hebench::APIBridge::DataType::Int32:
-                    is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int32_t *>(p_truth),
-                                                                     reinterpret_cast<const std::int32_t *>(p_output),
-                                                                     count,
-                                                                     0.01);
-                    break;
-
-                case hebench::APIBridge::DataType::Int64:
-                    is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int64_t *>(p_truth),
-                                                                     reinterpret_cast<const std::int64_t *>(p_output),
-                                                                     count,
-                                                                     0.01);
-                    break;
-
-                case hebench::APIBridge::DataType::Float32:
-                    is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const float *>(p_truth),
-                                                                     reinterpret_cast<const float *>(p_output),
-                                                                     count,
-                                                                     0.01);
-                    break;
-
-                case hebench::APIBridge::DataType::Float64:
-                    is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const double *>(p_truth),
-                                                                     reinterpret_cast<const double *>(p_output),
-                                                                     count,
-                                                                     0.01);
-                    break;
-
-                default:
-                    retval = false;
-                    break;
-                } // end switch
-
-                // In case retval is set to false, it will break the for loop
-                retval = retval && is_valid.empty();
             } // end for
-
-            if (!retval)
+            if (is_valid.size() > MaxErrorPrint)
             {
-                std::stringstream ss;
-                ss << "Elements not within 1% of each other, " << is_valid.size() << std::endl
-                   << "Failed indices, ";
-                for (std::size_t i = 0; i < is_valid.size() && i < MaxErrorPrint; ++i)
-                {
-                    ss << is_valid[i];
-                    if (i + 1 < is_valid.size() && i + 1 < MaxErrorPrint)
-                    {
-                        ss << ", ";
-                    }
-                } // end for
-                if (is_valid.size() > MaxErrorPrint)
-                {
-                    ss << ", ...";
-                }
-                throw std::runtime_error(ss.str());
-            } // end if
+                ss << ", ...";
+            }
+            throw std::runtime_error(ss.str());
         } // end if
     } // end if
+
     return retval;
 }
 
