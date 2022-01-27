@@ -501,7 +501,6 @@ int main(int argc, char **argv)
                     } // end if
 
                     std::cout << std::endl
-                              //<< bench_token->getDescription().header << std::endl;
                               << report.getHeader() << std::endl;
 
                     // create the benchmark
