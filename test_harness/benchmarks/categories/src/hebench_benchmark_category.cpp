@@ -181,7 +181,8 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
         if (!retval)
         {
             std::stringstream ss;
-            ss << "Result component " << index << "; elements not within 1% of each other, " << is_valid.size() << std::endl
+            ss << "Result component, " << index << std::endl
+               << "Elements not within 1% of each other, " << is_valid.size() << std::endl
                << "Failed indices, ";
             for (std::size_t i = 0; i < is_valid.size() && i < MaxErrorPrint; ++i)
             {
