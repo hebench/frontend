@@ -86,9 +86,9 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     } // end switch
     ss << "(W . X + b)" << std::endl
        << ", , , Elements, Batch size" << std::endl;
-    ss << ", , W, " << vector_size << ", " << batch_sizes[DataGenerator::Index_W] << std::endl;
-    ss << ", , b, 1, " << batch_sizes[DataGenerator::Index_b] << std::endl;
-    ss << ", , X, " << vector_size << ", " << batch_sizes[DataGenerator::Index_X] << std::endl;
+    ss << ", , W, " << vector_size << ", " << batch_sizes[DataLoader::Index_W] << std::endl;
+    ss << ", , b, 1, " << batch_sizes[DataLoader::Index_b] << std::endl;
+    ss << ", , X, " << vector_size << ", " << batch_sizes[DataLoader::Index_X] << std::endl;
     ss << ", , P(X), 1, " << result_batch_size << std::endl;
 
     output.workload_header = ss.str();
@@ -141,32 +141,48 @@ void Benchmark::init()
 
     vector_size = BenchmarkDescriptor::fetchVectorSize(this->getBenchmarkConfiguration().w_params);
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating workload...") << std::endl;
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading workload data...") << std::endl;
-
-    DataGenerator::PolynomialDegree pd;
+    DataLoader::PolynomialDegree pd;
     switch (this->getBackendDescription().descriptor.workload)
     {
     case hebench::APIBridge::Workload::LogisticRegression_PolyD3:
-        pd = DataGenerator::PolynomialDegree::PD3;
+        pd = DataLoader::PolynomialDegree::PD3;
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD5:
-        pd = DataGenerator::PolynomialDegree::PD5;
+        pd = DataLoader::PolynomialDegree::PD5;
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD7:
-        pd = DataGenerator::PolynomialDegree::PD7;
+        pd = DataLoader::PolynomialDegree::PD7;
         break;
     default:
-        pd = DataGenerator::PolynomialDegree::None;
+        pd = DataLoader::PolynomialDegree::None;
         break;
     } // end switch
 
     timer.start();
-    m_data         = DataGenerator::create(pd,
-                                   vector_size,
-                                   batch_sizes[DataGenerator::Index_X],
-                                   this->getBackendDescription().descriptor.data_type);
+    if (this->getBenchmarkConfiguration().dataset_filename.empty())
+    {
+        // generates random values for input and generates (computes) ground truth
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating data...") << std::endl;
+        m_data = DataLoader::create(pd,
+                                    vector_size,
+                                    batch_sizes[DataLoader::Index_X],
+                                    this->getBackendDescription().descriptor.data_type);
+    } // end if
+    else
+    {
+        std::stringstream ss;
+        ss << "Loading data from external dataset: " << std::endl
+           << "\"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+        // load values for input and ground truth from file
+        m_data = DataLoader::create(pd,
+                                    vector_size,
+                                    batch_sizes[DataLoader::Index_X],
+                                    this->getBackendDescription().descriptor.data_type,
+                                    this->getBenchmarkConfiguration().dataset_filename);
+    } // end else
     p_timing_event = timer.stop<std::milli>();
 
     ss = std::stringstream();

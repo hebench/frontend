@@ -1,4 +1,3 @@
-
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
@@ -56,7 +55,8 @@ private:
 class ConfigImporterImpl
 {
 public:
-    static std::vector<BenchmarkRequest> importYAML2BenchmarkRequest(std::size_t benchmark_index,
+    static std::vector<BenchmarkRequest> importYAML2BenchmarkRequest(const std::filesystem::path &working_path,
+                                                                     std::size_t benchmark_index,
                                                                      const YAML::Node &yaml_bench,
                                                                      const hebench::TestHarness::Engine &engine,
                                                                      std::uint64_t fallback_min_test_time,
@@ -91,7 +91,8 @@ private:
 // class ConfigImporterImpl
 //--------------------------
 
-std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(std::size_t benchmark_index,
+std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(const std::filesystem::path &working_path,
+                                                                              std::size_t benchmark_index,
                                                                               const YAML::Node &yaml_bench,
                                                                               const TestHarness::Engine &engine,
                                                                               std::uint64_t fallback_min_test_time,
@@ -101,8 +102,35 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
 
     std::vector<BenchmarkRequest> retval;
 
+    std::filesystem::path dataset_filename;
     std::uint64_t default_min_test_time_ms = 0;
     std::vector<std::uint64_t> default_sample_sizes;
+
+    if (yaml_bench["dataset"].IsDefined() && !yaml_bench["dataset"].IsNull())
+    {
+        dataset_filename = std::filesystem::path(yaml_bench["dataset"].as<std::string>());
+        if (dataset_filename.is_relative())
+            dataset_filename = working_path / dataset_filename;
+        try
+        {
+            // may throw if file does not exist
+            dataset_filename = std::filesystem::canonical(dataset_filename);
+        }
+        catch (const std::exception &ex)
+        {
+            YAML::Mark yaml_mark = yaml_bench["dataset"].Mark();
+            std::stringstream ss;
+            ss << "Error in ";
+            if (yaml_mark.is_null())
+                ss << "benchmark with ID " << benchmark_index;
+            else
+                ss << "line " << yaml_mark.line + 1;
+            ss << "." << std::endl
+               << "  dataset: \"" << yaml_bench["dataset"] << "\"" << std::endl
+               << ex.what();
+            throw std::runtime_error(ss.str());
+        }
+    } // end if
 
     if (yaml_bench["default_min_test_time"].IsDefined())
         default_min_test_time_ms = yaml_bench["default_min_test_time"].as<decltype(default_min_test_time_ms)>();
@@ -226,6 +254,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
         {
             const std::vector<std::size_t> &count = c_counter.getCount();
             hebench::TestHarness::BenchmarkDescription::Configuration config;
+            config.dataset_filename             = dataset_filename.string();
             config.default_min_test_time_ms     = default_min_test_time_ms <= 0 ? fallback_min_test_time : default_min_test_time_ms;
             config.fallback_default_sample_size = fallback_sample_size;
             config.default_sample_sizes         = default_sample_sizes;
@@ -268,6 +297,9 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(st
             // check if benchmark is supported with specified parameters
             try
             {
+                if (!retval.empty() && !config.dataset_filename.empty())
+                    throw std::runtime_error("External dataset is only supported on benchmark configuration blocks that define a single benchmark "
+                                             "(for a workload parameter, fields `from` and `to` must match).");
                 hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr p_token =
                     engine.describeBenchmark(benchmark_index, config);
                 if (!p_token)
@@ -375,6 +407,7 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
         << YAML::Comment("Descriptor:") << YAML::Newline
         << YAML::Comment("  " + ss.str());
     node_benchmark["ID"]                    = bench_req.index;
+    node_benchmark["dataset"]               = YAML::Node(YAML::NodeType::Null);
     node_benchmark["default_min_test_time"] = config.default_min_test_time_ms;
     if (!config.default_sample_sizes.empty())
     {
@@ -475,7 +508,14 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
        << "  auto-generated benchmark with the same ID." << std::endl
        << "  Refer to workload and backend specifications for supported range of values" << std::endl
        << "  for each workload parameter. Invalid values will cause the benchmark to" << std::endl
-       << "  fail during execution." << std::endl;
+       << "  fail during execution." << std::endl
+       << std::endl
+       << "If non-null \"dataset\" is specified for a benchmark, the framework will" << std::endl
+       << "attempt to load the specified file and use its contents as values for inputs" << std::endl
+       << "and ground truths instead of using synthetic data. For a benchmark" << std::endl
+       << "description specifying a dataset file, all workload parameter ranges must" << std::endl
+       << "resolve to single values." << std::endl;
+
     out << YAML::Comment(ss.str()) << YAML::Newline;
 
     // output benchmark default configuration
@@ -554,7 +594,8 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
     if (!p_engine)
         throw std::logic_error(IL_LOG_MSG_CLASS("Invalid internal state: engine object has been released."));
 
-    YAML::Node root = YAML::LoadFile(yaml_filename);
+    std::filesystem::path file_dir = std::filesystem::path(yaml_filename).remove_filename();
+    YAML::Node root                = YAML::LoadFile(yaml_filename);
 
     if (!root["benchmark"].IsDefined())
         throw std::runtime_error("Map \"benchmark\" not found at root of configuration file.");
@@ -580,7 +621,8 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
             throw std::runtime_error("Field \"ID\" not found on benchmark.");
         std::size_t benchmark_index = root[i]["ID"].as<std::size_t>();
         std::vector<BenchmarkRequest> node_requests =
-            ConfigImporterImpl::importYAML2BenchmarkRequest(benchmark_index,
+            ConfigImporterImpl::importYAML2BenchmarkRequest(file_dir,
+                                                            benchmark_index,
                                                             root[i],
                                                             *p_engine,
                                                             default_min_test_time_ms,

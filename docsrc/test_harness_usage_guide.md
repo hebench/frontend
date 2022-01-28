@@ -64,7 +64,7 @@ Optionally the output location for the performance report can also be specified.
 
 Backends can support several workloads and offer a set of default parameters for each workload. Sometimes, however, we may want to run specific workloads, or workloads with parameters other than the default sets.
 
-Test Harness offers facilities to configure the run using a configuration file. This benchmark configuration file is a YAML file that contains the list of which benchmarks to run and the workload parameters to use for each benchmark.
+Test Harness offers facilities to configure the run using a configuration file. This benchmark configuration file is a YAML file that contains the list of which *benchmarks to run*, each *benchmark workload parameters*, and *external datasets* to use for each benchmark if desired.
 
 If we already have a configuration file named `config.yaml`, we can load it for a Test Harness run as follows:
 
@@ -82,9 +82,9 @@ While the format of a benchmark configuration YAML file is standard for the Test
 ./test_harness --backend_lib_path libmy_backend.so --benchmark_config_file config.yaml --dump_config
 ```
 
-This will launch the Test Harness which, instead of running any benchmarks, will query the specified backend and generate the file `config.yaml` containing the benchmark configuration information to run the backend with default parameters. This file will contain comments on how to use and what  benchmark is represented by each section.
+This will launch the Test Harness which, instead of running any benchmarks, will query the specified backend and generate the file `config.yaml` containing the benchmark configuration information to run the backend with default parameters. This file will contain comments on how to use and which benchmark is represented by each section.
 
-Exported default configuration files are the starting point for users to create their own run configuration by editing these files to match their needs. Some workload parameter values may not be supported by certain backends, so, it is recommended to consult specific backend documentation for information on supported values.
+Exported default configuration files are the starting point for users to create their own run configuration by editing these files users to match their needs. Some workload parameter values may not be supported by certain backends, so, it is recommended to consult specific backend documentation for information on supported values.
 
 ### 3.3 Configuration file format
 For reference on the configuration file format, see @ref config_file_reference

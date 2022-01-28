@@ -53,7 +53,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     // The following is simplified since latency test is predefined to have a
     // single sample for each parameter and result
 
-    constexpr std::uint64_t batch_size = 1; // all batch sizes are 1 in latency test
+    constexpr std::uint64_t LatencySampleSize = 1; // all batch sizes are 1 in latency test
 
     // prepare the parameters for encoding
 
@@ -73,9 +73,34 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     {
         assert(p_dataset->getParameterData(param_i).param_position == param_i);
         param_packs[param_i].p_buffers      = p_dataset->getParameterData(param_i).p_buffers;
-        param_packs[param_i].buffer_count   = batch_size;
+        param_packs[param_i].buffer_count   = LatencySampleSize;
         param_packs[param_i].param_position = param_i;
+
+        // validate param pack
+        if (param_packs[param_i].buffer_count > 0
+            && !param_packs[param_i].p_buffers)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid empty DataPack in IDataLoader `p_dataset` for parameter " + std::to_string(param_i) + "."));
     } // end for
+
+    // validate results
+    for (std::uint64_t result_i = 0; result_i < p_dataset->getResultCount(); ++result_i)
+    {
+        // make sure we have enough results in the dataset
+        if (p_dataset->getResultData(result_i).buffer_count < LatencySampleSize)
+        {
+            std::stringstream ss;
+            ss << "Invalid number of result samples for result component " << result_i << ". "
+               << "Expected " << LatencySampleSize << ", but " << p_dataset->getResultData(result_i).buffer_count << " received.";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+        // make sure the results are not null
+        if (!p_dataset->getResultData(result_i).p_buffers)
+        {
+            std::stringstream ss;
+            ss << "Invalid null DataPack buffer in IDataLoader `p_dataset` for result component " << result_i << ".";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+    } // end if
 
     // pack the parameters based on encrypted/plain
 
@@ -217,7 +242,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     std::vector<hebench::APIBridge::ParameterIndexer> params(p_dataset->getParameterCount());
     for (std::size_t i = 0; i < params.size(); ++i)
     {
-        params[i].batch_size  = batch_size;
+        params[i].batch_size  = LatencySampleSize;
         params[i].value_index = 0;
     } // end if
 
@@ -402,7 +427,12 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     std::vector<std::uint8_t> raw_result_buffer;
     std::uint64_t max_raw_result_size = 0;
     for (std::uint64_t result_pos = 0; result_pos < p_dataset->getResultCount(); ++result_pos)
+    {
+        if (p_dataset->getResultData(result_pos).buffer_count <= 0
+            || !p_dataset->getResultData(result_pos).p_buffers)
+            throw std::logic_error(IL_LOG_MSG_CLASS("Invalid empty NativeDataBuffer in IDataLoader `p_dataset` at result " + std::to_string(result_pos) + "."));
         max_raw_result_size += p_dataset->getResultData(result_pos).p_buffers[0].size;
+    } // end for
     raw_result_buffer.resize(max_raw_result_size);
 
     // point to the allocated buffers

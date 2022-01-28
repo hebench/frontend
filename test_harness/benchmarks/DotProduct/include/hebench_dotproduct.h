@@ -16,8 +16,8 @@
 
 #include "hebench/api_bridge/types.h"
 
+#include "benchmarks/datagen_helper/include/datagen_helper.h"
 #include "include/hebench_benchmark_factory.h"
-#include "include/hebench_idata_loader.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -52,33 +52,49 @@ protected:
                                      const BenchmarkDescription::Configuration &config) const override;
 };
 
-class DataGenerator : public hebench::TestHarness::PartialDataLoader
+class DataLoader : public hebench::TestHarness::DataLoaderCompute
 {
 public:
-    DISABLE_COPY(DataGenerator)
-    DISABLE_MOVE(DataGenerator)
+    DISABLE_COPY(DataLoader)
+    DISABLE_MOVE(DataLoader)
 private:
-    IL_DECLARE_CLASS_NAME(DotProduct::DataGenerator)
+    IL_DECLARE_CLASS_NAME(DotProduct::DataLoader)
 
 public:
-    typedef std::shared_ptr<DataGenerator> Ptr;
+    typedef std::shared_ptr<DataLoader> Ptr;
 
-    static DataGenerator::Ptr create(std::uint64_t vector_size,
-                                     std::uint64_t batch_size_a,
-                                     std::uint64_t batch_size_b,
-                                     hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(std::uint64_t vector_size,
+                                  std::uint64_t batch_size_a,
+                                  std::uint64_t batch_size_b,
+                                  hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(std::uint64_t vector_size,
+                                  std::uint64_t batch_size_a,
+                                  std::uint64_t batch_size_b,
+                                  hebench::APIBridge::DataType data_type,
+                                  const std::string &dataset_filename);
 
-    ~DataGenerator() override = default;
+    ~DataLoader() override {}
+
+protected:
+    void computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                       const std::uint64_t *param_data_pack_indices,
+                       hebench::APIBridge::DataType data_type) override;
 
 private:
     static constexpr std::size_t InputDim0  = BenchmarkDescriptorCategory::OpParameterCount;
     static constexpr std::size_t OutputDim0 = BenchmarkDescriptorCategory::OpResultCount;
+    std::uint64_t m_vector_size;
 
-    DataGenerator() = default;
+    DataLoader() {}
     void init(std::uint64_t vector_size,
               std::uint64_t batch_size_a,
               std::uint64_t batch_size_b,
               hebench::APIBridge::DataType data_type);
+    void init(std::uint64_t vector_size,
+              std::uint64_t batch_size_a,
+              std::uint64_t batch_size_b,
+              hebench::APIBridge::DataType data_type,
+              const std::string &dataset_filename);
 };
 
 } // namespace DotProduct

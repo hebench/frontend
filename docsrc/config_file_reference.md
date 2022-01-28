@@ -1,3 +1,4 @@
+
 Benchmark Configuration File Reference {#config_file_reference}
 ========================
 
@@ -16,6 +17,7 @@ random_seed: <seed>
 
 benchmark:
   - ID: <benchmark_id>
+    dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -38,6 +40,7 @@ benchmark:
           step: <value_step>
       ...
   - ID: <benchmark_id>
+    dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -93,11 +96,15 @@ If any of these is `0` or is missing, then the next down the list is used. For s
 
 Top level `benchmark` key contains a list. It must exist in the configuration file. An element of this list specifies a benchmark to run and its description.
 
-A benchmark description is composed by `ID`, `default_min_test_time`, `default_sample_sizes` and `params`.
+A benchmark description is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
 
 A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Front end during initialization.
 
-The value of field `ID` is `<benchmark_id>`. This is an integer number identifying the benchmark to run. These IDs are backend specific that map to a registered benchmark. To obtain the correct ID, users can either find out in the backend documentation, or by exporting the backend default configuration file.
+The value of field `ID` is `<benchmark_id>`. This is an integer number identifying the benchmark to run. These IDs are backend specific that map to a registered benchmark. To obtain the correct ID, users can either find out by exporting the backend default configuration file, or, if available, in the backend documentation.
+
+The `dataset` field is optional and `<file_name>` is a string specifying a file containing the input data and optional ground truths to use for the benchmark. If this field is a relative path, it is considered relative to the configuration file location. If this field is missing, or the value is `null`, Test Harness will attempt to pre-generate the data as specified in the benchmark's workload definition. Note that some workloads may not support pre-generating data, while others may not support external datasets. See @ref tests_overview for more information on each particular workload.
+
+For formats supported by the Test Harness dataset loader see @ref dataset_loader_overview .
 
 #### Workload parameters
 
@@ -130,8 +137,11 @@ else
 }
 ```
 
-For workloads with multiple parameters, all possible combinations for each range will be generated and the benchmark for each combination executed by Test Harness. The order of each combination is undefined.
+All possible configurations will be generated combining each value in the range specified using `from`, `to`, `step` for each workload parameter. The benchmark for each configuration will be executed by Test Harness. The order of each combination is undefined.
 
+**IMPORTANT**: Because an external dataset provides inputs and outputs for a single benchmark configuration, if a benchmark description specifies an external dataset using the `dataset` field, then, the range of values for every workload parameter of said benchmark must contain a single element. Otherwise, an error is produced.
+
+<br/>
 Finally, backends may have extra workload parameters, beyond those required. Configuration files are expected to fulfill these as well. To know if and which extra parameters a backend has defined for a benchmark, users must consult the specific backend documentation. Exported configuration files may offer a hint at any extra parameters as well.
 
 ## Default benchmark configuration
@@ -156,6 +166,7 @@ benchmark:
 # Descriptor:
 #   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
   - ID: 3
+    dataset: ~
     default_min_test_time: 0
     default_sample_size:
       0: 0
@@ -170,6 +181,7 @@ benchmark:
           to: 16
           step: 0
 ```
+
 we know that `ID` value of `3` will always represent a "Logistic Regression PolyD3" workload and descriptor "offline | float64 | 1120 | all_cipher | ckks | 128 | 1". The number of features `n` is the workload parameter `0` as specified in @ref logistic_regression .
 
 We can modify the parameters at will, as long as our new values are supported by the backend used to export this file.
@@ -194,3 +206,5 @@ The command below will launch the Test Harness which will load the file pointed 
 ```bash
 ./test_harness --backend_lib_path $BACKEND_LIB --benchmark_config_file $CONFIG_FILE_PATH
 ```
+
+See @ref test_harness_usage_guide for more information on using the Test Harness.

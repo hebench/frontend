@@ -12,8 +12,8 @@
 
 #include "hebench/api_bridge/types.h"
 
+#include "benchmarks/datagen_helper/include/datagen_helper.h"
 #include "include/hebench_benchmark_factory.h"
-#include "include/hebench_idata_loader.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -48,16 +48,16 @@ protected:
                                      const BenchmarkDescription::Configuration &config) const override;
 };
 
-class DataGenerator : public hebench::TestHarness::PartialDataLoader
+class DataLoader : public hebench::TestHarness::DataLoaderCompute
 {
 public:
-    DISABLE_COPY(DataGenerator)
-    DISABLE_MOVE(DataGenerator)
+    DISABLE_COPY(DataLoader)
+    DISABLE_MOVE(DataLoader)
 private:
-    IL_DECLARE_CLASS_NAME(LogisticRegression::DataGenerator)
+    IL_DECLARE_CLASS_NAME(LogisticRegression::DataLoader)
 
 public:
-    typedef std::shared_ptr<DataGenerator> Ptr;
+    typedef std::shared_ptr<DataLoader> Ptr;
     enum class PolynomialDegree
     {
         None,
@@ -70,22 +70,39 @@ public:
     static constexpr std::size_t Index_b = 1;
     static constexpr std::size_t Index_X = 2;
 
-    static DataGenerator::Ptr create(PolynomialDegree polynomial_degree,
-                                     std::uint64_t vector_size,
-                                     std::uint64_t batch_size_input,
-                                     hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(PolynomialDegree polynomial_degree,
+                                  std::uint64_t vector_size,
+                                  std::uint64_t batch_size_input,
+                                  hebench::APIBridge::DataType data_type);
+    static DataLoader::Ptr create(PolynomialDegree polynomial_degree,
+                                  std::uint64_t vector_size,
+                                  std::uint64_t batch_size_input,
+                                  hebench::APIBridge::DataType data_type,
+                                  const std::string &dataset_filename);
 
-    ~DataGenerator() override = default;
+    ~DataLoader() override {}
+
+protected:
+    void computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                       const std::uint64_t *param_data_pack_indices,
+                       hebench::APIBridge::DataType data_type) override;
 
 private:
     static constexpr std::size_t InputDim0  = BenchmarkDescriptorCategory::OpParameterCount;
     static constexpr std::size_t OutputDim0 = BenchmarkDescriptorCategory::OpResultCount;
+    PolynomialDegree m_polynomial_degree;
+    std::uint64_t m_vector_size;
 
-    DataGenerator() = default;
+    DataLoader() {}
     void init(PolynomialDegree polynomial_degree,
               std::uint64_t vector_size,
               std::uint64_t batch_size_input,
               hebench::APIBridge::DataType data_type);
+    void init(PolynomialDegree polynomial_degree,
+              std::uint64_t expected_vector_size,
+              std::uint64_t max_batch_size_input,
+              hebench::APIBridge::DataType data_type,
+              const std::string &dataset_filename);
 };
 
 } // namespace LogisticRegression

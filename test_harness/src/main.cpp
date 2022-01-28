@@ -49,8 +49,8 @@ struct ProgramConfig
     static constexpr const char *DefaultRootPath      = ".";
 
     void initializeConfig(const hebench::ArgsParser &parser);
-    std::ostream &showBenchmarkDefaults(std::ostream &os);
-    std::ostream &showConfig(std::ostream &os) const;
+    void showBenchmarkDefaults(std::ostream &os);
+    void showConfig(std::ostream &os) const;
     static std::ostream &showVersion(std::ostream &os);
 };
 
@@ -107,35 +107,37 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     b_single_path_report = parser.hasArgument("--single_path_report");
 }
 
-std::ostream &ProgramConfig::showBenchmarkDefaults(std::ostream &os)
+void ProgramConfig::showBenchmarkDefaults(std::ostream &os)
 {
     os << "Benchmark defaults:" << std::endl
        << "    Random seed: " << random_seed << std::endl;
-    return os;
 }
 
-std::ostream &ProgramConfig::showConfig(std::ostream &os) const
+void ProgramConfig::showConfig(std::ostream &os) const
 {
-    os << "Global Configuration:" << std::endl;
+    os << "Global Configuration:" << std::endl
+       << "    Backend library: " << backend_lib_path << std::endl
+       //<< std::endl
+       << "    ==================" << std::endl
+       << "    Run type: ";
     if (b_dump_config)
     {
-        os << "    Dumping configuration file!" << std::endl;
+        os << "Dumping configuration file!" << std::endl;
     } // end of
     else
     {
-        os
-            << "    Validate results: " << (b_validate_results ? "Yes" : "No") << std::endl
-            << "    Report delay (ms): " << report_delay_ms << std::endl
-            << "    Report Root Path: " << report_root_path << std::endl
-            << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl;
+        os << "Benchmark Run." << std::endl
+           << "    Validate results: " << (b_validate_results ? "Yes" : "No") << std::endl
+           << "    Report delay (ms): " << report_delay_ms << std::endl
+           << "    Report Root Path: " << report_root_path << std::endl
+           << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl;
     } // end if
     os << "    Run configuration file: ";
     if (config_file.empty())
         os << "(none)" << std::endl;
     else
         os << config_file << std::endl;
-    os << "    Backend library: " << backend_lib_path << std::endl;
-    return os;
+    os << "    ==================" << std::endl;
 }
 
 std::ostream &ProgramConfig::showVersion(std::ostream &os)
@@ -383,7 +385,7 @@ int main(int argc, char **argv)
            << config.backend_lib_path;
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
         hebench::APIBridge::DynamicLibLoad::loadLibrary(config.backend_lib_path);
-        std::cout << IOS_MSG_OK << std::endl;
+        std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log("Backend loaded successfully.") << std::endl;
 
         // create engine and register all benchmarks
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
@@ -490,11 +492,18 @@ int main(int argc, char **argv)
                               << " " << hebench::Logging::GlobalLogger::log(s_workload_name) << std::endl
                               << std::setw(fill_size) << "=" << std::setfill(' ') << std::endl;
 
+                    report.setHeader(bench_token->getDescription().header);
+                    if (!bench_token->getBenchmarkConfiguration().dataset_filename.empty())
+                    {
+                        std::stringstream ss;
+                        ss << "Dataset, \"" << bench_token->getBenchmarkConfiguration().dataset_filename << "\"" << std::endl;
+                        report.appendFooter(ss.str());
+                    } // end if
+
                     std::cout << std::endl
-                              << bench_token->getDescription().header << std::endl;
+                              << report.getHeader() << std::endl;
 
                     // create the benchmark
-                    report.setHeader(bench_token->getDescription().header);
                     hebench::TestHarness::IBenchmark::Ptr p_bench = p_engine->createBenchmark(bench_token, report);
 
                     hebench::TestHarness::IBenchmark::RunConfig run_config;

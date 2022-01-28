@@ -9,6 +9,8 @@ The documents and pages listed in this section detail how to use the test harnes
  
  - @ref test_harness_usage_guide
  - @ref config_file_reference
+ - Dataset loader:
+   - @ref dataset_csv_reference
 
 ##Namespace
 [Test Harness namespace](@ref hebench::TestHarness)

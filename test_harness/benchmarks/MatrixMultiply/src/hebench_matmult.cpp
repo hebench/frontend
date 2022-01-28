@@ -4,9 +4,9 @@
 
 #include <cassert>
 #include <sstream>
+#include <stdexcept>
 
 #include "../include/hebench_matmult.h"
-#include "benchmarks/datagen_helper/include/datagen_helper.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -134,6 +134,12 @@ private:
     static void matMul(T *mat_result, const T *mat_a, const T *mat_b,
                        std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b)
     {
+        if (!mat_result)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `mat_result`"));
+        if (!mat_a)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `mat_a`"));
+        if (!mat_b)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `mat_b`"));
         // perform matrix multiplication (straight-forward way,
         // maybe optimize later)
         for (std::uint64_t row_a = 0; row_a < rows_a; ++row_a)
@@ -195,55 +201,72 @@ void DataGeneratorHelper::matMul(hebench::APIBridge::DataType data_type,
     } // end switch
 }
 
-//---------------------
-// class DataGenerator
-//---------------------
+//------------------
+// class DataLoader
+//------------------
 
-DataGenerator::Ptr DataGenerator::create(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
-                                         std::uint64_t batch_size_mat_a,
-                                         std::uint64_t batch_size_mat_b,
-                                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
+                                   std::uint64_t batch_size_mat_a,
+                                   std::uint64_t batch_size_mat_b,
+                                   hebench::APIBridge::DataType data_type)
 {
-    DataGenerator::Ptr retval = DataGenerator::Ptr(new DataGenerator());
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
     retval->init(rows_a, cols_a, cols_b, batch_size_mat_a, batch_size_mat_b, data_type);
     return retval;
 }
 
-void DataGenerator::init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
-                         std::uint64_t batch_size_mat_a,
-                         std::uint64_t batch_size_mat_b,
-                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
+                                   std::uint64_t expected_sample_size_mat_a,
+                                   std::uint64_t expected_sample_size_mat_b,
+                                   hebench::APIBridge::DataType data_type,
+                                   const std::string &dataset_filename)
+{
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
+    retval->init(rows_a, cols_a, cols_b,
+                 expected_sample_size_mat_a, expected_sample_size_mat_b,
+                 data_type,
+                 dataset_filename);
+    return retval;
+}
+
+void DataLoader::init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
+                      std::uint64_t batch_size_mat_a,
+                      std::uint64_t batch_size_mat_b,
+                      hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for matrix multiplication:
     // M2 = M0 * M1
 
     // number of samples in each input parameter and output
-    std::size_t batch_sizes[InputDim0 + 1] = {
+    std::size_t batch_sizes[InputDim0 + OutputDim0] = {
         batch_size_mat_a,
         batch_size_mat_b,
         batch_size_mat_a * batch_size_mat_b
     };
-    // initialize base data (data packs)
-    PartialDataLoader::init(InputDim0, batch_sizes, OutputDim0);
 
     // store the dimensions of each matrix
-    std::array<std::pair<std::uint64_t, std::uint64_t>, InputDim0 + 1> mat_dims; // rows <=> first, cols <=> second
+    std::pair<std::uint64_t, std::uint64_t> mat_dims[InputDim0 + OutputDim0]; // rows <=> first, cols <=> second
     mat_dims[0] = std::make_pair(rows_a, cols_a);
     mat_dims[1] = std::make_pair(cols_a, cols_b);
     mat_dims[2] = std::make_pair(rows_a, cols_b);
 
-    // compute buffer size for each matrix
-    std::uint64_t buffer_sizes[InputDim0 + 1];
-    for (std::size_t i = 0; i < InputDim0 + 1; ++i)
+    m_rows_a = rows_a;
+    m_cols_a = cols_a;
+    m_cols_b = cols_b;
+
+    // compute number of elements in vector to hold each matrix data
+    // matrices are kept in a single vector in row major order
+    std::uint64_t sample_vector_sizes[InputDim0 + OutputDim0];
+    for (std::size_t i = 0; i < InputDim0 + OutputDim0; ++i)
     {
-        buffer_sizes[i] = mat_dims[i].first * mat_dims[i].second * PartialDataLoader::sizeOf(data_type);
+        sample_vector_sizes[i] = mat_dims[i].first * mat_dims[i].second;
     } // end for
 
-    // allocate memory for each matrix buffer
-    allocate(buffer_sizes, // sizes (in bytes) for each input matrix
-             InputDim0, // number of input matrices
-             buffer_sizes + InputDim0, // sizes (in bytes) for each output matrix
-             OutputDim0); // number of output matrices
+    // initialize data packs and allocate memory
+    PartialDataLoader::init(data_type,
+                            InputDim0, batch_sizes, sample_vector_sizes,
+                            OutputDim0, sample_vector_sizes + InputDim0,
+                            true);
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -284,6 +307,63 @@ void DataGenerator::init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64
     } // end for
 
     // all data has been generated at this point
+}
+
+void DataLoader::init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
+                      std::uint64_t max_sample_size_mat_a,
+                      std::uint64_t max_sample_size_mat_b,
+                      hebench::APIBridge::DataType data_type,
+                      const std::string &dataset_filename)
+{
+    // Load/generate and initialize the data for matrix multiplication:
+    // M2 = M0 * M1
+
+    // number of samples in each input parameter and output
+    std::size_t max_sample_sizes[InputDim0 + OutputDim0] = {
+        max_sample_size_mat_a,
+        max_sample_size_mat_b,
+        max_sample_size_mat_a * max_sample_size_mat_b
+    };
+
+    // store the dimensions of each matrix
+    std::pair<std::uint64_t, std::uint64_t> mat_dims[InputDim0 + OutputDim0]; // rows <=> first, cols <=> second
+    mat_dims[0] = std::make_pair(rows_a, cols_a);
+    mat_dims[1] = std::make_pair(cols_a, cols_b);
+    mat_dims[2] = std::make_pair(rows_a, cols_b);
+
+    m_rows_a = rows_a;
+    m_cols_a = cols_a;
+    m_cols_b = cols_b;
+
+    // compute number of elements in vector to hold each matrix data
+    // matrices are kept in a single vector in row major order
+    std::uint64_t sample_vector_sizes[InputDim0 + OutputDim0];
+    for (std::size_t i = 0; i < InputDim0 + OutputDim0; ++i)
+    {
+        sample_vector_sizes[i] = mat_dims[i].first * mat_dims[i].second;
+    } // end for
+
+    PartialDataLoader::init(dataset_filename, data_type,
+                            InputDim0, max_sample_sizes, sample_vector_sizes,
+                            OutputDim0, sample_vector_sizes + InputDim0);
+
+    // at this point all NativeDataBuffers have been allocated, pointed to the correct locations
+    // and buffers loaded with data from dataset_filename
+}
+
+void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type)
+{
+    // as protected method, parameters should be valid when called
+
+    // generate the output
+    DataGeneratorHelper::matMul(data_type,
+                                result.front()->p,
+                                this->getParameterData(0).p_buffers[param_data_pack_indices[0]].p,
+                                this->getParameterData(1).p_buffers[param_data_pack_indices[1]].p,
+                                m_rows_a, m_cols_a, // dims for m0
+                                m_cols_b); // dims for m1
 }
 
 } // namespace MatrixMultiply

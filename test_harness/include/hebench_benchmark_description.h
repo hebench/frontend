@@ -105,7 +105,8 @@ class Configuration
 {
 public:
     Configuration() :
-        default_min_test_time_ms(0)
+        default_min_test_time_ms(0),
+        fallback_default_sample_size(0)
     {
     }
 
@@ -121,6 +122,19 @@ public:
      * default should be used.
      */
     std::uint64_t fallback_default_sample_size;
+    /**
+     * @brief File containing data for the benchmark. If empty string, benchmarks
+     * that can auto generate the dataset will do so.
+     * @details Set to a filename containing the data to be used as input (and,
+     * optionally, ground truth output) for the benchmark. The benchmark receiving
+     * this configuration will try to load the external data by attempting to match
+     * the file contents to a known format.
+     *
+     * Some benchmarks do not support external datasets, others require them, yet
+     * others support both. See the particular workload definition documentation
+     * for information on configuration feature support.
+     */
+    std::string dataset_filename;
     /**
      * @brief Default sample size for each operation parameter.
      * @details If the number of elements in this array is less than the number of
