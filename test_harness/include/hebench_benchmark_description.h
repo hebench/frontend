@@ -25,6 +25,16 @@ namespace BenchmarkDescription {
 
 class Backend
 {
+private:
+    struct Internal
+    {
+        std::size_t m_index;
+        hebench::APIBridge::Handle m_handle;
+        hebench::APIBridge::BenchmarkDescriptor m_descriptor;
+        std::size_t m_operation_params_count;
+    };
+    Internal m_backend_description;
+
 public:
     friend class hebench::TestHarness::Engine;
 
@@ -66,16 +76,8 @@ public:
     }
 
 private:
-    struct Internal
-    {
-        std::size_t m_index;
-        hebench::APIBridge::Handle m_handle;
-        hebench::APIBridge::BenchmarkDescriptor m_descriptor;
-        std::size_t m_operation_params_count;
-    };
-    Internal m_backend_description;
-
     Backend(bool init) :
+        m_backend_description(),
         index(m_backend_description.m_index),
         handle(m_backend_description.m_handle),
         descriptor(m_backend_description.m_descriptor),
@@ -106,7 +108,8 @@ class Configuration
 public:
     Configuration() :
         default_min_test_time_ms(0),
-        fallback_default_sample_size(0)
+        fallback_default_sample_size(0),
+        b_single_path_report(false)
     {
     }
 

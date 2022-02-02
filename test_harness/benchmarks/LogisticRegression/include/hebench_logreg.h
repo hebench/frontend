@@ -93,7 +93,7 @@ private:
     PolynomialDegree m_polynomial_degree;
     std::uint64_t m_vector_size;
 
-    DataLoader() {}
+    DataLoader();
     void init(PolynomialDegree polynomial_degree,
               std::uint64_t vector_size,
               std::uint64_t batch_size_input,

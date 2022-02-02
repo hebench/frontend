@@ -94,7 +94,7 @@ private:
     std::uint64_t m_cols_a;
     std::uint64_t m_cols_b;
 
-    DataLoader() {}
+    DataLoader();
     void init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
               std::uint64_t batch_size_mat_a,
               std::uint64_t batch_size_mat_b,

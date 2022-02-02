@@ -296,6 +296,12 @@ DataLoader::Ptr DataLoader::create(PolynomialDegree polynomial_degree,
     return retval;
 }
 
+DataLoader::DataLoader() :
+    m_polynomial_degree(PolynomialDegree::None),
+    m_vector_size(0)
+{
+}
+
 void DataLoader::init(PolynomialDegree polynomial_degree,
                       std::uint64_t vector_size,
                       std::uint64_t batch_size_input,

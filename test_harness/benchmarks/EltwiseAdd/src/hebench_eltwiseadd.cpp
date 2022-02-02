@@ -196,6 +196,11 @@ DataLoader::Ptr DataLoader::create(std::uint64_t expected_vector_size,
     return retval;
 }
 
+DataLoader::DataLoader() :
+    m_vector_size(0)
+{
+}
+
 void DataLoader::init(std::uint64_t vector_size,
                       std::uint64_t batch_size_a,
                       std::uint64_t batch_size_b,
