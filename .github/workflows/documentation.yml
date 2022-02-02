@@ -22,6 +22,7 @@ jobs:
     - name: Documentation
       working-directory: ${{github.workspace}}
       run: |
+        git pull
         git reset --hard 210fb7c819a79eeb75163eee3bf7ccf7b66fcdd5
         git clean -fdx
         API_BRIDGE_TAG="main"
