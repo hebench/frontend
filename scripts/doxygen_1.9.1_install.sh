@@ -18,8 +18,8 @@ yes | sudo apt-get install graphviz
 yes | sudo apt-get install flex
 yes | sudo apt-get install bison
 cmake ..
-make -j
-sudo make install -j
+make -j 4
+sudo make install -j 4
 doxygen -v
 popd
 rm -rf $tmp_dir
