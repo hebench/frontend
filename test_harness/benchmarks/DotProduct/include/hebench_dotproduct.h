@@ -85,7 +85,7 @@ private:
     static constexpr std::size_t OutputDim0 = BenchmarkDescriptorCategory::OpResultCount;
     std::uint64_t m_vector_size;
 
-    DataLoader() {}
+    DataLoader();
     void init(std::uint64_t vector_size,
               std::uint64_t batch_size_a,
               std::uint64_t batch_size_b,

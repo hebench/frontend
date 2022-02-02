@@ -229,6 +229,11 @@ DataLoader::Ptr DataLoader::create(std::uint64_t rows_a, std::uint64_t cols_a, s
     return retval;
 }
 
+DataLoader::DataLoader() :
+    m_rows_a(0), m_cols_a(0), m_cols_b(0)
+{
+}
+
 void DataLoader::init(std::uint64_t rows_a, std::uint64_t cols_a, std::uint64_t cols_b,
                       std::uint64_t batch_size_mat_a,
                       std::uint64_t batch_size_mat_b,
