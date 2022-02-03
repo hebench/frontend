@@ -63,13 +63,41 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
 
     // create the data packs
     std::vector<hebench::APIBridge::DataPack> param_packs(p_dataset->getParameterCount());
+    std::uint64_t num_results_samples = 1; // used to count the number of expected results
     for (std::size_t param_i = 0; param_i < param_packs.size(); ++param_i)
     {
         assert(p_dataset->getParameterData(param_i).param_position == param_i);
         param_packs[param_i].p_buffers      = p_dataset->getParameterData(param_i).p_buffers;
         param_packs[param_i].buffer_count   = p_dataset->getParameterData(param_i).buffer_count;
         param_packs[param_i].param_position = param_i;
+
+        // validate param pack
+        if (param_packs[param_i].buffer_count > 0
+            && !param_packs[param_i].p_buffers)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid empty DataPack in IDataLoader `p_dataset` for parameter " + std::to_string(param_i) + "."));
+
+        num_results_samples *= param_packs[param_i].buffer_count; // count the number of results
     } // end for
+
+    // validate ground truths
+    for (std::uint64_t result_i = 0; result_i < p_dataset->getResultCount(); ++result_i)
+    {
+        // make sure we have enough results in the dataset
+        if (p_dataset->getResultData(result_i).buffer_count < num_results_samples)
+        {
+            std::stringstream ss;
+            ss << "Invalid number of result samples for result component " << result_i << ". "
+               << "Expected " << num_results_samples << ", but " << p_dataset->getResultData(result_i).buffer_count << " received.";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+        // make sure the results are not null
+        if (!p_dataset->getResultData(result_i).p_buffers)
+        {
+            std::stringstream ss;
+            ss << "Invalid null DataPack buffer in IDataLoader `p_dataset` for result component " << result_i << ".";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+    } // end if
 
     // pack the parameters based on encrypted/plain
 
@@ -209,12 +237,11 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
     // params[1].value_index = 0; // starting with the first.
 
     std::vector<hebench::APIBridge::ParameterIndexer> params(p_dataset->getParameterCount());
-    std::uint64_t num_results = 1;
+
     for (std::size_t i = 0; i < params.size(); ++i)
     {
         params[i].batch_size  = p_dataset->getParameterData(i).buffer_count;
         params[i].value_index = 0;
-        num_results *= params[i].batch_size;
     } // end if
 
     // operate
@@ -248,7 +275,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
         validateRetCode(hebench::APIBridge::operate(handle(),
                                                     h_inputs_remote.handle, params.data(),
                                                     &h_remote_results.handle));
-        p_timing_event = timer.stop<DefaultTimeInterval>(event_id, num_results, nullptr);
+        p_timing_event = timer.stop<DefaultTimeInterval>(event_id, num_results_samples, nullptr);
         elapsed_ms += p_timing_event->elapsedWallTime<std::milli>();
 
         // check if we have enough capacity
@@ -434,7 +461,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Result", false);
 
         std::size_t mini_reports_cnt        = 3;
-        std::size_t report_every_n_elements = num_results / 7 + 1;
+        std::size_t report_every_n_elements = num_results_samples / 7 + 1;
         if (report_every_n_elements <= 0)
             report_every_n_elements = 1;
         std::size_t report_every_n_by_3_elements = report_every_n_elements / 4;
@@ -457,7 +484,7 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
         // validate the result of the operation evaluated on all sample combinations per parameter
         do
         {
-            assert(result_i < num_results);
+            assert(result_i < num_results_samples);
 
             if (result_i == 0 || (result_i + 1) % report_every_n_elements == 0)
             {
@@ -542,12 +569,12 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
         if (b_valid)
         {
             // report valid op
-            if ((num_results) % report_every_n_elements != 0)
+            if ((num_results_samples) % report_every_n_elements != 0)
             {
                 // pretty-print end of result report
                 while (mini_reports_cnt++ < 3)
                     std::cout << hebench::Logging::GlobalLogger::log(".", false) << std::flush;
-                std::cout << hebench::Logging::GlobalLogger::log(" " + std::to_string(num_results)) << std::endl;
+                std::cout << hebench::Logging::GlobalLogger::log(" " + std::to_string(num_results_samples)) << std::endl;
             } // end if
             else
                 std::cout << hebench::Logging::GlobalLogger::log("") << std::endl;

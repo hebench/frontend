@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 project(hebench_dynamic_lib_load)
 
 set(${PROJECT_NAME}_SOURCES

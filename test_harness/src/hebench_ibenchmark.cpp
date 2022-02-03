@@ -179,6 +179,7 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
 
     std::stringstream ss;
     std::filesystem::path ss_path;
+
     std::string &s_workload_name = completed_description.workload_name;
     std::string s_path_workload_name;
     std::string s_scheme_name   = engine.getSchemeName(bench_desc.scheme);
@@ -187,9 +188,13 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     // generate path
     ss = std::stringstream();
     if (!s_workload_name.empty())
+    {
         ss << s_workload_name << "_";
+    }
     else
+    {
         s_workload_name = std::to_string(static_cast<int>(bench_desc.workload));
+    }
     ss << std::to_string(static_cast<int>(bench_desc.workload));
     s_path_workload_name = hebench::Utilities::convertToDirectoryName(ss.str());
     ss_path              = s_path_workload_name;
@@ -246,7 +251,6 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     ss_path /= hebench::Utilities::convertToDirectoryName(s_scheme_name);
     ss_path /= hebench::Utilities::convertToDirectoryName(s_security_name);
     ss_path /= std::to_string(bench_desc.other);
-
     // generate header
     ss = std::stringstream();
     ss << "Specifications," << std::endl
@@ -319,7 +323,18 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
 
     description.workload_name = completed_description.workload_name;
     description.header        = ss.str();
-    description.path          = ss_path;
+
+    if (!config.b_single_path_report)
+    {
+        description.path = ss_path;
+    }
+    else
+    {
+        std::string modified_ss_path = std::string(ss_path);
+        std::replace(modified_ss_path.begin(), modified_ss_path.end(),
+                     hebench::TestHarness::separator, hebench::TestHarness::hyphen);
+        description.path = modified_ss_path;
+    }
 }
 
 //------------------------
