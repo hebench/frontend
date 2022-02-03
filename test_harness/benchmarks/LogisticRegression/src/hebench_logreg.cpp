@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "../include/hebench_logreg.h"
-#include "benchmarks/datagen_helper/include/datagen_helper.h"
 #include "include/hebench_math_utils.h"
 
 namespace hebench {
@@ -140,7 +139,7 @@ private:
 
 public:
     static void logisticRegressionInference(hebench::APIBridge::DataType data_type,
-                                            DataGenerator::PolynomialDegree poly_deg,
+                                            DataLoader::PolynomialDegree poly_deg,
                                             void *result, const void *w, const void *b, const void *input,
                                             std::uint64_t feature_count);
 
@@ -155,7 +154,7 @@ private:
     static double sigmoid(double x);
 
     template <class T> // T must always be floating point
-    static void logisticRegressionInference(DataGenerator::PolynomialDegree poly_deg,
+    static void logisticRegressionInference(DataLoader::PolynomialDegree poly_deg,
                                             T &result, const T *p_w, const T &b, const T *p_input,
                                             std::uint64_t feature_count);
 };
@@ -205,23 +204,28 @@ inline double DataGeneratorHelper::sigmoid<7>(double x)
 }
 
 template <class T>
-inline void DataGeneratorHelper::logisticRegressionInference(DataGenerator::PolynomialDegree poly_deg,
+inline void DataGeneratorHelper::logisticRegressionInference(DataLoader::PolynomialDegree poly_deg,
                                                              T &result, const T *p_w, const T &b, const T *p_input,
                                                              std::uint64_t feature_count)
 {
+    if (!p_w)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null 'p_w'."));
+    if (!p_input)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null 'p_input'."));
+
     T linear_regression = std::inner_product(p_w, p_w + feature_count, p_input, static_cast<T>(0))
                           + b;
     switch (poly_deg)
     {
-    case DataGenerator::PolynomialDegree::PD3:
+    case DataLoader::PolynomialDegree::PD3:
         result = static_cast<T>(sigmoid<3>(static_cast<double>(linear_regression)));
         break;
 
-    case DataGenerator::PolynomialDegree::PD5:
+    case DataLoader::PolynomialDegree::PD5:
         result = static_cast<T>(sigmoid<5>(static_cast<double>(linear_regression)));
         break;
 
-    case DataGenerator::PolynomialDegree::PD7:
+    case DataLoader::PolynomialDegree::PD7:
         result = static_cast<T>(sigmoid<7>(static_cast<double>(linear_regression)));
         break;
 
@@ -232,7 +236,7 @@ inline void DataGeneratorHelper::logisticRegressionInference(DataGenerator::Poly
 }
 
 void DataGeneratorHelper::logisticRegressionInference(hebench::APIBridge::DataType data_type,
-                                                      DataGenerator::PolynomialDegree poly_deg,
+                                                      DataLoader::PolynomialDegree poly_deg,
                                                       void *p_result, const void *p_w, const void *p_bias, const void *p_input,
                                                       std::uint64_t feature_count)
 {
@@ -271,20 +275,37 @@ void DataGeneratorHelper::logisticRegressionInference(hebench::APIBridge::DataTy
 // class DataGenerator
 //---------------------
 
-DataGenerator::Ptr DataGenerator::create(PolynomialDegree polynomial_degree,
-                                         std::uint64_t vector_size,
-                                         std::uint64_t batch_size_input,
-                                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(PolynomialDegree polynomial_degree,
+                                   std::uint64_t vector_size,
+                                   std::uint64_t batch_size_input,
+                                   hebench::APIBridge::DataType data_type)
 {
-    DataGenerator::Ptr retval = DataGenerator::Ptr(new DataGenerator());
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
     retval->init(polynomial_degree, vector_size, batch_size_input, data_type);
     return retval;
 }
 
-void DataGenerator::init(PolynomialDegree polynomial_degree,
-                         std::uint64_t vector_size,
-                         std::uint64_t batch_size_input,
-                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(PolynomialDegree polynomial_degree,
+                                   std::uint64_t vector_size,
+                                   std::uint64_t batch_size_input,
+                                   hebench::APIBridge::DataType data_type,
+                                   const std::string &dataset_filename)
+{
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
+    retval->init(polynomial_degree, vector_size, batch_size_input, data_type, dataset_filename);
+    return retval;
+}
+
+DataLoader::DataLoader() :
+    m_polynomial_degree(PolynomialDegree::None),
+    m_vector_size(0)
+{
+}
+
+void DataLoader::init(PolynomialDegree polynomial_degree,
+                      std::uint64_t vector_size,
+                      std::uint64_t batch_size_input,
+                      hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for logistic regression
 
@@ -297,22 +318,25 @@ void DataGenerator::init(PolynomialDegree polynomial_degree,
         batch_size_input, // X
         batch_size_input // result
     };
-    // initialize base data (data packs)
-    PartialDataLoader::init(InputDim0, batch_sizes, OutputDim0);
+    m_polynomial_degree = polynomial_degree;
+    m_vector_size       = vector_size;
 
     // compute buffer size in bytes for each vector
-    std::uint64_t buffer_sizes[InputDim0 + OutputDim0] = {
-        vector_size * PartialDataLoader::sizeOf(data_type), // W
-        PartialDataLoader::sizeOf(data_type), // b
-        vector_size * PartialDataLoader::sizeOf(data_type), // X
-        PartialDataLoader::sizeOf(data_type) // result
+    std::uint64_t vector_sample_sizes[InputDim0 + OutputDim0] = {
+        vector_size, // W
+        1, // b
+        vector_size, // X
+        1 // result
     };
 
     // allocate memory for each vector buffer
-    allocate(buffer_sizes, // sizes (in bytes) for each input vector
-             InputDim0, // number of input vectors
-             buffer_sizes + InputDim0, // sizes (in bytes) for each output vector
-             OutputDim0); // number of output vectors
+    DataLoaderCompute::init(data_type,
+                            InputDim0, // number of input components
+                            batch_sizes, // number of samples per input component
+                            vector_sample_sizes, // number of elements in each vector of the input
+                            OutputDim0, // number of output components
+                            vector_sample_sizes + InputDim0, // number of elements in each vector of the output
+                            true); // allocate memory for results?
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -351,6 +375,62 @@ void DataGenerator::init(PolynomialDegree polynomial_degree,
     // all data has been generated at this point
 }
 
+void DataLoader::init(PolynomialDegree polynomial_degree,
+                      std::uint64_t expected_vector_size,
+                      std::uint64_t max_batch_size_input,
+                      hebench::APIBridge::DataType data_type,
+                      const std::string &dataset_filename)
+{
+    // Load/generate and initialize the data for logistic regression
+
+    assert(InputDim0 + OutputDim0 >= 4);
+
+    // number of samples in each input parameter and output
+    std::size_t batch_sizes[InputDim0 + OutputDim0] = {
+        1, // W
+        1, // b
+        max_batch_size_input, // X
+        max_batch_size_input // result
+    };
+    m_polynomial_degree = polynomial_degree;
+    m_vector_size       = expected_vector_size;
+
+    // compute buffer size in bytes for each vector
+    std::uint64_t vector_sample_sizes[InputDim0 + OutputDim0] = {
+        expected_vector_size, // W
+        1, // b
+        expected_vector_size, // X
+        1 // result
+    };
+
+    // allocate memory for each vector buffer
+    DataLoaderCompute::init(dataset_filename, data_type,
+                            InputDim0, // number of input components
+                            batch_sizes, // number of samples per input component
+                            vector_sample_sizes, // number of elements in each vector of the input
+                            OutputDim0, // number of output components
+                            vector_sample_sizes + InputDim0); // number of elements in each vector of the output
+
+    // at this point all NativeDataBuffers have been allocated, pointed to the correct locations
+    // and buffers loaded with data from dataset_filename
+}
+
+void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type)
+{
+    // as protected method, parameters should be valid when called
+
+    assert(param_data_pack_indices[Index_W] == 0 && param_data_pack_indices[Index_b] == 0);
+
+    // generate the output
+    DataGeneratorHelper::logisticRegressionInference(data_type, m_polynomial_degree,
+                                                     result.front()->p, // result
+                                                     this->getParameterData(Index_W).p_buffers[0].p, // W
+                                                     this->getParameterData(Index_b).p_buffers[0].p, // b
+                                                     this->getParameterData(Index_X).p_buffers[param_data_pack_indices[Index_X]].p, // X
+                                                     m_vector_size);
+}
 } // namespace LogisticRegression
 } // namespace TestHarness
 } // namespace hebench

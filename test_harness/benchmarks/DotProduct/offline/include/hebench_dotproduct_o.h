@@ -73,7 +73,7 @@ protected:
                         hebench::APIBridge::DataType data_type) const override;
 
 private:
-    DataGenerator::Ptr m_data;
+    DataLoader::Ptr m_data;
 
     Benchmark(std::shared_ptr<Engine> p_engine, const IBenchmarkDescriptor::DescriptionToken &description_token);
 };

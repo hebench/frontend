@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.13)
 project(frontend LANGUAGES C CXX)
 set(CMAKE_PROJECT_NAME ${PROJECT_NAME})
@@ -71,6 +74,7 @@ set(FETCHCONTENT_BASE_DIR ${CMAKE_BINARY_DIR}/third-party)
 add_subdirectory(common-lib)
 add_subdirectory(report_gen)
 add_subdirectory(dynamic_lib_load)
+add_subdirectory(dataset_loader)
 
 ## APIBridge
 set(_COMPONENT_NAME "API_BRIDGE")

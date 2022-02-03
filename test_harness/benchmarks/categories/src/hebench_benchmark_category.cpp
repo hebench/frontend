@@ -103,74 +103,103 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
     // extract the pointers to the actual results
 
     if (outputs.size() != dataset->getResultCount())
+    {
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid number of outputs: 'outputs'."));
+    }
 
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> truths =
-        dataset->getResultFor(param_data_pack_indices);
+    IDataLoader::ResultDataPtr ptr_truths = dataset->getResultFor(param_data_pack_indices);
+    const std::vector<const hebench::APIBridge::NativeDataBuffer *> &truths =
+        ptr_truths->result;
 
+    // TODO:
+    //#pragma message("This should go over all elements of truth and outputs")
+
+    // There's at least 1 element that requires processing.
     if (!truths.empty() && !outputs.empty() && truths.front())
     {
-        if (!outputs.front())
-            throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected null output component in: 'outputs'."));
-
-        if (outputs.front()->size < truths.front()->size)
-            throw std::invalid_argument(IL_LOG_MSG_CLASS("Buffer in outputs is not large enough to contain the expected output: 'outputs'."));
-
-        std::uint64_t count = truths.front()->size / IDataLoader::sizeOf(data_type);
-        void *p_truth       = truths.front()->p;
-        void *p_output      = outputs.front()->p; // single output
-
-        // validate the results
-        switch (data_type)
+        std::size_t index = 0;
+        for (index = 0; retval && index < truths.size(); ++index)
         {
-        case hebench::APIBridge::DataType::Int32:
-            is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int32_t *>(p_truth),
-                                                             reinterpret_cast<const std::int32_t *>(p_output),
-                                                             count,
-                                                             0.01);
-            break;
+            // in case outputs.size() < truths.size() an exception can be triggered
+            try
+            {
+                if (!outputs.at(index))
+                {
+                    throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected null output component in: 'outputs[" + std::to_string(index) + "]'."));
+                }
+            }
+            catch (const std::out_of_range &out_of_range)
+            {
+                throw std::invalid_argument(IL_LOG_MSG_CLASS("Unexpected out of range index output component in: 'outputs[" + std::to_string(index) + "]'."));
+            }
 
-        case hebench::APIBridge::DataType::Int64:
-            is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int64_t *>(p_truth),
-                                                             reinterpret_cast<const std::int64_t *>(p_output),
-                                                             count,
-                                                             0.01);
-            break;
+            if (outputs.at(index)->size < truths.at(index)->size)
+            {
+                throw std::invalid_argument(IL_LOG_MSG_CLASS("Buffer in outputs is not large enough to contain the expected output: 'outputs[" + std::to_string(index) + "]'."));
+            }
 
-        case hebench::APIBridge::DataType::Float32:
-            is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const float *>(p_truth),
-                                                             reinterpret_cast<const float *>(p_output),
-                                                             count,
-                                                             0.01);
-            break;
+            std::uint64_t count = truths.at(index)->size / IDataLoader::sizeOf(data_type);
+            void *p_truth       = truths.at(index)->p;
+            void *p_output      = outputs.at(index)->p; // single output
 
-        case hebench::APIBridge::DataType::Float64:
-            is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const double *>(p_truth),
-                                                             reinterpret_cast<const double *>(p_output),
-                                                             count,
-                                                             0.01);
-            break;
+            // validate the results
+            switch (data_type)
+            {
+            case hebench::APIBridge::DataType::Int32:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int32_t *>(p_truth),
+                                                                 reinterpret_cast<const std::int32_t *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
 
-        default:
-            retval = false;
-            break;
-        } // end switch
+            case hebench::APIBridge::DataType::Int64:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const std::int64_t *>(p_truth),
+                                                                 reinterpret_cast<const std::int64_t *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
 
-        retval = retval && is_valid.empty();
+            case hebench::APIBridge::DataType::Float32:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const float *>(p_truth),
+                                                                 reinterpret_cast<const float *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            case hebench::APIBridge::DataType::Float64:
+                is_valid = hebench::Utilities::Math::almostEqual(reinterpret_cast<const double *>(p_truth),
+                                                                 reinterpret_cast<const double *>(p_output),
+                                                                 count,
+                                                                 0.01);
+                break;
+
+            default:
+                retval = false;
+                break;
+            } // end switch
+
+            // In case retval is set to false, it will break the for loop
+            retval = retval && is_valid.empty();
+        } // end for
 
         if (!retval)
         {
             std::stringstream ss;
-            ss << "Elements not within 1% of each other, " << is_valid.size() << std::endl
+            ss << "Result component, " << index << std::endl
+               << "Elements not within 1% of each other, " << is_valid.size() << std::endl
                << "Failed indices, ";
             for (std::size_t i = 0; i < is_valid.size() && i < MaxErrorPrint; ++i)
             {
                 ss << is_valid[i];
                 if (i + 1 < is_valid.size() && i + 1 < MaxErrorPrint)
+                {
                     ss << ", ";
+                }
             } // end for
             if (is_valid.size() > MaxErrorPrint)
+            {
                 ss << ", ...";
+            }
             throw std::runtime_error(ss.str());
         } // end if
     } // end if
@@ -186,13 +215,36 @@ void PartialBenchmarkCategory::logResult(std::ostream &os,
 {
     std::stringstream ss;
 
+    // validate dataset and param_data_pack_indices
+    if (!dataset)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `dataset`."));
+    if (!param_data_pack_indices)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `param_data_pack_indices`."));
+    for (std::size_t param_i = 0; param_i < dataset->getParameterCount(); ++param_i)
+    {
+        if (param_data_pack_indices[param_i] >= dataset->getParameterData(param_i).buffer_count)
+        {
+            std::stringstream ss;
+            ss << "Index out of range `param_data_pack_indices[" << param_i << "]` = " << param_data_pack_indices[param_i] << ". "
+               << "Expected less than " << dataset->getParameterData(param_i).buffer_count << ".";
+            throw std::out_of_range(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+        if (!dataset->getParameterData(param_i).p_buffers)
+        {
+            std::stringstream ss;
+            ss << "Invalid empty DataPack buffer in IDataLoader `dataset` for parameter " << param_i << ".";
+            throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
+        } // end if
+    } // end for
+
     os << "Number of parameters, " << dataset->getParameterCount() << std::endl
        << "Number of result components (expected), " << dataset->getResultCount() << std::endl
        << "Number of result components (received), " << outputs.size() << std::endl
        << std::endl;
 
-    std::vector<const hebench::APIBridge::NativeDataBuffer *> truths =
-        dataset->getResultFor(param_data_pack_indices);
+    IDataLoader::ResultDataPtr ptr_truths = dataset->getResultFor(param_data_pack_indices);
+    const std::vector<const hebench::APIBridge::NativeDataBuffer *> &truths =
+        ptr_truths->result;
 
     // param_data_pack_indices already validated by previous call
 

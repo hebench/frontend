@@ -25,6 +25,16 @@ namespace BenchmarkDescription {
 
 class Backend
 {
+private:
+    struct Internal
+    {
+        std::size_t m_index;
+        hebench::APIBridge::Handle m_handle;
+        hebench::APIBridge::BenchmarkDescriptor m_descriptor;
+        std::size_t m_operation_params_count;
+    };
+    Internal m_backend_description;
+
 public:
     friend class hebench::TestHarness::Engine;
 
@@ -66,16 +76,8 @@ public:
     }
 
 private:
-    struct Internal
-    {
-        std::size_t m_index;
-        hebench::APIBridge::Handle m_handle;
-        hebench::APIBridge::BenchmarkDescriptor m_descriptor;
-        std::size_t m_operation_params_count;
-    };
-    Internal m_backend_description;
-
     Backend(bool init) :
+        m_backend_description(),
         index(m_backend_description.m_index),
         handle(m_backend_description.m_handle),
         descriptor(m_backend_description.m_descriptor),
@@ -105,7 +107,9 @@ class Configuration
 {
 public:
     Configuration() :
-        default_min_test_time_ms(0)
+        default_min_test_time_ms(0),
+        fallback_default_sample_size(0),
+        b_single_path_report(false)
     {
     }
 
@@ -122,6 +126,19 @@ public:
      */
     std::uint64_t fallback_default_sample_size;
     /**
+     * @brief File containing data for the benchmark. If empty string, benchmarks
+     * that can auto generate the dataset will do so.
+     * @details Set to a filename containing the data to be used as input (and,
+     * optionally, ground truth output) for the benchmark. The benchmark receiving
+     * this configuration will try to load the external data by attempting to match
+     * the file contents to a known format.
+     *
+     * Some benchmarks do not support external datasets, others require them, yet
+     * others support both. See the particular workload definition documentation
+     * for information on configuration feature support.
+     */
+    std::string dataset_filename;
+    /**
      * @brief Default sample size for each operation parameter.
      * @details If the number of elements in this array is less than the number of
      * operation parameters, all missing sizes are expected to be default. On the
@@ -132,6 +149,10 @@ public:
      * @brief Set of arguments for workload parameters.
      */
     std::vector<hebench::APIBridge::WorkloadParam> w_params;
+    /**
+     * @brief Defines if the workload report will be created in a single-level directory
+     */
+    bool b_single_path_report;
 };
 
 class Description
