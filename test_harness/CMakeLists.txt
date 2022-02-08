@@ -86,6 +86,19 @@ list(APPEND ${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/MatrixMultiply/offline/src/hebench_matmult_o.cpp"
     )
 
+# Generic Workload
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/include/hebench_genericwl.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/latency/include/hebench_genericwl_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/offline/include/hebench_genericwl_o.h"
+    )
+
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/src/hebench_genericwl.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/latency/src/hebench_genericwl_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/offline/src/hebench_genericwl_o.cpp"
+    )
+
 # main application
 list(APPEND ${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_factory.h"

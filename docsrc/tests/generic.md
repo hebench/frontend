@@ -14,7 +14,7 @@ The following describes the settings required to define a generic workload. See 
   - [Result](#operation-result)
   - [Details](#operation-details)
 - [Workloads](#workloads)
-  - [Workload Parameters](#workload-parameters)
+  - [Workload Parameters](#req-workload-parameters)
 - [Categories](#categories)
   - [Category Parameters](#category-parameters)
 - [Data Type](#data-type)
@@ -31,7 +31,7 @@ This operation is defined as:
 (ResultComponent[0], ResultComponent[1], ..., ResultComponent[m - 1]) = op(InputParam[0], InputParam[1], ..., InputParam[n - 1])
 ```
 
-for some unknown bijective function `op` with `n` input parameters and an output with `m` components. Where `0 < n < HEBENCH_MAX_OP_PARAMS` and `m > 0`.
+for some user-defined bijective function `op` with `n` input parameters and an output with `m` components. Where `0 < n < HEBENCH_MAX_OP_PARAMS` and `m > 0`.
 
 ### Operation Parameters <a name="operation-parameters"></a>
 
@@ -41,7 +41,7 @@ Input: `n` parameters
 
 | Parameter | Description |
 |-|-|
-| `0 <= i < n` | `InputParam[i]` is a vector of scalars with an undetermined non-zero number of components. |
+| `0 <= i < n` | `InputParam[i]` is a vector of scalars with a user-defined non-zero number of components. |
 
 The number of components in `InputParam[i]` does not need to be the same as the number of components in `InputParam[j]` for `i != j`.
 
@@ -53,13 +53,13 @@ Output: `m` components
 
 | Output | Description |
 |-|-|
-| `0 <= i < m` | `ResultComponent[i]` is a vector of scalars with an undetermined non-zero number of components. |
+| `0 <= i < m` | `ResultComponent[i]` is a vector of scalars with a user-defined non-zero number of components. |
 
 The number of components in `ResultComponent[i]` does not need to be the same as the number of components in `ResultComponent[j]` for `i != j`.
 
 ### Details <a name="operation-details"></a>
 
-The operation for a generic workload is a function described by a configuration file and a given external dataset. The configuration file describes the number of inputs `n`, the number of outputs `m`, the number of components for each input `InputParam[i]`, and the number of components for each output `ResultComponent[j]`. The external dataset provides the mapping of values for all combinations in `InputParam` into all values in `ResultComponent`. See @ref config_file_reference and @ref dataset_loader_overview for details on how to use configuration files and external datasets.
+The operation for a generic workload is a bijective function defined by a user-provided mapping of inputs into outputs. This function is defined by its mapping, its input and output shapes, domain, and image; these definitions are described in a given benchmark configuration and a corresponding external dataset. The configuration file describes the number of inputs `n`, the number of outputs `m`, the number of components for each input `InputParam[i]`, and the number of components for each output `ResultComponent[j]`. The external dataset provides the mapping of values for all combinations in `InputParam` into all values in `ResultComponent`. See @ref config_file_reference and @ref dataset_loader_overview for details on how to use benchmark configuration files and external datasets.
 
 ## Workloads <a name="workloads"></a>
 
@@ -71,14 +71,14 @@ This document applies to the following workloads:
 hebench:APIBridge::Workload::Generic
 ```
 
-### Workload Parameters <a name="workload-parameters"></a>
+### Workload Parameters <a name="req-workload-parameters"></a>
 
 Required workload parameters: `2 + m + n`
 
 | Index | Name | Type | Description |
 |-|-|-|-|
-| `0` | `n` | `uint64_t` | Number of inputs to the operation (number of vectors in collection `A`). |
-| `1` | `m` | `uint64_t` | Number of outputs to the operation (number of vectors in collection `B`). |
+| `0` | `n` | `uint64_t` | Number of inputs to the operation (number of vectors in collection `InputParam`). |
+| `1` | `m` | `uint64_t` | Number of outputs from the operation (number of vectors in collection `ResultComponent`). |
 | `2` | `length_InputParam0` | `uint64_t` | Number of components in vector `InputParam[0]`. |
 | ... |  |  |  |
 | `n + 1` | `length_InputParam`*n-1* | `uint64_t` | Number of components in vector `InputParam[n - 1]`. |

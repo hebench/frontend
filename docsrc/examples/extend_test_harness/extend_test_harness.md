@@ -15,11 +15,11 @@ Next, once the workload is defined, HEBench must be made aware of it.
 
 ### 2. Declare the workload in the API Bridge.
 
-To declare the workload in the API Bridge, a new enumeration value must be added for it in `hebench/api_bridge/types.h` `enum hebench::APIBridge::Workload`.
+To declare the workload in the API Bridge, a new enumeration value representing the workload <b>must be appended</b> to `enum hebench::APIBridge::Workload` in `hebench/api_bridge/types.h`.
 
 At this point, Test Harness and any backends are able to use the workload as part of their workload description.
 
-Note: make sure to change the API version constants in `hebench/api_bridge/types.h` as appropriate to reflect changes in the API Bridge. Adding new workload, as explained, should only constitute a revision increase.
+Note: make sure to change the API version values in file `VERSION` as appropriate to reflect changes in the API Bridge. Adding new workload, as explained, should only constitute a revision increase.
 
 For appropriate API Bridge versioning, check <b>API Bridge Versioning General Guidelines</b> in @ref APIBridge_overview .
 
