@@ -462,7 +462,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     {
         results_pack[result_pos].p_buffers      = &raw_results[result_pos];
         results_pack[result_pos].buffer_count   = 1;
-        results_pack[result_pos].param_position = 0;
+        results_pack[result_pos].param_position = result_pos;
     } // end for
 
     // PackedData packed_results;

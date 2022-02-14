@@ -112,7 +112,7 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     // workload name
 
     auto op_info = fetchIOVectorSizes(config.w_params);
-    ss << BaseWorkloadName << " " << op_info.first.size() << " Inputs, " << op_info.second.size() << " Outputs";
+    ss << BaseWorkloadName << ", " << op_info.first.size() << " Inputs, " << op_info.second.size() << " Outputs";
 
     output.workload_name          = ss.str();
     output.operation_params_count = op_info.first.size();
