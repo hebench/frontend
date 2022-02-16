@@ -303,7 +303,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
                 hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr p_token =
                     engine.describeBenchmark(benchmark_index, config);
                 if (!p_token)
-                    throw std::runtime_error("Unable to match benchmark.");
+                    throw std::runtime_error("Unable to match benchmark: no match found able to support selected benchmark with specified workload parameters.");
                 retval.emplace_back();
                 retval.back().index         = benchmark_index;
                 retval.back().configuration = p_token->getBenchmarkConfiguration();

@@ -554,11 +554,6 @@ int main(int argc, char **argv)
                                                         report_filename :
                                                         config.report_root_path / report_filename;
 
-                ss = std::stringstream();
-                ss << "Saving report to: " << std::endl
-                   << report_path;
-                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-
                 // output CSV report
                 report_filename = report_path;
                 if (!config.b_single_path_report)
@@ -570,6 +565,11 @@ int main(int argc, char **argv)
                     report_filename += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
                 }
                 report_filename += ".csv";
+
+                ss = std::stringstream();
+                ss << "Saving report to: " << std::endl
+                   << report_filename;
+                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 
                 if (b_critical_error)
                 {
