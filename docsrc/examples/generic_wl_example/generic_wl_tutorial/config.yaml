@@ -1,0 +1,66 @@
+default_min_test_time: 0
+default_sample_size: 0
+random_seed: 1234
+
+benchmark:
+
+# Benchmark with workload parameters:
+#   Generic 2 Inputs, 3 Outputs
+# Descriptor:
+#   wp_2_3_2_2_2_2_1 | offline | float64 | default | all_plain | plain | none | 0
+  - ID: 1
+    dataset: dataset.csv
+    default_min_test_time: 1000
+    default_sample_sizes:
+      0: 2
+      1: 5
+    params:
+      0:
+        name: n
+        type: UInt64
+        value:
+          from: 2
+          to: 2
+          step: 0
+      1:
+        name: m
+        type: UInt64
+        value:
+          from: 3
+          to: 3
+          step: 0
+      2:
+        name: length_InputParam0
+        type: UInt64
+        value:
+          from: 2
+          to: 2
+          step: 0
+      3:
+        name: length_InputParam1
+        type: UInt64
+        value:
+          from: 2
+          to: 2
+          step: 0
+      4:
+        name: length_ResultComponent0
+        type: UInt64
+        value:
+          from: 2
+          to: 2
+          step: 0
+      5:
+        name: length_ResultComponent1
+        type: UInt64
+        value:
+          from: 2
+          to: 2
+          step: 0
+      6:
+        name: length_ResultComponent2
+        type: UInt64
+        value:
+          from: 1
+          to: 1
+          step: 0

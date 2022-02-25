@@ -36,6 +36,9 @@
         <tab type="user" visible="yes" url="@ref extend_test_harness_o" title="Add offline Category to Workload" intro=""/>
       </tab>
       <tab type="usergroup" visible="yes" url="@ref tests_overview" title="HEBench tests overview" intro="">
+        <tab type="usergroup" visible="yes" url="@ref generic_workload" title="Generic Workload" intro="">
+          <tab type="user" visible="yes" url="@ref generic_wl_example" title="Generic Workload Example" intro=""/>
+        </tab>
         <tab type="user" visible="yes" url="@ref dot_product" title="Dot Product" intro=""/>
         <tab type="user" visible="yes" url="@ref elementwise_add" title="Elementwise Addition" intro=""/>
         <tab type="user" visible="yes" url="@ref elementwise_mult" title="Elementwise Multiplication" intro=""/>

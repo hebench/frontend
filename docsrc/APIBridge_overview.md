@@ -13,12 +13,33 @@ This page provides details on the design and internal implementation of the API.
 When creating a backend, users must be mindful of the version of API Bridge being used for compatibility purposes. In general, a backend should be able to use any version of API Bridge that is backwards compatible with the required major and minor.
 
 Not backwards compatible:
-- Major: Reflects major changes in syntax or drastic changes in semantics. Reserved for new API version.
-- Minor: Reflects changes on semantics and/or minor syntax changes.
+- `major`: Reflects major changes in syntax or drastic changes in semantics. Reserved for new API version.
+- `minor`: Reflects changes on semantics and/or minor syntax changes.
 
 Backwards compatible:
-- Revision: Reflects changes that do not affect overall existing functionality, including additions, extensions, optimizations, etc.
-- Build: Reflects the build type, such as development, debug, release, versioned release, different compilation flags, etc. It should not represent any changes to the API Bridge interface.
+- `revision`: Reflects changes that do not affect overall existing functionality, including additions, extensions, optimizations, bug fixes, etc.
+- `build`: Reflects the build type, such as development, debug, release, versioned release, different compilation flags, etc. It should not represent any changes to the API Bridge interface.
+
+API Bridge version is stored in the `VERSION` file at the root of the API Bridge repository in the following format:
+
+```
+v
+<major>
+<minor>
+<revision>
+<build>
+```
+
+and it is to be interpreted as `v.<major>.<minor>.<revision>-<build>`. During CMake processing, file `hebench/api_bridge/version.h` is generated containing the definition for the corresponding version constants as follows:
+
+```cpp
+#define HEBENCH_API_VERSION_MAJOR
+#define HEBENCH_API_VERSION_MINOR
+#define HEBENCH_API_VERSION_REVISION
+#define HEBENCH_API_VERSION_BUILD
+```
+
+A backend can use these constants to determine the API Bridge version in use.
 
 ##Namespace
 
