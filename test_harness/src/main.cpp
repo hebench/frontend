@@ -213,7 +213,8 @@ std::string toDoubleVariableFrac(double x, int up_to_digits_after_dot)
         up_to_digits_after_dot = 0;
     ss << std::fixed << std::setprecision(up_to_digits_after_dot) << x;
     retval = ss.str();
-    retval.erase(retval.find_last_not_of(".0") + 1);
+    retval.erase(retval.find_last_not_of("0") + 1);
+    retval.erase(retval.find_last_not_of(".") + 1);
     return retval;
 }
 
