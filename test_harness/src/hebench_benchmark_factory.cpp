@@ -30,10 +30,10 @@ IBenchmark::Ptr BenchmarkFactory::createBenchmark(std::shared_ptr<Engine> p_engi
     if (!p_token->getDescriptor())
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid benchmark token \"p_token\" with null descriptor."));
 
-    // make sure that the token matches to a descriptor that is registered
     std::vector<std::shared_ptr<IBenchmarkDescriptor>> &registered_benchmarks = getRegisteredBenchmarks();
-    IBenchmarkDescriptor *p_tmp                                               = p_token->getDescriptor();
-    auto found_it                                                             = std::find_if(registered_benchmarks.begin(), registered_benchmarks.end(),
+    // make sure that the token matches to a descriptor that is registered
+    IBenchmarkDescriptor *p_tmp = p_token->getDescriptor();
+    auto found_it               = std::find_if(registered_benchmarks.begin(), registered_benchmarks.end(),
                                  [p_tmp](std::shared_ptr<IBenchmarkDescriptor> p) -> bool { return p_tmp == p.get(); });
     if (found_it == registered_benchmarks.end() || !*found_it)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Benchmark token \"p_token\" descriptor is invalid: not found in registered benchmark descriptors."));

@@ -7,6 +7,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <numeric>
 #include <type_traits>
 #include <vector>
 
@@ -141,11 +142,23 @@ almostEqual(const T *a, const T *b, std::uint64_t count, double pct)
 {
     std::vector<std::uint64_t> retval;
     retval.reserve(count);
-    for (std::uint64_t i = 0; i < count; ++i)
+    if (a != b)
     {
-        if (!almostEqual(a[i], b[i], pct))
-            retval.push_back(i);
-    } // end for
+        if (a && b)
+        {
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                if (!almostEqual(a[i], b[i], pct))
+                    retval.push_back(i);
+            } // end for
+        } // end if
+        else
+        {
+            // all elements differ if one is null
+            retval.resize(count);
+            std::iota(retval.begin(), retval.end(), 0UL);
+        } // end else
+    } // end if
     return retval;
 }
 

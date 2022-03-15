@@ -18,9 +18,13 @@ int main(int argc, char **argv)
         std::string csv_filename;
 
         if (argc > 1)
+        {
             csv_filename = argv[1];
+        }
         else
+        {
             csv_filename = "/data/storage/git-repos/hebench/frontend/test_harness/test.tmp/element_wise_addition_1000_3/latency/float32/5001/all_plain/plain/none/0/report.csv";
+        }
 
         TimingReport report =
             TimingReport::loadReportFromCSVFile(csv_filename);

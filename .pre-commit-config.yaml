@@ -16,7 +16,7 @@ repos:
       rev: v1.1.10
       hooks:
         - id: insert-license
-          files: \.(sh|py)$
+          files: (CMakeLists\.txt)|\.(sh|py)$
           args:
           - --license-filepath
           # defaults to: LICENSE.txt

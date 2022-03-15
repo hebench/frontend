@@ -6,7 +6,6 @@
 #include <sstream>
 
 #include "../include/hebench_eltwisemult.h"
-#include "benchmarks/datagen_helper/include/datagen_helper.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -123,6 +122,12 @@ private:
     template <class T>
     static void vectorEltwiseMult(T *result, const T *a, const T *b, std::uint64_t elem_count)
     {
+        if (!result)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `result`"));
+        if (!a)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `a`"));
+        if (!b)
+            throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `b`"));
         std::transform(a, a + elem_count, // a[0..elem_count]
                        b, // b[0..elem_count]
                        result, // result[0..elem_count]
@@ -170,20 +175,36 @@ void DataGeneratorHelper::vectorEltwiseMult(hebench::APIBridge::DataType data_ty
 // class DataGenerator
 //---------------------
 
-DataGenerator::Ptr DataGenerator::create(std::uint64_t vector_size,
-                                         std::uint64_t batch_size_a,
-                                         std::uint64_t batch_size_b,
-                                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
+                                   std::uint64_t batch_size_a,
+                                   std::uint64_t batch_size_b,
+                                   hebench::APIBridge::DataType data_type)
 {
-    DataGenerator::Ptr retval = DataGenerator::Ptr(new DataGenerator());
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
     retval->init(vector_size, batch_size_a, batch_size_b, data_type);
     return retval;
 }
 
-void DataGenerator::init(std::uint64_t vector_size,
-                         std::uint64_t batch_size_a,
-                         std::uint64_t batch_size_b,
-                         hebench::APIBridge::DataType data_type)
+DataLoader::Ptr DataLoader::create(std::uint64_t vector_size,
+                                   std::uint64_t batch_size_a,
+                                   std::uint64_t batch_size_b,
+                                   hebench::APIBridge::DataType data_type,
+                                   const std::string &dataset_filename)
+{
+    DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
+    retval->init(vector_size, batch_size_a, batch_size_b, data_type, dataset_filename);
+    return retval;
+}
+
+DataLoader::DataLoader() :
+    m_vector_size(0)
+{
+}
+
+void DataLoader::init(std::uint64_t vector_size,
+                      std::uint64_t batch_size_a,
+                      std::uint64_t batch_size_b,
+                      hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for vector element-wise addition:
     // C[i] = A[i] * B[i]
@@ -194,21 +215,18 @@ void DataGenerator::init(std::uint64_t vector_size,
         batch_size_b,
         batch_size_a * batch_size_b
     };
-    // initialize base data (data packs)
-    PartialDataLoader::init(InputDim0, batch_sizes, OutputDim0);
 
     // compute buffer size in bytes for each vector
-    std::uint64_t buffer_sizes[InputDim0 + OutputDim0];
-    for (std::size_t i = 0; i < InputDim0 + OutputDim0; ++i)
-    {
-        buffer_sizes[i] = vector_size * PartialDataLoader::sizeOf(data_type);
-    } // end for
+    std::vector<std::uint64_t> sample_vector_sizes(InputDim0 + OutputDim0, vector_size);
+    m_vector_size = vector_size;
 
-    // allocate memory for each vector buffer
-    allocate(buffer_sizes, // sizes (in bytes) for each input vector
-             InputDim0, // number of input vectors
-             buffer_sizes + InputDim0, // sizes (in bytes) for each output vector
-             OutputDim0); // number of output vectors
+    PartialDataLoader::init(data_type,
+                            InputDim0, // number of input parameters
+                            batch_sizes, // samples per parameter
+                            sample_vector_sizes.data(), // vector size for each parameter
+                            OutputDim0, // number of result components
+                            sample_vector_sizes.data() + InputDim0, // number of result samples
+                            true); // allocate memory for ground truth?
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
@@ -246,6 +264,51 @@ void DataGenerator::init(std::uint64_t vector_size,
     } // end for
 
     // all data has been generated at this point
+}
+
+void DataLoader::init(std::uint64_t expected_vector_size,
+                      std::uint64_t max_batch_size_a,
+                      std::uint64_t max_batch_size_b,
+                      hebench::APIBridge::DataType data_type,
+                      const std::string &dataset_filename)
+{
+    // Load and initialize the data for vector element-wise addition:
+    // C = A * B
+
+    // number of samples in each input parameter and output
+    std::size_t batch_sizes[InputDim0 + OutputDim0] = {
+        max_batch_size_a,
+        max_batch_size_b,
+        max_batch_size_a * max_batch_size_b
+    };
+
+    // compute buffer size in bytes for each vector
+    std::vector<std::uint64_t> sample_vector_sizes(InputDim0 + OutputDim0, expected_vector_size);
+    m_vector_size = expected_vector_size;
+
+    PartialDataLoader::init(dataset_filename, data_type,
+                            InputDim0,
+                            batch_sizes,
+                            sample_vector_sizes.data(),
+                            OutputDim0,
+                            sample_vector_sizes.data() + InputDim0);
+
+    // at this point all NativeDataBuffers have been allocated, pointed to the correct locations
+    // and filled with data from the specified dataset file
+}
+
+void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type)
+{
+    // as protected method, parameters should be valid when called
+
+    // generate the output
+    DataGeneratorHelper::vectorEltwiseMult(data_type,
+                                           result.front()->p, // C
+                                           this->getParameterData(0).p_buffers[param_data_pack_indices[0]].p, // A
+                                           this->getParameterData(1).p_buffers[param_data_pack_indices[1]].p, // B
+                                           m_vector_size);
 }
 
 } // namespace EltwiseMult

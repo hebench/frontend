@@ -10,9 +10,44 @@
 #include "modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
+#include "include/hebench_idata_loader.h"
 
 namespace hebench {
 namespace TestHarness {
+
+class DataLoaderCompute : public hebench::TestHarness::PartialDataLoader
+{
+public:
+    DISABLE_COPY(DataLoaderCompute)
+    DISABLE_MOVE(DataLoaderCompute)
+private:
+    IL_DECLARE_CLASS_NAME(DataLoaderCompute)
+public:
+    ~DataLoaderCompute() override {}
+    ResultDataPtr getResultFor(const std::uint64_t *param_data_pack_indices) override;
+
+protected:
+    DataLoaderCompute() {}
+
+    /**
+     * @brief Computes result of the operation on the input data given the
+     * of the input sample.
+     * @param result Vector where to store the result. Vector comes pre-initialized.
+     * This method's task is to fill up the data buffers with the result values.
+     * @param[in] param_data_pack_indices For each operation parameter, this array
+     * indicates the sample index to use for the operation.
+     * Must contain, at least, `getParameterCount()` elements.
+     * @param[in] data_type Data type of the data pointed by the inputs and result.
+     */
+    virtual void computeResult(std::vector<hebench::APIBridge::NativeDataBuffer *> &result,
+                               const std::uint64_t *param_data_pack_indices,
+                               hebench::APIBridge::DataType data_type) = 0;
+
+private:
+    // can we find a thread friendly/safe solution?
+    std::vector<std::shared_ptr<hebench::APIBridge::DataPack>> &getLocalTempResult();
+    std::shared_ptr<std::vector<std::shared_ptr<hebench::APIBridge::DataPack>>> m_p_temp_result;
+};
 
 /**
  * @brief Static helper class to generate vector data for all supported data types.
@@ -67,7 +102,5 @@ private:
 
 } // namespace TestHarness
 } // namespace hebench
-
-#include "inl/datagen_helper.inl"
 
 #endif // defined _HEBench_Harness_DataGenerator_H_0596d40a3cce4b108a81595c50eb286d
