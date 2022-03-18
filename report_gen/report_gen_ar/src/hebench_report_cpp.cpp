@@ -293,6 +293,11 @@ TimingReport TimingReport::loadReportFromCSVFile(const std::string &filename)
     return retval;
 }
 
+void TimingReport::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
+{
+    hebench::TestHarness::Report::setTimingPrefix(&prefix, seconds, ch_prefix);
+}
+
 void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
 {
     hebench::TestHarness::Report::computeTimingPrefix(&prefix, seconds);

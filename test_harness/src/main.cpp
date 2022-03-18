@@ -264,7 +264,13 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
         } // end else
 
         // No need to create dir if single path is enabled.
-        if (!benchmarks_ran[bench_i].configuration.b_single_path_report)
+        if (benchmarks_ran[bench_i].configuration.b_single_path_report)
+        {
+            // complete the paths to the input and output files
+            report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
+            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
+        }
+        else
         {
             // Generate output directory if it doesn't exits.
             std::filesystem::create_directories(output_path);
@@ -272,12 +278,6 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
             // complete the paths to the input and output files
             report_path /= hebench::TestHarness::FileNameNoExtReport;
             output_path /= hebench::TestHarness::FileNameNoExtSummary;
-        }
-        else
-        {
-            // complete the paths to the input and output files
-            report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
-            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
         }
         // Adding the file extension
         report_path += ".csv";
