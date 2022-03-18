@@ -563,6 +563,41 @@ TimingReport TimingReport::loadCSV(std::istream &is)
     return retval;
 }
 
+void TimingReport::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
+{
+    switch (ch_prefix)
+    {
+    case 0:
+        computeTimingPrefix(prefix, seconds);
+        break;
+    case 's':
+        prefix.time_interval_ratio_den = 1;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "");
+        break;
+    case 'm':
+        prefix.time_interval_ratio_den = 1e3; //1000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "m");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "milli");
+        break;
+    case 'u':
+        prefix.time_interval_ratio_den = 1e6; //1000000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "u");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "micro");
+        break;
+    case 'n':
+        prefix.time_interval_ratio_den = 1e9; //1000000000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "n");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "nano");
+        break;
+    default:
+        throw std::invalid_argument("Unknown prefix.");
+        break;
+    } // end switch
+
+    prefix.value = seconds * prefix.time_interval_ratio_den;
+}
+
 void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
 {
     // convert to seconds
@@ -603,7 +638,8 @@ void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double sec
 // class ReportSummary
 //---------------------
 
-ReportSummary::ReportSummary(const TimingReport &report)
+ReportSummary::ReportSummary(const TimingReport &report) :
+    m_main_event_index(std::numeric_limits<decltype(m_main_event_index)>::max())
 {
     m_header = report.getHeader();
     m_footer = report.getFooter();

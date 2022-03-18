@@ -63,6 +63,7 @@ public:
     static TimingReport loadCSV(std::istream &is);
     static TimingReport loadCSV(const std::string &csv_content);
 
+    static void setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix);
     static void computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds);
 
 private:

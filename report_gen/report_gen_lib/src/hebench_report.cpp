@@ -637,6 +637,24 @@ extern "C"
     }
 }
 
+int32_t setTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds, char prefix)
+{
+    int32_t retval = 1;
+
+    try
+    {
+        if (!retval)
+            throw std::invalid_argument("p_prefix");
+        TimingReport::setTimingPrefix(*p_prefix, seconds, prefix);
+    }
+    catch (...)
+    {
+        retval = 0;
+    }
+
+    return retval;
+}
+
 int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)
 {
     int32_t retval = 1;

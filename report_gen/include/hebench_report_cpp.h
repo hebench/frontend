@@ -85,6 +85,35 @@ public:
     // utils
 
     /**
+     * @brief Converts the time in seconds to the specified time unit.
+     * @param[out] prefix Structure where to store the result.
+     * @param[in] seconds Time in seconds for which to compute prefix.
+     * @param[in] ch_prefix Time unit prefix specification. See details.
+     * @details
+     * Given a timing in seconds and the metric prefix, this function will compute
+     * the corresponding value.
+     *
+     * Values for \p ch_prefix are:
+     *
+     * 0: behaves as computeTimingPrefix()
+     * `'s'`: result is in seconds.
+     * `'m'`: result is in milliseconds.
+     * `'u'`: result is in microseconds.
+     * `'n'`: result is in nanoseconds.
+     *
+     * Any other value makes the function return a failure.
+     *
+     * For example, if \p seconds is `0.05` and \p ch_prefix is `m`, then, the result is:
+     *
+     * @code
+     * prefix.value                   = 50;
+     * prefix.time_interval_ratio_den = 1000;
+     * prefix.symbol                  = 'm';
+     * prefix.prefix                  = 'milli';
+     * @endcode
+     */
+    static void setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix);
+    /**
      * @brief Given a time interval in seconds, computes the timing prefix.
      * @param prefix
      * @param seconds
