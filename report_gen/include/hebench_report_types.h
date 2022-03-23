@@ -15,6 +15,7 @@ extern "C"
 {
 
 #define MAX_DESCRIPTION_BUFFER_SIZE            256
+#define MAX_SYMBOL_BUFFER_SIZE                 4
 #define MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE 256
 
     struct _TimingReportEventC
@@ -78,7 +79,6 @@ extern "C"
     };
     typedef struct _TimingReportEventSummaryC TimingReportEventSummaryC;
 
-#define MAX_SYMBOL_BUFFER_SIZE 4
     struct _UnitPrefix
     {
         /**

@@ -15,7 +15,10 @@
 namespace hebench {
 namespace Utilities {
 
+constexpr int MaxDecimalDigits = 12;
+
 uint64_t copyString(char *dst, uint64_t size, const std::string &src);
+std::string convertDoubleToStr(double x, int up_to_digits_after_dot = MaxDecimalDigits);
 
 namespace Math {
 

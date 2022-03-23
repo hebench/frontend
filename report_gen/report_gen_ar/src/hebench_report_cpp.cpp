@@ -4,7 +4,6 @@
 
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <vector>
 
 #include "hebench_report.h"
@@ -52,6 +51,24 @@ namespace hebench {
 namespace TestHarness {
 namespace Report {
 namespace cpp {
+
+//---------------------------
+// class TimingPrefixUtility
+//---------------------------
+
+void TimingPrefixUtility::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
+{
+    hebench::TestHarness::Report::setTimingPrefix(&prefix, seconds, ch_prefix);
+}
+
+void TimingPrefixUtility::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
+{
+    hebench::TestHarness::Report::computeTimingPrefix(&prefix, seconds);
+}
+
+//--------------------
+// class TimingReport
+//--------------------
 
 TimingReport::TimingReport(const std::string &header) :
     m_lib_handle(nullptr)
@@ -255,12 +272,17 @@ std::string TimingReport::convert2CSV()
     return retval;
 }
 
-std::string TimingReport::generateSummaryCSV(hebench::TestHarness::Report::TimingReportEventSummaryC &main_event_summary)
+std::string TimingReport::generateSummaryCSV(hebench::TestHarness::Report::TimingReportEventSummaryC &main_event_summary,
+                                             TimingPrefixUtility::TimeUnit time_unit)
 {
     char *p_tmp = nullptr;
-    if (!hebench::TestHarness::Report::generateSummaryCSV(m_lib_handle, &main_event_summary, &p_tmp))
+    if (!hebench::TestHarness::Report::generateSummaryCSV(m_lib_handle,
+                                                          TimingPrefixUtility::getPrefix(time_unit),
+                                                          &main_event_summary,
+                                                          &p_tmp)
+        || !p_tmp)
         throw std::runtime_error(INTERNAL_LOG_MSG("Error generating report summary."));
-    std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp,
+    std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp, // make RAII to avoid memory leak if exceptions
                                                                  [](char *p) {
                                                                      if (p)
                                                                          hebench::TestHarness::Report::freeCSVContent(p);
@@ -291,16 +313,6 @@ TimingReport TimingReport::loadReportFromCSVFile(const std::string &filename)
         throw std::runtime_error(INTERNAL_LOG_MSG(error_description));
 
     return retval;
-}
-
-void TimingReport::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
-{
-    hebench::TestHarness::Report::setTimingPrefix(&prefix, seconds, ch_prefix);
-}
-
-void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
-{
-    hebench::TestHarness::Report::computeTimingPrefix(&prefix, seconds);
 }
 
 } // namespace cpp

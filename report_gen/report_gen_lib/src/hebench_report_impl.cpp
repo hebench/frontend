@@ -127,10 +127,10 @@ std::ostream &TimingReport::convert2CSV(std::ostream &os) const
                 os << m_event_headers.at(timing_event.event_type_id);
             os << "," << timing_event.description << ","
                << timing_event.time_interval_ratio_num << "," << timing_event.time_interval_ratio_den << ","
-               << timing_event.wall_time_start << "," << timing_event.wall_time_end << ","
-               << timing_event.wall_time_end - timing_event.wall_time_start << ","
-               << timing_event.cpu_time_start << "," << timing_event.cpu_time_end << ","
-               << timing_event.cpu_time_end - timing_event.cpu_time_start << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_start) << "," << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_end) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_end - timing_event.wall_time_start) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_start) << "," << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end - timing_event.cpu_time_start) << ","
                << timing_event.iterations;
 
             os << std::endl;
@@ -641,6 +641,8 @@ void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double sec
 ReportSummary::ReportSummary(const TimingReport &report) :
     m_main_event_index(std::numeric_limits<decltype(m_main_event_index)>::max())
 {
+    // all timings for the stats are in seconds
+
     m_header = report.getHeader();
     m_footer = report.getFooter();
 
@@ -713,7 +715,7 @@ const TimingReportEventSummaryC &ReportSummary::getMainEventSummary() const
     return getEventSummary(getMainEventSummaryIndex());
 }
 
-void ReportSummary::generateCSV(std::ostream &os)
+void ReportSummary::generateCSV(std::ostream &os, char ch_prefix)
 {
     if (!os)
         throw std::ios_base::failure("Output stream is in an invalid state.");
@@ -733,13 +735,13 @@ void ReportSummary::generateCSV(std::ostream &os)
         const TimingReportEventSummaryC &event_stats = *m_event_summaries[i];
         hebench::TestHarness::Report::TimingPrefixedSeconds prefix_wall;
         hebench::TestHarness::Report::TimingPrefixedSeconds prefix_cpu;
-        hebench::TestHarness::Report::TimingReport::computeTimingPrefix(prefix_wall, event_stats.wall_time_ave);
-        hebench::TestHarness::Report::TimingReport::computeTimingPrefix(prefix_cpu, event_stats.cpu_time_ave);
+        hebench::TestHarness::Report::TimingReport::setTimingPrefix(prefix_wall, event_stats.wall_time_ave, ch_prefix);
+        hebench::TestHarness::Report::TimingReport::setTimingPrefix(prefix_cpu, event_stats.cpu_time_ave, ch_prefix);
         os << event_stats.event_id << "," << event_stats.name << ","
-           << event_stats.wall_time_ave * prefix_wall.time_interval_ratio_den << "," << prefix_wall.symbol << "s,"
-           << event_stats.wall_time_variance * prefix_wall.time_interval_ratio_den * prefix_wall.time_interval_ratio_den << ","
-           << event_stats.cpu_time_ave * prefix_cpu.time_interval_ratio_den << "," << prefix_cpu.symbol << "s,"
-           << event_stats.cpu_time_variance * prefix_cpu.time_interval_ratio_den * prefix_cpu.time_interval_ratio_den << ","
+           << hebench::Utilities::convertDoubleToStr(event_stats.wall_time_ave * prefix_wall.time_interval_ratio_den) << "," << prefix_wall.symbol << "s,"
+           << hebench::Utilities::convertDoubleToStr(event_stats.wall_time_variance * prefix_wall.time_interval_ratio_den * prefix_wall.time_interval_ratio_den) << ","
+           << hebench::Utilities::convertDoubleToStr(event_stats.cpu_time_ave * prefix_cpu.time_interval_ratio_den) << "," << prefix_cpu.symbol << "s,"
+           << hebench::Utilities::convertDoubleToStr(event_stats.cpu_time_variance * prefix_cpu.time_interval_ratio_den * prefix_cpu.time_interval_ratio_den) << ","
            << event_stats.iterations << std::endl;
         if (!os)
             throw std::ios_base::failure("Error writing summary row to stream.");

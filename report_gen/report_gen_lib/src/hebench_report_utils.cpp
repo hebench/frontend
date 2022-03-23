@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <algorithm>
+#include <iomanip>
 #include <stdexcept>
 #include <string>
 
@@ -23,6 +24,21 @@ uint64_t copyString(char *dst, uint64_t size, const std::string &src)
         dst[min_size - 1] = '\0'; // close string
     } // end if
 
+    return retval;
+}
+
+std::string convertDoubleToStr(double x, int up_to_digits_after_dot)
+{
+    // Prints a floating point value with up to a number of digits after decimal point
+    // with no trailing zeroes.
+    std::string retval;
+    std::stringstream ss;
+    if (up_to_digits_after_dot < 0)
+        up_to_digits_after_dot = 0;
+    ss << std::fixed << std::setprecision(up_to_digits_after_dot) << x;
+    retval = ss.str();
+    retval.erase(retval.find_last_not_of("0") + 1);
+    retval.erase(retval.find_last_not_of(".") + 1);
     return retval;
 }
 
