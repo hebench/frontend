@@ -5,6 +5,7 @@
 #ifndef _HEBench_Harness_Report_CPP_H_0596d40a3cce4b108a81595c50eb286d
 #define _HEBench_Harness_Report_CPP_H_0596d40a3cce4b108a81595c50eb286d
 
+#include <stdexcept>
 #include <string>
 
 #include "hebench_report_types.h"
@@ -16,73 +17,67 @@ namespace cpp {
 
 class ReportSummary;
 
-class TimingReport
+class TimingPrefixUtility
 {
-    friend class ReportSummary;
-
-private:
-    static constexpr const char *m_private_class_name = "TimingReport";
-
 public:
-    TimingReport(const TimingReport &) = delete;
+    enum class TimeUnit
+    {
+        Default,
+        Seconds,
+        MilliSeconds,
+        Microseconds,
+        Nanoseconds
+    };
 
-public:
-    TimingReport(const std::string &header = std::string());
-    TimingReport(TimingReport &&);
-    virtual ~TimingReport();
+    static constexpr TimeUnit getPrefix(char ch_prefix)
+    {
+        switch (ch_prefix)
+        {
+        case 0:
+            return TimeUnit::Default;
+            break;
+        case 's':
+            return TimeUnit::Seconds;
+            break;
+        case 'm':
+            return TimeUnit::MilliSeconds;
+            break;
+        case 'u':
+            return TimeUnit::Microseconds;
+            break;
+        case 'n':
+            return TimeUnit::Nanoseconds;
+            break;
+        default:
+            throw std::invalid_argument("Unknown prefix.");
+            break;
+        } // end switch
+    }
 
-    TimingReport &operator=(TimingReport &&);
-
-    void setHeader(const std::string &new_header);
-    void appendHeader(const std::string &new_header, bool new_line = true);
-    void prependHeader(const std::string &new_header, bool new_line = true);
-    std::string getHeader() const;
-
-    void setFooter(const std::string &new_footer);
-    void appendFooter(const std::string &new_header, bool new_line = true);
-    void prependFooter(const std::string &new_header, bool new_line = true);
-    std::string getFooter() const;
-
-    // event type: groups a collection of events under the same type
-
-    /**
-     * @brief Adds a new event type to the types of events.
-     * @param event_type_id
-     * @param event_type_header
-     * @param is_main_event
-     * @details
-     * If an event of the same type already exists the following will happen:
-     *
-     * - This method will overwrite the existing event header.
-     * - If \p is_main_event is true, the existing event type will be set as the main event.
-     * Otherwise, event type status as main event remains unchanged.
-     */
-    void addEventType(uint32_t event_type_id, const std::string &event_type_header, bool is_main_event = false);
-    bool hasEventType(uint32_t event_type_id) const;
-    std::string getEventTypeHeader(uint32_t event_type_id) const;
-    uint64_t getEventTypeCount() const;
-    uint32_t getMainEventType() const;
-
-    // events management
-
-    void addEvent(const TimingReportEventC &p_event);
-    void getEvent(TimingReportEventC &p_event, uint64_t index) const;
-    uint64_t getEventCount() const;
-    uint64_t getEventCapacity() const;
-    void setEventCapacity(uint64_t new_capacity);
-    void clear();
-
-    // CSV
-
-    void save2CSV(const std::string &filename);
-    std::string convert2CSV();
-
-    std::string generateSummaryCSV(TimingReportEventSummaryC &main_event_summary);
-
-    static TimingReport loadReportFromCSV(const std::string &s_csv_content);
-    static TimingReport loadReportFromCSVFile(const std::string &filename);
-
-    // utils
+    static constexpr char getPrefix(TimeUnit unit)
+    {
+        switch (unit)
+        {
+        case TimeUnit::Default:
+            return 0;
+            break;
+        case TimeUnit::Seconds:
+            return 's';
+            break;
+        case TimeUnit::MilliSeconds:
+            return 'm';
+            break;
+        case TimeUnit::Microseconds:
+            return 'u';
+            break;
+        case TimeUnit::Nanoseconds:
+            return 'n';
+            break;
+        default:
+            throw std::invalid_argument("Unknown prefix.");
+            break;
+        } // end switch
+    }
 
     /**
      * @brief Converts the time in seconds to the specified time unit.
@@ -113,6 +108,10 @@ public:
      * @endcode
      */
     static void setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix);
+    static void setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, TimeUnit unit)
+    {
+        setTimingPrefix(prefix, seconds, getPrefix(unit));
+    }
     /**
      * @brief Given a time interval in seconds, computes the timing prefix.
      * @param prefix
@@ -134,6 +133,81 @@ public:
      * @endcode
      */
     static void computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds);
+};
+
+class TimingReport
+{
+    friend class ReportSummary;
+
+private:
+    static constexpr const char *m_private_class_name = "TimingReport";
+
+public:
+    TimingReport(const TimingReport &) = delete;
+
+public:
+    TimingReport(const std::string &header = std::string());
+    TimingReport(TimingReport &&);
+    virtual ~TimingReport();
+
+    TimingReport &operator=(TimingReport &&);
+
+    void setHeader(const std::string &new_header);
+    void appendHeader(const std::string &new_header, bool new_line = true);
+    void prependHeader(const std::string &new_header, bool new_line = true);
+    std::string getHeader() const;
+
+    void setFooter(const std::string &new_footer);
+    void appendFooter(const std::string &new_header, bool new_line = true);
+    void prependFooter(const std::string &new_header, bool new_line = true);
+    std::string getFooter() const;
+
+    /**
+     * @brief Adds a new event type to the types of events.
+     * @param event_type_id
+     * @param event_type_header
+     * @param is_main_event
+     * @details
+     * event type: groups a collection of events under the same type.
+     *
+     * If an event of the same type already exists the following will happen:
+     *
+     * - This method will overwrite the existing event header.
+     * - If \p is_main_event is true, the existing event type will be set as the main event.
+     * Otherwise, event type status as main event remains unchanged.
+     */
+    void addEventType(uint32_t event_type_id, const std::string &event_type_header, bool is_main_event = false);
+    bool hasEventType(uint32_t event_type_id) const;
+    std::string getEventTypeHeader(uint32_t event_type_id) const;
+    uint64_t getEventTypeCount() const;
+    uint32_t getMainEventType() const;
+
+    // events management
+
+    void addEvent(const TimingReportEventC &p_event);
+    void getEvent(TimingReportEventC &p_event, uint64_t index) const;
+    uint64_t getEventCount() const;
+    uint64_t getEventCapacity() const;
+    void setEventCapacity(uint64_t new_capacity);
+    void clear();
+
+    // CSV
+
+    void save2CSV(const std::string &filename);
+    std::string convert2CSV();
+
+    /**
+     * @brief Generates the summary CSV for this report.
+     * @param[out] main_event_summary Structure to contain information about the main event
+     * for the report. All timings are in seconds.
+     * @param[in] time_unit Time unit used throughout the report.
+     * @return The summary text that can be directly stored in a CSV file.
+     */
+    std::string generateSummaryCSV(TimingReportEventSummaryC &main_event_summary,
+                                   TimingPrefixUtility::TimeUnit time_unit = TimingPrefixUtility::TimeUnit::Default);
+
+    static TimingReport loadReportFromCSV(const std::string &s_csv_content);
+    static TimingReport loadReportFromCSVFile(const std::string &filename);
 
 private:
     void *m_lib_handle;

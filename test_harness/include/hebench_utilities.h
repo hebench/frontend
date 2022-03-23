@@ -85,6 +85,9 @@ void printArraysAsColumns(std::ostream &os,
                           bool output_row_index = false,
                           const char *separator = " ");
 
+std::string convertDoubleToStr(double x, int up_to_digits_after_dot);
+std::string convertDoubleToStrScientific(double x, std::size_t max_width);
+
 class RandomGenerator
 {
 private:

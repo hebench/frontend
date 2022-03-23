@@ -38,8 +38,9 @@ int main(int argc, char **argv)
         } // end if
         else
         {
+            constexpr hebench::TestHarness::Report::cpp::TimingPrefixUtility::TimeUnit time_unit = hebench::TestHarness::Report::cpp::TimingPrefixUtility::TimeUnit::Default;
             hebench::TestHarness::Report::TimingReportEventSummaryC tre;
-            std::cout << report.generateSummaryCSV(tre) << std::endl;
+            std::cout << report.generateSummaryCSV(tre, time_unit) << std::endl;
             std::cout << "Main event: " << tre.event_id << std::endl;
         } // end else
     }

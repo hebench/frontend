@@ -180,7 +180,7 @@ public:
     std::uint64_t getMainEventSummaryIndex() const { return m_main_event_index; }
     const TimingReportEventSummaryC &getMainEventSummary() const;
 
-    void generateCSV(std::ostream &os);
+    void generateCSV(std::ostream &os, char ch_prefix);
 
 private:
     std::string m_header;

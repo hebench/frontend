@@ -63,14 +63,13 @@ extern "C"
     int32_t prependReportFooter(void *p_report, const char *new_footer, int32_t new_line);
     uint64_t getReportFooter(void *p_report, char *footer, uint64_t size);
 
-    // event type: groups a collection of events under the same type
-
     /**
      * @brief addEventType
      * @param p_report
      * @param event_type_id
      * @param event_type_header
      * @returns `true` on success.
+     * @details event type: groups a collection of events under the same type.
      */
     int32_t addEventType(void *p_report, uint32_t event_type_id, const char *event_type_header);
     /**
@@ -143,12 +142,25 @@ extern "C"
     /**
      * @brief generateSummaryCSV
      * @param p_report
+     * @param[in] ch_prefix Prefix of time unit to use for the report.
      * @param[out] p_main_event_summary TimingReportEventSummaryC struct where to store the
      * summary of the main event.
      * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
      * @returns `true` on success.
+     * @details
+     * Values for \p ch_prefix are:
+     *
+     * @code
+     * 0 - default
+     * 's' - seconds
+     * 'm' - milliseconds
+     * 'u' - microseconds
+     * 'n' - nanoseconds
+     * @endcode
+     *
+     * Using any other value results in failure.
      */
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
+    int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
     /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.
