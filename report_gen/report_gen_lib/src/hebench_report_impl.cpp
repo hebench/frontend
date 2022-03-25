@@ -9,7 +9,8 @@
 #include <sstream>
 
 #include "hebench_report_impl.h"
-#include "hebench_report_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace TestHarness {

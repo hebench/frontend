@@ -2,8 +2,8 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-#ifndef _HEBench_Harness_MathUtils_H_0596d40a3cce4b108a81595c50eb286d
-#define _HEBench_Harness_MathUtils_H_0596d40a3cce4b108a81595c50eb286d
+#ifndef _HEBench_Common_MathUtils_H_0596d40a3cce4b108a81595c50eb286d
+#define _HEBench_Common_MathUtils_H_0596d40a3cce4b108a81595c50eb286d
 
 #include <cmath>
 #include <cstdint>
@@ -15,37 +15,53 @@ namespace hebench {
 namespace Utilities {
 namespace Math {
 
-template <typename T>
 /**
- * @brief Finds whether two values are within a certain percentage of each other.
- * @param[in] a First value to compare.
- * @param[in] b Second value to compare.
- * @param[in] pct Per-one for comparison: this is percent divided by 100.
- * @returns true if \p a and \p b are within \p pct * 100 of each other.
- * @returns false otherwise.
+ * @brief Maintains a running mean and variance of a collection of events.
  */
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        bool>::type
-almostEqual(T a, T b, double pct = 0.05);
+class EventStats
+{
+public:
+    EventStats() :
+        m_count(0), m_mean(0.0), m_m2(0.0),
+        m_min(std::numeric_limits<double>::infinity()),
+        m_max(-std::numeric_limits<double>::infinity())
+    {
+    }
 
-template <typename T>
-/**
-* @brief Finds whether values in two arrays are within a certain percentage of each other.
-* @param[in] a Pointer to start of first array to compare.
-* @param[in] b Pointer to start of second array to compare.
-* @param[in] count Number of elements in each array.
-* @param[in] pct Per-one for comparison: this is percent divided by 100.
-* @return A vector of `uint64` where each element in this vector is the index of the
-* values in \p a and \p b that were not within \p pct * 100 of each other. The return
-* vector is empty if all values were within range of each other.
-* @details Parameter \p a must hold, at least, \p count elements, same as \p b.
-*/
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        std::vector<std::uint64_t>>::type
-almostEqual(const T *a, const T *b,
-            std::uint64_t count, double pct = 0.05);
+    void newEvent(double x)
+    {
+        ++m_count;
+        double d = x - m_mean;
+        m_mean += d / m_count;
+        double d2 = x - m_mean;
+
+        m_m2 = m_m2 + d * d2;
+
+        if (m_min > x)
+            m_min = x;
+        if (m_max < x)
+            m_max = x;
+    }
+
+    std::size_t getCount() const { return m_count; }
+    double getMin() const { return m_min; }
+    double getMax() const { return m_max; }
+    double getMean() const { return m_mean; }
+    double getVariance() const
+    {
+        if (m_count < 2)
+            return 0;
+        else
+            return m_m2 / (m_count - 1);
+    }
+
+private:
+    std::size_t m_count;
+    double m_mean;
+    double m_m2;
+    double m_min;
+    double m_max;
+};
 
 /**
  * @brief Provides facilities for a counter by components with limited sizes.
@@ -96,13 +112,44 @@ private:
     std::vector<std::size_t> m_sizes;
 };
 
+template <typename T>
+/**
+ * @brief Finds whether two values are within a certain percentage of each other.
+ * @param[in] a First value to compare.
+ * @param[in] b Second value to compare.
+ * @param[in] pct Per-one for comparison: this is percent divided by 100.
+ * @returns true if \p a and \p b are within \p pct * 100 of each other.
+ * @returns false otherwise.
+ */
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        bool>::type
+almostEqual(T a, T b, double pct = 0.05);
+
+template <typename T>
+/**
+* @brief Finds whether values in two arrays are within a certain percentage of each other.
+* @param[in] a Pointer to start of first array to compare.
+* @param[in] b Pointer to start of second array to compare.
+* @param[in] count Number of elements in each array.
+* @param[in] pct Per-one for comparison: this is percent divided by 100.
+* @return A vector of `uint64` where each element in this vector is the index of the
+* values in \p a and \p b that were not within \p pct * 100 of each other. The return
+* vector is empty if all values were within range of each other.
+* @details Parameter \p a must hold, at least, \p count elements, same as \p b.
+*/
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        std::vector<std::uint64_t>>::type
+almostEqual(const T *a, const T *b,
+            std::uint64_t count, double pct = 0.05);
+
 // inline template implementations
 
 template <typename T>
 typename std::enable_if<std::is_integral<T>::value
                             || std::is_floating_point<T>::value,
                         bool>::type
-//MathUtils::
 almostEqual(T a, T b, double pct)
 {
     bool retval = a == b;
@@ -137,7 +184,6 @@ template <typename T>
 typename std::enable_if<std::is_integral<T>::value
                             || std::is_floating_point<T>::value,
                         std::vector<std::uint64_t>>::type
-//MathUtils::
 almostEqual(const T *a, const T *b, std::uint64_t count, double pct)
 {
     std::vector<std::uint64_t> retval;
@@ -166,4 +212,4 @@ almostEqual(const T *a, const T *b, std::uint64_t count, double pct)
 } // namespace Utilities
 } // namespace hebench
 
-#endif // defined _HEBench_Harness_MathUtils_H_0596d40a3cce4b108a81595c50eb286d
+#endif // defined _HEBench_Common_MathUtils_H_0596d40a3cce4b108a81595c50eb286d

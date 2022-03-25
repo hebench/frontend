@@ -7,7 +7,8 @@
 
 #include <algorithm>
 
-#include "../hebench_utilities.h"
+#include "../hebench_utilities_harness.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace Utilities {
