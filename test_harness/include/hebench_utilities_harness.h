@@ -39,7 +39,6 @@ namespace Utilities {
  * @endcode
  */
 std::string convertToDirectoryName(const std::string &s, bool to_lowercase = true);
-std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src);
 void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
                  bool b_binary, bool b_append = false);
 void writeToFile(const std::string &filename,
@@ -85,9 +84,6 @@ void printArraysAsColumns(std::ostream &os,
                           bool output_row_index = false,
                           const char *separator = " ");
 
-std::string convertDoubleToStr(double x, int up_to_digits_after_dot);
-std::string convertDoubleToStrScientific(double x, std::size_t max_width);
-
 class RandomGenerator
 {
 private:
@@ -129,6 +125,6 @@ private:
 } // namespace Utilities
 } // namespace hebench
 
-#include "inl/hebench_utilities.inl"
+#include "inl/hebench_utilities_harness.inl"
 
 #endif // defined _HEBench_Harness_Utilities_H_0596d40a3cce4b108a81595c50eb286d

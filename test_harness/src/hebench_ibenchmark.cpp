@@ -18,7 +18,7 @@
 #include "hebench/api_bridge/api.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_ibenchmark.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 
 namespace hebench {
 namespace TestHarness {

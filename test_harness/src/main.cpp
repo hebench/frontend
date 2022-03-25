@@ -14,6 +14,7 @@
 
 #include "modules/args_parser/include/args_parser.h"
 #include "modules/general/include/error.h"
+#include "modules/general/include/hebench_utilities.h"
 #include "modules/logging/include/logging.h"
 
 #include "dynamic_lib_load.h"
@@ -21,7 +22,7 @@
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_types_harness.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 #include "include/hebench_version.h"
 
 // enforce floating point standard compatibility
