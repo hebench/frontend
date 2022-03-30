@@ -12,7 +12,7 @@ Negative cases for the Dataset Loader
 Testing scenario to validate the tags
 com
 
-DATA_LOADER=/bin/hebench_dataset_loader_test
+DATA_LOADER=./bin/hebench_dataset_loader_test
 RESULT=0
 
 data="# invalid tag
