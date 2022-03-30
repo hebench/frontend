@@ -1,4 +1,7 @@
-/* 
+// Copyright (C) 2021 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+/*
 * Copyright (C) 2022 Intel Corporation
 * SPDX-License-Identifier: Apache-2.0
 */
@@ -39,13 +42,13 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::uint64_t max_loaded_size = argc == max_args_allowed? (std::uint64_t) std::stoul(argv[max_loaded_size_arg], nullptr, 0): 0;
-            std::string data_load_type = argv[type_arg];
+            std::uint64_t max_loaded_size = argc == max_args_allowed ? (std::uint64_t)std::stoul(argv[max_loaded_size_arg], nullptr, 0) : 0;
+            std::string data_load_type    = argv[type_arg];
             try
             {
                 load_from_csv(data_load_type, file_path, max_loaded_size);
             }
-            catch(const std::exception& exc)
+            catch (const std::exception &exc)
             {
                 signal_error(exc.what());
             }

@@ -1,4 +1,7 @@
-/* 
+// Copyright (C) 2021 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
+/*
 * Copyright (C) 2022 Intel Corporation
 * SPDX-License-Identifier: Apache-2.0
 */
@@ -7,7 +10,7 @@
 
 using namespace hebench::DataLoader;
 
-void signal_error(const char* msg, bool usage)
+void signal_error(const char *msg, bool usage)
 {
     std::cerr << msg;
     if (usage)
@@ -20,12 +23,12 @@ void signal_error(const char* msg, bool usage)
 
 std::uint8_t get_type_from_data(std::string data)
 {
-    std::map<std::string, std::uint8_t> dataTypeMap = { {"i32", i32}, {"i64", i64}, {"f32", f32}, {"f64", f64} };
+    std::map<std::string, std::uint8_t> dataTypeMap = { { "i32", i32 }, { "i64", i64 }, { "f32", f32 }, { "f64", f64 } };
     try
     {
         return dataTypeMap.at(data);
     }
-    catch (const std::out_of_range& missing_key) 
+    catch (const std::out_of_range &missing_key)
     {
         return data_fail;
     }
@@ -38,7 +41,7 @@ void load_from_csv(std::string data, std::filesystem::path file_path, std::uint6
     {
     case i32:
     {
-        ExternalDataset<std::int32_t> data_set_i32 = 
+        ExternalDataset<std::int32_t> data_set_i32 =
             ExternalDatasetLoader<std::int32_t>::loadFromCSV(file_path.string(), max_loaded_size);
         break;
     }
