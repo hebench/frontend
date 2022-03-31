@@ -53,9 +53,9 @@ jobs:
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
           cmake --install ${{github.workspace}}/build
 
-          cmake -B ${{github.workspace}}/dataset_loader/tests/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -S ${{github.workspace}}/dataset_loader/tests/
+          cmake -B ${{github.workspace}}/dataset_loader/tests/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dataset_loader/tests/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -S ${{github.workspace}}/dataset_loader/tests/
           cmake --build ${{github.workspace}}/dataset_loader/tests/build --config ${{env.BUILD_TYPE}} -j
-          cmake --install ${{github.workspace}}/build
+          cmake --install ${{github.workspace}}/dataset_loader/tests/build
 
           CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_example_backend.so
           echo "CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_example_backend.so" >> $GITHUB_ENV

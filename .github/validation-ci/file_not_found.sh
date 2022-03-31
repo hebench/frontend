@@ -12,7 +12,7 @@ Negative cases for the Dataset Loader
 Testing scenario for unexistent files
 com
 
-DATA_LOADER=./bin/hebench_dataset_loader_test
+DATA_LOADER=../dataset_loader/tests/build/bin/hebench_dataset_loader_test
 RESULT=0
 
 data="input, 0, 3, local
