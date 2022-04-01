@@ -1,6 +1,8 @@
 Vector Element-wise Multiplication Workload {#elementwise_mult}
 ========================
 
+[TOC]
+
 ## Operation Description
 
 ### Summary

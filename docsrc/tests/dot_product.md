@@ -2,6 +2,8 @@
 Vector Dot Product Workload {#dot_product}
 ========================
 
+[TOC]
+
 ## Operation Description
 
 ### Summary

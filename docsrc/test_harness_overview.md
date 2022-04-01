@@ -1,5 +1,8 @@
 HEBench Test Harness Overview                {#test_harness_overview}
 ========================
+
+[TOC]
+
 ##Description
 The Test Harness is the is the core frontend component and user interaction point for the HEBench project. It is built as part of the HEBench frontend and it is responsible for orchestrating the benchmarking operations, submiting and timing requests to backends, parsing user arguments and configurations, and outputting benchmark reports and summaries. It provides support for dynamically loading compatible HEBench backends and benchmarking supported tests. 
 

@@ -1,6 +1,8 @@
 HEBench Backend Overview                {#backend_overview}
 ========================
 
+[TOC]
+
 ##Overview
 The HEBench components that enable backends consist of the API Bridge and the C++ wrapper that enable the creation of backends that implement the benchmarks for the supported workloads.
  
