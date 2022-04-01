@@ -1,6 +1,8 @@
 API Bridge overview                         {#APIBridge_overview}
 ========================
 
+[TOC]
+
 ##High-level design and architecture overview
 
 The API Bridge is the common interface that backends need to expose. It consists of a set of C headers that declare the C API which is used by the test harness to execute workloads implemented by backends.

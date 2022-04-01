@@ -1,6 +1,8 @@
 HEBench C++ Wrapper Overview {#CPP_overview}
 ========================
 
+[TOC]
+
 ##High-level design and architecture overview
 
 Backend engines are expected to be shared libraries (.so in Linux, .dll in Windows) that expose the [API Bridge](@ref APIBridge_overview) functionality. The functionality can be implemented by directly defining the required functions specified in the @ref hebench::APIBridge or extending the C++ wrapper @ref hebench::cpp .

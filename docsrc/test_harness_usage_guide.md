@@ -1,6 +1,8 @@
 Test Harness User Guide        {#test_harness_usage_guide}
 ========================
 
+[TOC]
+
 ## Test Harness Usage Overview
 This page describes and provides information on how to use the test harness application to configure and run workloads, output reports, load different dynamic backends, and available command line options. For additional test harness information including how to extend it please refer to [Test Harness Overview](@ref test_harness_overview)
 

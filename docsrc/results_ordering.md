@@ -1,6 +1,8 @@
 Ordering of Results Based on Input Batch Sizes                {#results_order}
 ========================
 
+[TOC]
+
 The following defines the ordering of results based on batched input.
 
 It is recommended to refer to @ref glossary for a list of terms used in this document.
@@ -90,7 +92,7 @@ r = param[2] + cn[2] * param[1] + cn[2] * cn[1] * param[0]
 ```
 <hr>
 
-## Parameter Indexers in APIBridge operate()
+## Parameter Indexers in API Bridge operate()
 A parameter to `hebench::APIBridge::operate()` is `const hebench::APIBridge::ParameterIndexer *p_param_indexers`. This is an array of parameter indexers with as many elements as parameters for the workload operation. A parameter indexer structure is defined as:
 
 ```cpp
