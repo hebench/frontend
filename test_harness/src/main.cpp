@@ -450,7 +450,6 @@ int main(int argc, char **argv)
             for (std::size_t bench_i = 0; bench_i < benchmarks_to_run.size(); ++bench_i)
             {
                 benchmarks_to_run[bench_i].configuration.b_single_path_report = config.b_single_path_report;
-                benchmarks_to_run[bench_i].configuration.time_unit            = 'n';
                 hebench::Utilities::BenchmarkRequest &benchmark_request       = benchmarks_to_run[bench_i];
                 bool b_critical_error                                         = false;
                 std::string bench_path;
