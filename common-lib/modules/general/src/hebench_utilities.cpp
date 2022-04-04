@@ -30,8 +30,6 @@ std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src)
 
 std::string convertDoubleToStr(double x, int up_to_digits_after_dot)
 {
-    // Prints a floating point value with up to a number of digits after decimal point
-    // with no trailing zeroes.
     std::string retval;
     std::stringstream ss;
     if (up_to_digits_after_dot < 0)
@@ -45,12 +43,6 @@ std::string convertDoubleToStr(double x, int up_to_digits_after_dot)
 
 std::string convertDoubleToStrScientific(double x, std::size_t max_width)
 {
-    // Converts a double to string, attempting to limit the size
-    // of the resulting string to a specified width.
-    // If the correct scientific notation with 1 decimal place is
-    // larger than specified width, then the output string will exceed
-    // the width, e.g. 1.234e+02 with a width less than 7 is always 1.2e+02.
-
     std::size_t max_precision = std::min(max_width - 4, 14UL);
     std::string retval;
     std::stringstream ss;
@@ -66,10 +58,15 @@ std::string convertDoubleToStrScientific(double x, std::size_t max_width)
         std::string s_coeff    = retval.substr(0, pos_e);
         ss                     = std::stringstream(s_coeff);
         ss >> coeff;
+        // remove trailing decimal zeros
         s_coeff.erase(s_coeff.find_last_not_of("0") + 1);
-        //        if (!s_coeff.empty() && s_coeff.back() == '.')
-        //            s_coeff += "0";
+        // replace following line by this code to force whole number
+        // coefficients to become #.0e+/-##, like 1e+10 will become 1.0e+10.
+        // if (!s_coeff.empty() && s_coeff.back() == '.')
+        //     s_coeff += "0";
+        // otherwise, no decimal is added to whole number coefficients.
         s_coeff.erase(s_coeff.find_last_not_of(".") + 1);
+        // manipulate coefficient to fit number into max width
         if (max_width < s_coeff.size() + s_sci_part.size())
         {
             if (max_width < s_sci_part.size() + 3)
@@ -81,7 +78,8 @@ std::string convertDoubleToStrScientific(double x, std::size_t max_width)
             ss << std::setprecision(max_precision);
             ss << coeff;
             s_coeff = ss.str();
-        }
+        } // end if
+        // create the final scientific notation output
         if (s_coeff.empty() || coeff == 0.0)
         {
             retval = "0";
@@ -89,10 +87,12 @@ std::string convertDoubleToStrScientific(double x, std::size_t max_width)
         else
         {
             retval = s_coeff + s_sci_part;
-        } // end if
+        } // end else
     } // end if
     else
     {
+        // scientific notation not found (it should never be the case):
+        // truncate trailing decimal zeros and do not modify the floating point output
         retval.erase(retval.find_last_not_of("0") + 1);
         retval.erase(retval.find_last_not_of(".") + 1);
     } // end else
