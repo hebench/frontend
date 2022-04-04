@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <limits>
 #include <numeric>
@@ -65,18 +66,43 @@ public:
                                                                      char fallback_report_time_unit,
                                                                      std::uint64_t fallback_min_test_time,
                                                                      std::uint64_t fallback_sample_size);
+    template <typename T>
+    static T retrieveValue(const std::string &s_value);
+    template <typename T>
+    static T retrieveValue(const YAML::Node &node)
+    {
+        return retrieveValue<T>(node.as<std::string>());
+    }
 
 private:
+    static std::string getCleanEnvVariableName(std::string s_var_name)
+    {
+        s_var_name.erase(0, s_var_name.find_first_not_of(" \t\n\r\f\v"));
+        s_var_name.erase(s_var_name.find_last_not_of(" \t\n\r\f\v") + 1);
+        return !s_var_name.empty() && s_var_name.front() == '$' ? s_var_name.substr(1) : std::string();
+    }
+    static std::string evaluateEnvVariable(const std::string &s_var_name)
+    {
+        std::string retval;
+        if (!s_var_name.empty())
+        {
+            const char *c_value = std::getenv(s_var_name.c_str());
+            if (c_value)
+                retval = c_value;
+        } // end if
+        return retval;
+    }
+
     template <typename T>
     static std::size_t computeComponentSize(const YAML::Node &node_from,
                                             const YAML::Node &node_to,
                                             const YAML::Node &node_step)
     {
-        T param_step = node_step.as<T>();
+        T param_step = retrieveValue<T>(node_step);
         if (param_step == static_cast<T>(0))
             param_step = std::numeric_limits<T>::max();
-        T tmp_to   = node_to.as<T>();
-        T tmp_from = node_from.as<T>();
+        T tmp_to   = retrieveValue<T>(node_to);
+        T tmp_from = retrieveValue<T>(node_from);
         if (tmp_to < tmp_from)
             tmp_to = tmp_from;
         return static_cast<std::size_t>((tmp_to - tmp_from) / param_step) + 1;
@@ -87,7 +113,7 @@ private:
                                const YAML::Node &node_from,
                                const YAML::Node &node_step)
     {
-        return static_cast<T>(count * node_step.as<T>() + node_from.as<T>());
+        return static_cast<T>(count * retrieveValue<T>(node_step) + retrieveValue<T>(node_from));
     }
 };
 
@@ -95,13 +121,38 @@ private:
 // class ConfigImporterImpl
 //--------------------------
 
+template <>
+inline std::string ConfigImporterImpl::retrieveValue<std::string>(const std::string &s_value)
+{
+    std::string s_tmp = getCleanEnvVariableName(s_value);
+    return s_tmp.empty() ? s_value : evaluateEnvVariable(s_tmp);
+}
+
+template <typename T>
+inline T ConfigImporterImpl::retrieveValue(const std::string &s_value)
+{
+    T retval;
+    std::string s_tmp = getCleanEnvVariableName(s_value);
+    std::stringstream ss(s_tmp.empty() ? s_value : evaluateEnvVariable(s_tmp));
+    ss >> retval;
+    if (!ss)
+    {
+        std::stringstream ss_err;
+        ss_err << "ConfigImporterImpl::" << __func__ << "():" << __LINE__ << ": "
+               << "Invalid conversion for value \"" << s_value << "\"";
+        throw std::runtime_error(ss_err.str());
+    } // end if
+
+    return retval;
+}
+
 char ConfigImporterImpl::retrieveTimeUnit(const YAML::Node &node)
 {
     char retval = 0;
 
     if (node["report_time_unit"].IsDefined() && !node["report_time_unit"].IsNull())
     {
-        std::string tmp_time_unit = std::filesystem::path(node["report_time_unit"].as<std::string>());
+        std::string tmp_time_unit = std::filesystem::path(retrieveValue<std::string>(node["report_time_unit"]));
         tmp_time_unit.erase(0, tmp_time_unit.find_first_not_of(" \t\n\r\f\v")); // trim leading whitespaces
         if (!tmp_time_unit.empty())
         {
@@ -131,7 +182,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
                                                                               std::uint64_t fallback_min_test_time,
                                                                               std::uint64_t fallback_sample_size)
 {
-    assert(yaml_bench["ID"].as<decltype(benchmark_index)>() == benchmark_index);
+    assert(retrieveValue<decltype(benchmark_index)>(yaml_bench["ID"]) == benchmark_index);
 
     std::vector<BenchmarkRequest> retval;
 
@@ -142,7 +193,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
 
     if (yaml_bench["dataset"].IsDefined() && !yaml_bench["dataset"].IsNull())
     {
-        dataset_filename = std::filesystem::path(yaml_bench["dataset"].as<std::string>());
+        dataset_filename = std::filesystem::path(retrieveValue<std::string>(yaml_bench["dataset"]));
         if (dataset_filename.is_relative())
             dataset_filename = working_path / dataset_filename;
         try
@@ -169,7 +220,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
     report_time_unit = retrieveTimeUnit(yaml_bench);
 
     if (yaml_bench["default_min_test_time"].IsDefined())
-        default_min_test_time_ms = yaml_bench["default_min_test_time"].as<decltype(default_min_test_time_ms)>();
+        default_min_test_time_ms = retrieveValue<decltype(default_min_test_time_ms)>(yaml_bench["default_min_test_time"]);
 
     if (yaml_bench["default_sample_sizes"].IsDefined())
     {
@@ -192,7 +243,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
             std::size_t key = it->first.as<std::size_t>();
             if (default_sample_sizes.size() <= key)
                 default_sample_sizes.resize(key + 1, 0);
-            default_sample_sizes[key] = it->second.as<std::uint64_t>();
+            default_sample_sizes[key] = retrieveValue<std::uint64_t>(it->second);
         } // end for
     } // end if
 
@@ -250,7 +301,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
             } // end if
 
             // convert param from-to-step into counter
-            std::string param_type = yaml_bench["params"][param_i]["type"].as<std::string>();
+            std::string param_type = retrieveValue<std::string>(yaml_bench["params"][param_i]["type"]);
             std::transform(param_type.begin(), param_type.end(), param_type.begin(),
                            [](unsigned char c) { return std::tolower(c); });
             if (param_type == "uint64")
@@ -301,7 +352,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
                 hebench::APIBridge::WorkloadParam w_param;
                 YAML::Node yaml_param       = yaml_bench["params"][param_i];
                 YAML::Node yaml_param_value = yaml_param["value"];
-                std::string param_type      = yaml_param["type"].as<std::string>();
+                std::string param_type      = retrieveValue<std::string>(yaml_param["type"]);
                 std::transform(param_type.begin(), param_type.end(), param_type.begin(),
                                [](unsigned char c) { return std::tolower(c); });
 
@@ -327,7 +378,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
                                                                                    yaml_param_value["step"]);
                 } // end if
 
-                hebench::Utilities::copyString(w_param.name, HEBENCH_MAX_BUFFER_SIZE, yaml_param["name"].as<std::string>());
+                hebench::Utilities::copyString(w_param.name, HEBENCH_MAX_BUFFER_SIZE, retrieveValue<std::string>(yaml_param["name"]));
                 config.w_params.push_back(w_param);
             } // end for
 
@@ -657,14 +708,14 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
     // parse benchmark defaults
     if (root["default_min_test_time"].IsDefined())
         default_min_test_time_ms =
-            root["default_min_test_time"].as<decltype(default_min_test_time_ms)>();
+            ConfigImporterImpl::retrieveValue<decltype(default_min_test_time_ms)>(root["default_min_test_time"]);
     if (root["default_sample_size"].IsDefined())
         default_sample_size =
-            root["default_sample_size"].as<decltype(default_sample_size)>();
+            ConfigImporterImpl::retrieveValue<decltype(default_sample_size)>(root["default_sample_size"]);
     fallback_time_unit = ConfigImporterImpl::retrieveTimeUnit(root);
     if (root["random_seed"].IsDefined())
         random_seed =
-            root["random_seed"].as<std::uint64_t>();
+            ConfigImporterImpl::retrieveValue<std::uint64_t>(root["random_seed"]);
 
     root = root["benchmark"];
     if (!root.IsSequence())
@@ -674,7 +725,7 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
     {
         if (!root[i]["ID"].IsDefined())
             throw std::runtime_error("Field \"ID\" not found on benchmark.");
-        std::size_t benchmark_index = root[i]["ID"].as<std::size_t>();
+        std::size_t benchmark_index = ConfigImporterImpl::retrieveValue<std::size_t>(root[i]["ID"]);
         std::vector<BenchmarkRequest> node_requests =
             ConfigImporterImpl::importYAML2BenchmarkRequest(file_dir,
                                                             benchmark_index,
