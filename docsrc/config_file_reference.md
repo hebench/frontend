@@ -2,6 +2,8 @@
 Benchmark Configuration File Reference {#config_file_reference}
 ========================
 
+[TOC]
+
 Benchmark configuration files can be specified during a run of Test Harness via the `--benchmark_config_file` command line argument.
 
 A configuration file contains a list of benchmarks to run and parameters to use for each workload. While the syntax of configuration files is the same for all, IDs for benchmarks are specific to each backend.
@@ -13,11 +15,13 @@ A configuration file is a YAML file with the following syntax:
 ```yaml
 default_min_test_time: <fallback_min_test_time_ms>
 default_sample_size: <fallback_sample_size>
+report_time_unit: <time_unit_scale>
 random_seed: <seed>
 
 benchmark:
   - ID: <benchmark_id>
     dataset: <file_name>
+    report_time_unit: <time_unit_scale>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -41,6 +45,7 @@ benchmark:
       ...
   - ID: <benchmark_id>
     dataset: <file_name>
+    report_time_unit: <time_unit_scale>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -65,7 +70,21 @@ benchmark:
   ...
 ```
 
-### Benchmark parameters
+### Configuration Scope
+
+The actual value used for a benchmark configuration is based on where it is specified first in the priority list. The priority is:
+
+1. Backend specified.
+2. Benchmark specific (description) in config file.
+3. Global config file.
+4. Workload specification.
+5. Global specification.
+
+This means, for example, if a benchmark description defines value `default_min_test_time: 10000`, this will override the configuration file global value for `default_min_test_time` (and any other value down the list).
+
+If any of these is set to default or is missing, then the next down the list is used. For sample sizes, workload specification must always be greater than `0` as there is no global default specification for sample sizes.
+
+### Global Configuration Description
 
 The configuration file can have settings for certain default behaviors. These are optional.
 
@@ -79,26 +98,23 @@ The configuration file can have settings for certain default behaviors. These ar
     Offline benchmarks can directly specify the sample size for each operation parameter, or indicate which parameters support flexible sample sizes.
 All workloads define a default sample size if none is specified for flexible parameters. When this setting is missing or set to `0`, indicates that these pre-defined workload sample sizes are to be used for flexible parameters.
 
+- `report_time_unit` - type: `string`. Specifies the report time unit scale that will be used to output benchmark timings. This global configuration value will be used if one is not specified in a benchmark description. If this is missing or value is `null`, time units default behavior is to use the variable scale that best matches the benchmark results such that the value is in the range between `1` and `1000` units when possible. The values supported for <time_unit_scale> are:
+
+  - `null`: default time scale
+  - `s`: seconds
+  - `ms`: milliseconds
+  - `us`: microseconds
+  - `ns`: nanoseconds
+
 - `random_seed` - type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
 
-<br/>
-The actual value used for a benchmark for `default_min_test_time` and `default_sample_size` is based on where it is specified first in the priority list. The priority is:
+### Benchmark Description Section
 
-1. Backend specified.
-2. Benchmark specific in config file.
-3. Global config file.
-4. Workload specification.
-5. Global specification.
+Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and its description.
 
-If any of these is `0` or is missing, then the next down the list is used. For sample sizes, workload specification must always be greater than `0` as there is no global default specification for sample sizes.
+A benchmark description is composed by `ID`, `dataset`, `report_time_unit`, `default_min_test_time`, `default_sample_sizes` and `params`.
 
-### Benchmark descriptions
-
-Top level `benchmark` key contains a list. It must exist in the configuration file. An element of this list specifies a benchmark to run and its description.
-
-A benchmark description is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
-
-A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Front end during initialization.
+A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Frontend during initialization.
 
 The value of field `ID` is `<benchmark_id>`. This is an integer number identifying the benchmark to run. These IDs are backend specific that map to a registered benchmark. To obtain the correct ID, users can either find out by exporting the backend default configuration file, or, if available, in the backend documentation.
 
@@ -116,7 +132,7 @@ The value of field `name` is `<param_name>`. This is any string used for descrip
 
 The value of field `type` is `<param_type>`. This is a string and  must be one of `UInt64`, `Int64`, `Float64`. This is not case sensitive. The correct type for a workload parameter is listed in the corresponding workload documentation.
 
-The `value` field specifies a range of values for this argument. The sub-fields `from`, `to` and `step` must be numbers compatibles with the type specified by `<param_type>`. Note that `<value_to>` must be greater than or equal to `<value_from>`.
+The `value` field specifies a range of values for this argument. The values of sub-fields `from`, `to` and `step` must be numbers compatible with the type specified by `<param_type>`. Note that `<value_to>` must be greater than or equal to `<value_from>`.
 
 A `<value_step>` of zero means that only `<value_from>` will be used in the range.
 
@@ -157,6 +173,7 @@ For example, if a backend exported configuration looks like below:
 ```yaml
 default_min_test_time: 0
 default_sample_size: 0
+report_time_unit: ~
 random_seed: 0
 
 benchmark:
@@ -167,6 +184,7 @@ benchmark:
 #   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
   - ID: 3
     dataset: ~
+    report_time_unit: ~
     default_min_test_time: 0
     default_sample_size:
       0: 0
@@ -208,3 +226,4 @@ The command below will launch the Test Harness which will load the file pointed 
 ```
 
 See @ref test_harness_usage_guide for more information on using the Test Harness.
+

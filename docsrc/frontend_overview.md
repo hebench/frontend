@@ -1,6 +1,8 @@
 HEBench frontend overview                {#frontend_overview}
 ========================
 
+[TOC]
+
 ##Description
 The HEBench frontend consists of the components relevant to users running benchmarks, extending the test harness with their own benchmarks, and developers who wish to contribute to the testing side of the framework.
 

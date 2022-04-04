@@ -10,6 +10,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 
 #include <yaml-cpp/yaml.h>
@@ -19,8 +20,9 @@
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_ibenchmark.h"
-#include "include/hebench_math_utils.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace Utilities {
@@ -55,10 +57,12 @@ private:
 class ConfigImporterImpl
 {
 public:
+    static char retrieveTimeUnit(const YAML::Node &node);
     static std::vector<BenchmarkRequest> importYAML2BenchmarkRequest(const std::filesystem::path &working_path,
                                                                      std::size_t benchmark_index,
                                                                      const YAML::Node &yaml_bench,
                                                                      const hebench::TestHarness::Engine &engine,
+                                                                     char fallback_report_time_unit,
                                                                      std::uint64_t fallback_min_test_time,
                                                                      std::uint64_t fallback_sample_size);
 
@@ -91,10 +95,39 @@ private:
 // class ConfigImporterImpl
 //--------------------------
 
+char ConfigImporterImpl::retrieveTimeUnit(const YAML::Node &node)
+{
+    char retval = 0;
+
+    if (node["report_time_unit"].IsDefined() && !node["report_time_unit"].IsNull())
+    {
+        std::string tmp_time_unit = std::filesystem::path(node["report_time_unit"].as<std::string>());
+        tmp_time_unit.erase(0, tmp_time_unit.find_first_not_of(" \t\n\r\f\v")); // trim leading whitespaces
+        if (!tmp_time_unit.empty())
+        {
+            retval = tmp_time_unit.front();
+            // validate time unit
+            if (std::string_view("smun").find_first_of(retval) == std::string_view::npos)
+            {
+                YAML::Mark yaml_mark = node["report_time_unit"].Mark();
+                std::stringstream ss;
+                ss << "Value of field `report_time_unit` ";
+                if (!yaml_mark.is_null())
+                    ss << "line " << yaml_mark.line + 1;
+                ss << " must be one of \"s\", \"ms\", \"us\", or \"ns\".";
+                throw std::runtime_error(ss.str());
+            } // end if
+        } // end if
+    } // end if
+
+    return retval;
+}
+
 std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(const std::filesystem::path &working_path,
                                                                               std::size_t benchmark_index,
                                                                               const YAML::Node &yaml_bench,
                                                                               const TestHarness::Engine &engine,
+                                                                              char fallback_report_time_unit,
                                                                               std::uint64_t fallback_min_test_time,
                                                                               std::uint64_t fallback_sample_size)
 {
@@ -103,6 +136,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
     std::vector<BenchmarkRequest> retval;
 
     std::filesystem::path dataset_filename;
+    char report_time_unit                  = 0;
     std::uint64_t default_min_test_time_ms = 0;
     std::vector<std::uint64_t> default_sample_sizes;
 
@@ -131,6 +165,8 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
             throw std::runtime_error(ss.str());
         }
     } // end if
+
+    report_time_unit = retrieveTimeUnit(yaml_bench);
 
     if (yaml_bench["default_min_test_time"].IsDefined())
         default_min_test_time_ms = yaml_bench["default_min_test_time"].as<decltype(default_min_test_time_ms)>();
@@ -255,6 +291,7 @@ std::vector<BenchmarkRequest> ConfigImporterImpl::importYAML2BenchmarkRequest(co
             const std::vector<std::size_t> &count = c_counter.getCount();
             hebench::TestHarness::BenchmarkDescription::Configuration config;
             config.dataset_filename             = dataset_filename.string();
+            config.time_unit                    = (report_time_unit == 0 ? fallback_report_time_unit : report_time_unit);
             config.default_min_test_time_ms     = default_min_test_time_ms <= 0 ? fallback_min_test_time : default_min_test_time_ms;
             config.fallback_default_sample_size = fallback_sample_size;
             config.default_sample_sizes         = default_sample_sizes;
@@ -408,6 +445,7 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
         << YAML::Comment("  " + ss.str());
     node_benchmark["ID"]                    = bench_req.index;
     node_benchmark["dataset"]               = YAML::Node(YAML::NodeType::Null);
+    node_benchmark["report_time_unit"]      = YAML::Node(YAML::NodeType::Null);
     node_benchmark["default_min_test_time"] = config.default_min_test_time_ms;
     if (!config.default_sample_sizes.empty())
     {
@@ -541,6 +579,21 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
     out << YAML::Newline << YAML::Newline;
 
     ss = std::stringstream();
+    ss << "Default report time unit to use for overall report output. This will be used" << std::endl
+       << "as fallback if no benchmark specific time unit is specified. If this is" << std::endl
+       << "missing or null, time units default behavior is to use the variable scale" << std::endl
+       << "that best matches the benchmark results." << std::endl
+       << "Possible values:" << std::endl
+       << "  null:   default time scale" << std::endl
+       << "  \"s\":  seconds" << std::endl
+       << "  \"ms\": milliseconds" << std::endl
+       << "  \"us\": microseconds" << std::endl
+       << "  \"ns\": nanoseconds";
+    out << YAML::Comment(ss.str())
+        << YAML::Key << "report_time_unit" << YAML::Value << YAML::Null; //random_seed;
+    out << YAML::Newline << YAML::Newline;
+
+    ss = std::stringstream();
     ss << "Random seed to use when generating synthetic data for these benchmarks." << std::endl
        << "Type: unsigned int. Defaults to system time when not present.";
     out << YAML::Comment(ss.str())
@@ -587,6 +640,7 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
                                                                        std::uint64_t &random_seed) const
 {
     std::vector<BenchmarkRequest> retval;
+    char fallback_time_unit;
     std::uint64_t default_min_test_time_ms = 0;
     std::uint64_t default_sample_size      = 0;
 
@@ -607,6 +661,7 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
     if (root["default_sample_size"].IsDefined())
         default_sample_size =
             root["default_sample_size"].as<decltype(default_sample_size)>();
+    fallback_time_unit = ConfigImporterImpl::retrieveTimeUnit(root);
     if (root["random_seed"].IsDefined())
         random_seed =
             root["random_seed"].as<std::uint64_t>();
@@ -625,6 +680,7 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
                                                             benchmark_index,
                                                             root[i],
                                                             *p_engine,
+                                                            fallback_time_unit,
                                                             default_min_test_time_ms,
                                                             default_sample_size);
         retval.insert(retval.end(), node_requests.begin(), node_requests.end());

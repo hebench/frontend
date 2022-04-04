@@ -104,29 +104,25 @@ list(APPEND ${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_factory.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_description.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_config.h"
-    #"${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_dataset_loader.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_engine.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_ibenchmark.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_idata_loader.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_math_utils.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_types_harness.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_utilities.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_utilities_harness.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_version.h"
     )
 
 list(APPEND ${PROJECT_NAME}_HEADERS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/inl/hebench_utilities.inl"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/inl/hebench_utilities_harness.inl"
     )
 
 list(APPEND ${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_benchmark_factory.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_config.cpp"
-    #"${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_dataset_loader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_engine.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_ibenchmark.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_idata_loader.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_math_utils.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_utilities.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_utilities_harness.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
     )
 

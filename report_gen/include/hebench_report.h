@@ -63,14 +63,13 @@ extern "C"
     int32_t prependReportFooter(void *p_report, const char *new_footer, int32_t new_line);
     uint64_t getReportFooter(void *p_report, char *footer, uint64_t size);
 
-    // event type: groups a collection of events under the same type
-
     /**
      * @brief addEventType
      * @param p_report
      * @param event_type_id
      * @param event_type_header
      * @returns `true` on success.
+     * @details event type: groups a collection of events under the same type.
      */
     int32_t addEventType(void *p_report, uint32_t event_type_id, const char *event_type_header);
     /**
@@ -143,12 +142,25 @@ extern "C"
     /**
      * @brief generateSummaryCSV
      * @param p_report
-     * @param[out] p_main_event_summary TimingReportEventC struct where to store the
+     * @param[in] ch_prefix Prefix of time unit to use for the report.
+     * @param[out] p_main_event_summary TimingReportEventSummaryC struct where to store the
      * summary of the main event.
      * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
      * @returns `true` on success.
+     * @details
+     * Values for \p ch_prefix are:
+     *
+     * @code
+     * 0 - default
+     * 's' - seconds
+     * 'm' - milliseconds
+     * 'u' - microseconds
+     * 'n' - nanoseconds
+     * @endcode
+     *
+     * Using any other value results in failure.
      */
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content);
+    int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
     /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.
@@ -163,6 +175,36 @@ extern "C"
     void *loadReportFromCSVFile(const char *filename, char error_description[MAX_DESCRIPTION_BUFFER_SIZE]);
 
     // misc/utilities
+
+    /**
+     * @brief Computes the value for the time unit based on a specified prefix.
+     * @param[out] p_prefix Structure where to store the result.
+     * @param[in] seconds Time in seconds for which to compute prefix.
+     * @param[in] prefix Timing prefix specification. See details.
+     * @details
+     * Given a timing in seconds and the metric prefix, this function will compute
+     * the corresponding value.
+     *
+     * Values for \p prefix are:
+     *
+     * 0: behaves as computeTimingPrefix()
+     * `'s'`: result is in seconds.
+     * `'m'`: result is in milliseconds.
+     * `'u'`: result is in microseconds.
+     * `'n'`: result is in nanoseconds.
+     *
+     * Any other value makes the function return a failure.
+     *
+     * For example, if \p seconds is `0.05` and \p prefix is `m`, then, the result is:
+     *
+     * @code
+     * p_prefix->value                   = 50;
+     * p_prefix->time_interval_ratio_den = 1000;
+     * p_prefix->symbol                  = 'm';
+     * p_prefix->prefix                  = 'milli';
+     * @endcode
+     */
+    int32_t setTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds, char prefix);
 
     /**
      * @brief Retrieves the prefix for the time unit.

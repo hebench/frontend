@@ -1,6 +1,8 @@
 Matrix Multiplication Workload {#matrix_multiplication}
 ========================
 
+[TOC]
+
 ## Operation Description
 
 ### Summary

@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 #include "../include/datagen_helper.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 
 namespace hebench {
 namespace TestHarness {

@@ -14,6 +14,7 @@
 
 #include "modules/args_parser/include/args_parser.h"
 #include "modules/general/include/error.h"
+#include "modules/general/include/hebench_utilities.h"
 #include "modules/logging/include/logging.h"
 
 #include "dynamic_lib_load.h"
@@ -21,7 +22,7 @@
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_types_harness.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 #include "include/hebench_version.h"
 
 // enforce floating point standard compatibility
@@ -203,21 +204,6 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.parse(argc, argv);
 }
 
-std::string toDoubleVariableFrac(double x, int up_to_digits_after_dot)
-{
-    // Prints a floating point value with up to a number of digits after decimal point
-    // with no trailing zeroes.
-    std::string retval;
-    std::stringstream ss;
-    if (up_to_digits_after_dot < 0)
-        up_to_digits_after_dot = 0;
-    ss << std::fixed << std::setprecision(up_to_digits_after_dot) << x;
-    retval = ss.str();
-    retval.erase(retval.find_last_not_of("0") + 1);
-    retval.erase(retval.find_last_not_of(".") + 1);
-    return retval;
-}
-
 void generateSummary(const hebench::TestHarness::Engine &engine,
                      const std::vector<hebench::Utilities::BenchmarkRequest> &benchmarks_ran,
                      const std::string &input_root_path, const std::string &output_root_path,
@@ -264,7 +250,13 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
         } // end else
 
         // No need to create dir if single path is enabled.
-        if (!benchmarks_ran[bench_i].configuration.b_single_path_report)
+        if (benchmarks_ran[bench_i].configuration.b_single_path_report)
+        {
+            // complete the paths to the input and output files
+            report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
+            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
+        }
+        else
         {
             // Generate output directory if it doesn't exits.
             std::filesystem::create_directories(output_path);
@@ -272,12 +264,6 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
             // complete the paths to the input and output files
             report_path /= hebench::TestHarness::FileNameNoExtReport;
             output_path /= hebench::TestHarness::FileNameNoExtSummary;
-        }
-        else
-        {
-            // complete the paths to the input and output files
-            report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
-            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
         }
         // Adding the file extension
         report_path += ".csv";
@@ -299,8 +285,10 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
             if (report.getEventCount() > 0)
             {
                 // output summary to file
-                hebench::TestHarness::Report::TimingReportEventC tre;
-                std::string csv_report = report.generateSummaryCSV(tre);
+                hebench::TestHarness::Report::cpp::TimingPrefixUtility::TimeUnit time_unit =
+                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::getPrefix(benchmarks_ran[bench_i].configuration.time_unit);
+                hebench::TestHarness::Report::TimingReportEventSummaryC tre;
+                std::string csv_report = report.generateSummaryCSV(tre, time_unit);
                 hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
 
                 // output overview of summary to stdout
@@ -308,21 +296,28 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
                 {
                     hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
                     double elapsed_time_secs;
+                    std::string s_elapsed_time;
 
-                    elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                    elapsed_time_secs = tre.wall_time_ave;
+                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
                     ss = std::stringstream();
                     ss << timing_prefix.symbol << "s";
+                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveWallColSize)
+                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveWallColSize);
                     std::cout << std::setw(AveWallColSize) << std::right
-                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveWallColSize)
+                              << s_elapsed_time
                               << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
 
-                    elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                    elapsed_time_secs = tre.cpu_time_ave;
+                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
                     ss = std::stringstream();
                     ss << timing_prefix.symbol << "s";
+                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveCPUColSize)
+                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveCPUColSize);
                     std::cout << std::setw(AveCPUColSize) << std::right
-                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveCPUColSize)
+                              << s_elapsed_time
                               << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
                 } // end if
             } // end if
