@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "include/hebench_math_utils.h"
+#include "../include/hebench_math_utils.h"
 
 namespace hebench {
 namespace Utilities {

@@ -5,9 +5,10 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 
 namespace hebench {
 namespace Utilities {
@@ -46,21 +47,6 @@ std::string convertToDirectoryName(const std::string &s, bool to_lowercase)
     } // end while
 
     return ss_retval.str();
-}
-
-std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src)
-{
-    std::uint64_t retval = src.size() + 1;
-
-    if (dst && size > 0)
-    {
-        std::uint64_t min_size = std::min(size, retval);
-        if (min_size > 1)
-            std::copy_n(src.c_str(), min_size - 1, dst);
-        dst[min_size - 1] = '\0'; // close string
-    } // end if
-
-    return retval;
 }
 
 void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,

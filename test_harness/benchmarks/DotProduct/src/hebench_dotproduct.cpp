@@ -7,7 +7,7 @@
 #include <sstream>
 
 #include "../include/hebench_dotproduct.h"
-#include "include/hebench_math_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
 
 namespace hebench {
 namespace TestHarness {

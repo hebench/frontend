@@ -15,7 +15,7 @@
 
 #include "hebench/api_bridge/api.h"
 #include "include/hebench_engine.h"
-#include "include/hebench_math_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
 
 #include "../include/hebench_eltwiseadd_o.h"
 

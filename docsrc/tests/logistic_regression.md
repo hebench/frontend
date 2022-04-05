@@ -1,6 +1,8 @@
 Logistic Regression Inference Workload {#logistic_regression}
 ========================
 
+[TOC]
+
 ## Operation Description
 
 The operation for this workload is the logistic regression with `sigmoid` activation function. 

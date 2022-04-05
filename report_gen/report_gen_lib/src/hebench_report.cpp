@@ -10,7 +10,8 @@
 
 #include "hebench_report.h"
 #include "hebench_report_impl.h"
-#include "hebench_report_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -530,7 +531,7 @@ extern "C"
         return retval;
     }
 
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content)
+    int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content)
     {
         int32_t retval      = 0;
         char *p_csv_content = nullptr;
@@ -543,9 +544,11 @@ extern "C"
             std::stringstream ss;
             std::string s_csv_content;
 
-            ReportSummary::generateCSV(ss, *p_main_event_summary, *p);
-            s_csv_content = ss.str();
-            ss            = std::stringstream();
+            ReportSummary report_summary(*p);
+            report_summary.generateCSV(ss, ch_prefix);
+            *p_main_event_summary = report_summary.getMainEventSummary();
+            s_csv_content         = ss.str();
+            ss                    = std::stringstream();
 
             p_csv_content = new char[s_csv_content.length() + 1];
             if (!p_csv_content)
@@ -632,6 +635,24 @@ extern "C"
         }
         return p_retval;
     }
+}
+
+int32_t setTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds, char prefix)
+{
+    int32_t retval = 1;
+
+    try
+    {
+        if (!retval)
+            throw std::invalid_argument("p_prefix");
+        TimingReport::setTimingPrefix(*p_prefix, seconds, prefix);
+    }
+    catch (...)
+    {
+        retval = 0;
+    }
+
+    return retval;
 }
 
 int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)

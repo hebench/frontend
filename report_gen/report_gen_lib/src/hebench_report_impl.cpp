@@ -2,13 +2,15 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <limits>
 #include <sstream>
 
 #include "hebench_report_impl.h"
-#include "hebench_report_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -126,10 +128,10 @@ std::ostream &TimingReport::convert2CSV(std::ostream &os) const
                 os << m_event_headers.at(timing_event.event_type_id);
             os << "," << timing_event.description << ","
                << timing_event.time_interval_ratio_num << "," << timing_event.time_interval_ratio_den << ","
-               << timing_event.wall_time_start << "," << timing_event.wall_time_end << ","
-               << timing_event.wall_time_end - timing_event.wall_time_start << ","
-               << timing_event.cpu_time_start << "," << timing_event.cpu_time_end << ","
-               << timing_event.cpu_time_end - timing_event.cpu_time_start << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_start) << "," << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_end) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_end - timing_event.wall_time_start) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_start) << "," << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end) << ","
+               << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end - timing_event.cpu_time_start) << ","
                << timing_event.iterations;
 
             os << std::endl;
@@ -562,6 +564,41 @@ TimingReport TimingReport::loadCSV(std::istream &is)
     return retval;
 }
 
+void TimingReport::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
+{
+    switch (ch_prefix)
+    {
+    case 0:
+        computeTimingPrefix(prefix, seconds);
+        break;
+    case 's':
+        prefix.time_interval_ratio_den = 1;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "");
+        break;
+    case 'm':
+        prefix.time_interval_ratio_den = 1e3; //1000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "m");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "milli");
+        break;
+    case 'u':
+        prefix.time_interval_ratio_den = 1e6; //1000000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "u");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "micro");
+        break;
+    case 'n':
+        prefix.time_interval_ratio_den = 1e9; //1000000000;
+        hebench::Utilities::copyString(prefix.symbol, MAX_SYMBOL_BUFFER_SIZE, "n");
+        hebench::Utilities::copyString(prefix.prefix, MAX_DESCRIPTION_BUFFER_SIZE, "nano");
+        break;
+    default:
+        throw std::invalid_argument("Unknown prefix.");
+        break;
+    } // end switch
+
+    prefix.value = seconds * prefix.time_interval_ratio_den;
+}
+
 void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
 {
     // convert to seconds
@@ -602,12 +639,13 @@ void TimingReport::computeTimingPrefix(TimingPrefixedSeconds &prefix, double sec
 // class ReportSummary
 //---------------------
 
-void ReportSummary::generateCSV(std::ostream &os, TimingReportEventC &main_event_summary, const TimingReport &report)
+ReportSummary::ReportSummary(const TimingReport &report) :
+    m_main_event_index(std::numeric_limits<decltype(m_main_event_index)>::max())
 {
-    if (!os)
-        throw std::ios_base::failure("Output stream is in an invalid state.");
+    // all timings for the stats are in seconds
 
-    std::memset(&main_event_summary, 0, sizeof(TimingReportEventC));
+    m_header = report.getHeader();
+    m_footer = report.getFooter();
 
     struct LocalStats
     {
@@ -618,12 +656,14 @@ void ReportSummary::generateCSV(std::ostream &os, TimingReportEventC &main_event
     std::vector<decltype(TimingReportEventC::event_type_id)> event_order;
 
     // compute the stats on the events
-    for (std::shared_ptr<TimingReportEventC> p_event : report.getEvents())
+    for (const std::shared_ptr<TimingReportEventC> &p_event : report.getEvents())
     {
         if (stats.count(p_event->event_type_id) <= 0)
         {
             stats[p_event->event_type_id] = LocalStats();
             event_order.push_back(p_event->event_type_id);
+            if (p_event->event_type_id == report.getMainEventID())
+                m_main_event_index = event_order.size() - 1;
         } // end if
 
         double wall_time = TimingReport::computeElapsedWallTime(*p_event) / p_event->iterations;
@@ -635,47 +675,77 @@ void ReportSummary::generateCSV(std::ostream &os, TimingReportEventC &main_event
         } // end for
     } // end for
 
-    os << report.getHeader() << std::endl
-       << std::endl
-       << "Notes" << std::endl
-       << report.getFooter() << std::endl
-       << std::endl
-       << "Main event," << report.getMainEventID() << "," << report.getEventTypes().at(report.getMainEventID()) << std::endl
-       << std::endl
-       << "ID,Event,Average Wall time,Unit,Variance Wall time,Average CPU time,Unit,Variance CPU time,Iterations" << std::endl;
-    if (!os)
-        throw std::ios_base::failure("Error writing summary report header to stream.");
+    std::sort(event_order.begin(), event_order.end());
+
     for (std::size_t i = 0; i < event_order.size(); ++i)
     {
         auto id                       = event_order[i];
         const LocalStats &event_stats = stats.at(id);
         assert(event_stats.ave_wall.getCount() == event_stats.ave_cpu.getCount());
+
+        m_event_summaries.emplace_back(std::make_shared<TimingReportEventSummaryC>());
+        TimingReportEventSummaryC &event_summary = *m_event_summaries.back();
+        std::memset(&event_summary, 0, sizeof(TimingReportEventSummaryC));
+        event_summary.event_id           = id;
+        event_summary.cpu_time_ave       = event_stats.ave_cpu.getMean();
+        event_summary.cpu_time_variance  = event_stats.ave_cpu.getVariance();
+        event_summary.wall_time_ave      = event_stats.ave_wall.getMean();
+        event_summary.wall_time_variance = event_stats.ave_wall.getVariance();
+        event_summary.iterations         = event_stats.ave_wall.getCount();
+        hebench::Utilities::copyString(event_summary.name,
+                                       MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE,
+                                       report.getEventTypes().at(id));
+    } // end for
+}
+
+const TimingReportEventSummaryC &ReportSummary::getEventSummary(std::uint64_t index) const
+{
+    if (index >= m_event_summaries.size())
+    {
+        std::stringstream ss;
+        ss << "Out of range `index`. Received " << index << ", but expected less than " << m_event_summaries.size() << ".";
+        throw std::out_of_range(ss.str());
+    } // end if
+    if (!m_event_summaries[index])
+        throw std::runtime_error("Unexpected empty summary");
+    return *m_event_summaries[index];
+}
+
+const TimingReportEventSummaryC &ReportSummary::getMainEventSummary() const
+{
+    return getEventSummary(getMainEventSummaryIndex());
+}
+
+void ReportSummary::generateCSV(std::ostream &os, char ch_prefix)
+{
+    if (!os)
+        throw std::ios_base::failure("Output stream is in an invalid state.");
+
+    os << this->getHeader() << std::endl
+       << std::endl
+       << "Notes" << std::endl
+       << this->getFooter() << std::endl
+       << std::endl
+       << "Main event," << this->getMainEventSummary().event_id << "," << this->getMainEventSummary().name << std::endl
+       << std::endl
+       << "ID,Event,Average Wall time,Unit,Variance Wall time,Average CPU time,Unit,Variance CPU time,Iterations" << std::endl;
+    if (!os)
+        throw std::ios_base::failure("Error writing summary report header to stream.");
+    for (std::size_t i = 0; i < m_event_summaries.size(); ++i)
+    {
+        const TimingReportEventSummaryC &event_stats = *m_event_summaries[i];
         hebench::TestHarness::Report::TimingPrefixedSeconds prefix_wall;
         hebench::TestHarness::Report::TimingPrefixedSeconds prefix_cpu;
-        hebench::TestHarness::Report::TimingReport::computeTimingPrefix(prefix_wall, event_stats.ave_wall.getMean());
-        hebench::TestHarness::Report::TimingReport::computeTimingPrefix(prefix_cpu, event_stats.ave_cpu.getMean());
-        os << id << "," << report.getEventTypes().at(id) << ","
-           << event_stats.ave_wall.getMean() * prefix_wall.time_interval_ratio_den << "," << prefix_wall.symbol << "s,"
-           << event_stats.ave_wall.getVariance() * prefix_wall.time_interval_ratio_den * prefix_wall.time_interval_ratio_den << ","
-           << event_stats.ave_cpu.getMean() * prefix_cpu.time_interval_ratio_den << "," << prefix_cpu.symbol << "s,"
-           << event_stats.ave_cpu.getVariance() * prefix_cpu.time_interval_ratio_den * prefix_cpu.time_interval_ratio_den << ","
-           << event_stats.ave_wall.getCount() << std::endl;
+        hebench::TestHarness::Report::TimingReport::setTimingPrefix(prefix_wall, event_stats.wall_time_ave, ch_prefix);
+        hebench::TestHarness::Report::TimingReport::setTimingPrefix(prefix_cpu, event_stats.cpu_time_ave, ch_prefix);
+        os << event_stats.event_id << "," << event_stats.name << ","
+           << hebench::Utilities::convertDoubleToStr(event_stats.wall_time_ave * prefix_wall.time_interval_ratio_den) << "," << prefix_wall.symbol << "s,"
+           << hebench::Utilities::convertDoubleToStr(event_stats.wall_time_variance * prefix_wall.time_interval_ratio_den * prefix_wall.time_interval_ratio_den) << ","
+           << hebench::Utilities::convertDoubleToStr(event_stats.cpu_time_ave * prefix_cpu.time_interval_ratio_den) << "," << prefix_cpu.symbol << "s,"
+           << hebench::Utilities::convertDoubleToStr(event_stats.cpu_time_variance * prefix_cpu.time_interval_ratio_den * prefix_cpu.time_interval_ratio_den) << ","
+           << event_stats.iterations << std::endl;
         if (!os)
             throw std::ios_base::failure("Error writing summary row to stream.");
-        if (i == 0 || report.getMainEventID() == id)
-        {
-            main_event_summary.event_type_id           = id;
-            main_event_summary.cpu_time_start          = 0;
-            main_event_summary.cpu_time_end            = event_stats.ave_cpu.getMean();
-            main_event_summary.wall_time_start         = 0;
-            main_event_summary.wall_time_end           = event_stats.ave_wall.getMean();
-            main_event_summary.iterations              = event_stats.ave_wall.getCount();
-            main_event_summary.time_interval_ratio_num = 1; // 1:1 seconds
-            main_event_summary.time_interval_ratio_den = 1;
-            hebench::Utilities::copyString(main_event_summary.description,
-                                           MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE,
-                                           report.getEventTypes().at(id));
-        } // end if
     } // end for
 }
 

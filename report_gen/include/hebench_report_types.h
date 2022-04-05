@@ -15,6 +15,7 @@ extern "C"
 {
 
 #define MAX_DESCRIPTION_BUFFER_SIZE            256
+#define MAX_SYMBOL_BUFFER_SIZE                 4
 #define MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE 256
 
     struct _TimingReportEventC
@@ -57,7 +58,27 @@ extern "C"
     };
     typedef struct _TimingReportEventC TimingReportEventC;
 
-#define MAX_SYMBOL_BUFFER_SIZE 4
+    struct _TimingReportEventSummaryC
+    {
+        /**
+         * @brief ID specifying the event type.
+         * @details During summary report, events with the same ID are
+         * grouped together for statistical computations. Users must make sure
+         * that related events are tagged with the correct ID.
+         */
+        uint32_t event_id;
+        double cpu_time_ave;
+        double cpu_time_variance;
+        double wall_time_ave;
+        double wall_time_variance;
+        uint64_t iterations;
+        /**
+         * @brief Event name.
+         */
+        char name[MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE];
+    };
+    typedef struct _TimingReportEventSummaryC TimingReportEventSummaryC;
+
     struct _UnitPrefix
     {
         /**
