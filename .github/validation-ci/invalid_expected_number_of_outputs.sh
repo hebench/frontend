@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Copyright (C) 2021 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-
 # Copyright (C) 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -43,5 +40,9 @@ for data_type in i32 i64 f32 f64; do
 done
 
 rm "$file"
+
+if [ $RESULT -eq 0 ]; then 
+    echo "Successfully tested Dataset Loader with: $0"
+fi
 
 exit $RESULT
