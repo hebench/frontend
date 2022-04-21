@@ -279,47 +279,48 @@ void generateSummary(const hebench::TestHarness::Engine &engine,
         try
         {
             // load input report
-            hebench::TestHarness::Report::cpp::TimingReport report =
-                hebench::TestHarness::Report::cpp::TimingReport::loadReportFromCSVFile(report_path);
+            hebench::ReportGen::cpp::TimingReport report =
+                hebench::ReportGen::cpp::TimingReport::loadReportFromCSVFile(report_path);
             // generate summary
             if (report.getEventCount() > 0)
             {
                 // output summary to file
-                hebench::TestHarness::Report::cpp::TimingPrefixUtility::TimeUnit time_unit =
-                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::getPrefix(benchmarks_ran[bench_i].configuration.time_unit);
-                hebench::TestHarness::Report::TimingReportEventSummaryC tre;
-                std::string csv_report = report.generateSummaryCSV(tre, time_unit);
-                hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
+                throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ": Not implemented");
+                //                hebench::ReportGen::cpp::TimingPrefixUtility::TimeUnit time_unit =
+                //                    hebench::ReportGen::cpp::TimingPrefixUtility::getPrefix(benchmarks_ran[bench_i].configuration.time_unit);
+                //                hebench::ReportGen::TimingReportEventSummaryC tre;
+                //                std::string csv_report = report.generateSummaryCSV(tre, time_unit);
+                //                hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
 
-                // output overview of summary to stdout
-                if (do_stdout_summary)
-                {
-                    hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
-                    double elapsed_time_secs;
-                    std::string s_elapsed_time;
+                //                // output overview of summary to stdout
+                //                if (do_stdout_summary)
+                //                {
+                //                    hebench::ReportGen::TimingPrefixedSeconds timing_prefix;
+                //                    double elapsed_time_secs;
+                //                    std::string s_elapsed_time;
 
-                    elapsed_time_secs = tre.wall_time_ave;
-                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
-                    ss = std::stringstream();
-                    ss << timing_prefix.symbol << "s";
-                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
-                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveWallColSize)
-                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveWallColSize);
-                    std::cout << std::setw(AveWallColSize) << std::right
-                              << s_elapsed_time
-                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
+                //                    elapsed_time_secs = tre.wall_time_ave;
+                //                    hebench::ReportGen::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
+                //                    ss = std::stringstream();
+                //                    ss << timing_prefix.symbol << "s";
+                //                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                //                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveWallColSize)
+                //                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveWallColSize);
+                //                    std::cout << std::setw(AveWallColSize) << std::right
+                //                              << s_elapsed_time
+                //                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
 
-                    elapsed_time_secs = tre.cpu_time_ave;
-                    hebench::TestHarness::Report::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
-                    ss = std::stringstream();
-                    ss << timing_prefix.symbol << "s";
-                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
-                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveCPUColSize)
-                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveCPUColSize);
-                    std::cout << std::setw(AveCPUColSize) << std::right
-                              << s_elapsed_time
-                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
-                } // end if
+                //                    elapsed_time_secs = tre.cpu_time_ave;
+                //                    hebench::ReportGen::cpp::TimingPrefixUtility::setTimingPrefix(timing_prefix, elapsed_time_secs, time_unit);
+                //                    ss = std::stringstream();
+                //                    ss << timing_prefix.symbol << "s";
+                //                    s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                //                    if (s_elapsed_time == "0" || s_elapsed_time.size() > AveCPUColSize)
+                //                        s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveCPUColSize);
+                //                    std::cout << std::setw(AveCPUColSize) << std::right
+                //                              << s_elapsed_time
+                //                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
+                //                } // end if
             } // end if
             else if (do_stdout_summary)
                 std::cout << "Validation Failed" << std::endl;

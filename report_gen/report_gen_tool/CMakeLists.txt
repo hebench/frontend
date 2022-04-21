@@ -2,17 +2,29 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 2.9)
-project(reportgen_tool)
+project(${PROJECT_NAME})
 
-set(reportgen_tool_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+set(${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_report_stats.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/hebench_report_overview_header.cpp"
+    )
 
-add_executable(reportgen_tool ${reportgen_tool_SOURCES} ${reportgen_tool_HEADERS})
+set(${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_report_stats.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_report_overview_header.h"
+    )
 
-target_include_directories(reportgen_tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(reportgen_tool PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
 
-target_link_libraries(reportgen_tool PRIVATE hebench_reportgen_lib)
-target_link_libraries(reportgen_tool PRIVATE hebench_reportgen)
-target_compile_options(reportgen_tool PRIVATE -Wall -Wextra)
+# add lib-common-lib.a dependency
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
 
-install(TARGETS reportgen_tool DESTINATION bin)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_reportgen_lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_reportgen)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
+
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)

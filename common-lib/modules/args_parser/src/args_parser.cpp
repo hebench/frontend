@@ -59,11 +59,6 @@ void ArgsParser::parse(int argc, char *const argv[], int start_index)
 {
     if (start_index < 0)
         start_index = 0;
-    if (argc < start_index)
-        throw std::invalid_argument("Not enough arguments.");
-    if (static_cast<std::size_t>(argc - start_index) < count_positional())
-        throw InvalidArgument("Insufficient positional parameters.");
-
     // get program name if available
     if (start_index > 0)
     {
@@ -74,6 +69,11 @@ void ArgsParser::parse(int argc, char *const argv[], int start_index)
         if (separator_index != std::string::npos)
             m_program_name = m_program_name.substr(separator_index + 1);
     }
+    if (argc < start_index)
+        throw std::invalid_argument("Not enough arguments.");
+    if (static_cast<std::size_t>(argc - start_index) < count_positional())
+        throw InvalidArgument("Insufficient positional parameters.");
+
     std::size_t positional_arg_i = 0;
     int i                        = start_index;
     while (i < argc)

@@ -22,7 +22,7 @@ class EventStats
 {
 public:
     EventStats() :
-        m_count(0), m_mean(0.0), m_m2(0.0),
+        m_count(0), m_total(0.0), m_mean(0.0), m_m2(0.0),
         m_min(std::numeric_limits<double>::infinity()),
         m_max(-std::numeric_limits<double>::infinity())
     {
@@ -31,6 +31,7 @@ public:
     void newEvent(double x)
     {
         ++m_count;
+        m_total += x;
         double d = x - m_mean;
         m_mean += d / m_count;
         double d2 = x - m_mean;
@@ -43,6 +44,14 @@ public:
             m_max = x;
     }
 
+    /**
+     * @brief Total of all events.
+     * @return Sum of all event values.
+     * @details Note that this value may overflow. To avoid unstable
+     * values as much as possible, mean and variance are computed using
+     * running mean and variance algorithms instead of this total.
+     */
+    double getTotal() const { return m_total; }
     std::size_t getCount() const { return m_count; }
     double getMin() const { return m_min; }
     double getMax() const { return m_max; }
@@ -57,6 +66,7 @@ public:
 
 private:
     std::size_t m_count;
+    double m_total;
     double m_mean;
     double m_m2;
     double m_min;

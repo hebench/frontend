@@ -39,11 +39,6 @@ namespace Utilities {
  * @endcode
  */
 std::string convertToDirectoryName(const std::string &s, bool to_lowercase = true);
-void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
-                 bool b_binary, bool b_append = false);
-void writeToFile(const std::string &filename,
-                 const char *p_data, std::size_t size,
-                 bool b_binary, bool b_append = false);
 
 /**
  * @brief Writes the collection of `NativeDataBuffer` as columns to the specified
@@ -95,10 +90,10 @@ public:
     static void setRandomSeed();
 };
 
-class TimingReportEx : public hebench::TestHarness::Report::cpp::TimingReport
+class TimingReportEx : public hebench::ReportGen::cpp::TimingReport
 {
 private:
-    using Base = hebench::TestHarness::Report::cpp::TimingReport;
+    using Base = hebench::ReportGen::cpp::TimingReport;
 
 public:
     TimingReportEx(const std::string &header = std::string()) :
@@ -114,7 +109,7 @@ public:
     //std::string generateSummaryCSV(TimingReportEventC &main_event_summary);
 
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>
-    static hebench::TestHarness::Report::TimingReportEventC convert2C(const hebench::Common::TimingReportEvent &timing_event);
+    static hebench::ReportGen::TimingReportEventC convert2C(const hebench::Common::TimingReportEvent &timing_event);
 
 private:
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>

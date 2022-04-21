@@ -64,16 +64,16 @@ inline void TimingReportEx::addEvent(hebench::Common::TimingReportEvent::Ptr p_e
 {
     if (event_type_name)
         this->addEventType(p_event->id, event_type_name);
-    hebench::TestHarness::Report::TimingReportEventC tre_c =
+    hebench::ReportGen::TimingReportEventC tre_c =
         convert2C<TimeInterval>(*p_event);
     this->addEvent(tre_c);
 }
 
 template <class TimeInterval>
-inline hebench::TestHarness::Report::TimingReportEventC
+inline hebench::ReportGen::TimingReportEventC
 TimingReportEx::convert2C(const hebench::Common::TimingReportEvent &timing_event)
 {
-    hebench::TestHarness::Report::TimingReportEventC retval;
+    hebench::ReportGen::TimingReportEventC retval;
     retval.time_interval_ratio_num = TimeInterval::num;
     retval.time_interval_ratio_den = TimeInterval::den;
     retval.event_type_id           = timing_event.id;

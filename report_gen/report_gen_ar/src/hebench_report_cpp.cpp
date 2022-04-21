@@ -2,6 +2,7 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <vector>
@@ -48,8 +49,7 @@ std::string prepareLogMessage(const std::string &message,
 }
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 namespace cpp {
 
 //---------------------------
@@ -58,12 +58,12 @@ namespace cpp {
 
 void TimingPrefixUtility::setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix)
 {
-    hebench::TestHarness::Report::setTimingPrefix(&prefix, seconds, ch_prefix);
+    hebench::ReportGen::setTimingPrefix(&prefix, seconds, ch_prefix);
 }
 
 void TimingPrefixUtility::computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds)
 {
-    hebench::TestHarness::Report::computeTimingPrefix(&prefix, seconds);
+    hebench::ReportGen::computeTimingPrefix(&prefix, seconds);
 }
 
 //--------------------
@@ -170,8 +170,8 @@ std::string TimingReport::getFooter() const
 void TimingReport::addEventType(uint32_t event_type_id, const std::string &event_type_header, bool is_main_event)
 {
     bool retval = (is_main_event ?
-                       hebench::TestHarness::Report::addMainEventType(m_lib_handle, event_type_id, event_type_header.c_str()) != 0 :
-                       hebench::TestHarness::Report::addEventType(m_lib_handle, event_type_id, event_type_header.c_str()) != 0);
+                       hebench::ReportGen::addMainEventType(m_lib_handle, event_type_id, event_type_header.c_str()) != 0 :
+                       hebench::ReportGen::addEventType(m_lib_handle, event_type_id, event_type_header.c_str()) != 0);
     if (!retval)
     {
         std::string err_msg = (is_main_event ?
@@ -183,7 +183,7 @@ void TimingReport::addEventType(uint32_t event_type_id, const std::string &event
 
 bool TimingReport::hasEventType(uint32_t event_type_id) const
 {
-    int32_t retval = hebench::TestHarness::Report::hasEventType(m_lib_handle, event_type_id);
+    int32_t retval = hebench::ReportGen::hasEventType(m_lib_handle, event_type_id);
 
     if (retval < 0)
         throw std::runtime_error(INTERNAL_LOG_MSG("Error querying for event type."));
@@ -194,109 +194,117 @@ bool TimingReport::hasEventType(uint32_t event_type_id) const
 std::string TimingReport::getEventTypeHeader(uint32_t event_type_id) const
 {
     std::vector<char> ch_retval;
-    std::uint64_t n = hebench::TestHarness::Report::getEventTypeHeader(m_lib_handle, event_type_id, nullptr, 0);
+    std::uint64_t n = hebench::ReportGen::getEventTypeHeader(m_lib_handle, event_type_id, nullptr, 0);
     if (n <= 0)
         throw std::runtime_error(INTERNAL_LOG_MSG("Unexpected error retrieving event type header."));
     ch_retval.resize(n);
-    if (hebench::TestHarness::Report::getEventTypeHeader(m_lib_handle, event_type_id, ch_retval.data(), ch_retval.size() <= 0))
+    if (hebench::ReportGen::getEventTypeHeader(m_lib_handle, event_type_id, ch_retval.data(), ch_retval.size()) <= 0)
         throw std::runtime_error(INTERNAL_LOG_MSG("Unexpected error retrieving event type header."));
     return ch_retval.data();
 }
 
 uint64_t TimingReport::getEventTypeCount() const
 {
-    return hebench::TestHarness::Report::getEventTypeCount(m_lib_handle);
+    return hebench::ReportGen::getEventTypeCount(m_lib_handle);
+}
+
+uint32_t TimingReport::getEventType(uint64_t index) const
+{
+    uint32_t retval = hebench::ReportGen::getEventType(m_lib_handle, index);
+    if (retval == std::numeric_limits<decltype(retval)>::max())
+        throw std::runtime_error(INTERNAL_LOG_MSG("Error retrieving event type ID for event type index " + std::to_string(index) + "."));
+    return retval;
 }
 
 uint32_t TimingReport::getMainEventType() const
 {
     uint32_t retval;
 
-    if (!hebench::TestHarness::Report::getMainEventType(m_lib_handle, &retval))
+    if (!hebench::ReportGen::getMainEventType(m_lib_handle, &retval))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error retrieving main event type."));
 
     return retval;
 }
 
-void TimingReport::addEvent(const hebench::TestHarness::Report::TimingReportEventC &p_event)
+void TimingReport::addEvent(const hebench::ReportGen::TimingReportEventC &p_event)
 {
-    if (!hebench::TestHarness::Report::addEvent(m_lib_handle, &p_event))
+    if (!hebench::ReportGen::addEvent(m_lib_handle, &p_event))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error adding new event to report."));
 }
 
-void TimingReport::getEvent(hebench::TestHarness::Report::TimingReportEventC &p_event, uint64_t index) const
+void TimingReport::getEvent(hebench::ReportGen::TimingReportEventC &p_event, uint64_t index) const
 {
-    if (!hebench::TestHarness::Report::getEvent(m_lib_handle, &p_event, index))
+    if (!hebench::ReportGen::getEvent(m_lib_handle, &p_event, index))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error retrieving event from report."));
 }
 
 uint64_t TimingReport::getEventCount() const
 {
-    return hebench::TestHarness::Report::getEventCount(m_lib_handle);
+    return hebench::ReportGen::getEventCount(m_lib_handle);
 }
 
 uint64_t TimingReport::getEventCapacity() const
 {
-    return hebench::TestHarness::Report::getEventCapacity(m_lib_handle);
+    return hebench::ReportGen::getEventCapacity(m_lib_handle);
 }
 
 void TimingReport::setEventCapacity(uint64_t new_capacity)
 {
-    if (!hebench::TestHarness::Report::setEventCapacity(m_lib_handle, new_capacity))
+    if (!hebench::ReportGen::setEventCapacity(m_lib_handle, new_capacity))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error setting new capacity for events."));
 }
 
 void TimingReport::clear()
 {
-    if (!hebench::TestHarness::Report::clearEvents(m_lib_handle))
+    if (!hebench::ReportGen::clearEvents(m_lib_handle))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error clearning up events."));
 }
 
 void TimingReport::save2CSV(const std::string &filename)
 {
-    if (!hebench::TestHarness::Report::save2CSV(m_lib_handle, filename.c_str()))
+    if (!hebench::ReportGen::save2CSV(m_lib_handle, filename.c_str()))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error saving report to CSV file."));
 }
 
 std::string TimingReport::convert2CSV()
 {
     char *p_tmp = nullptr;
-    if (!hebench::TestHarness::Report::convert2CSV(m_lib_handle, &p_tmp))
+    if (!hebench::ReportGen::convert2CSV(m_lib_handle, &p_tmp))
         throw std::runtime_error(INTERNAL_LOG_MSG("Error converting report to CSV format."));
     std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp,
                                                                  [](char *p) {
                                                                      if (p)
-                                                                         hebench::TestHarness::Report::freeCSVContent(p);
+                                                                         hebench::ReportGen::freeCSVContent(p);
                                                                  });
     std::string retval                   = sp_csv_content.get();
     return retval;
 }
 
-std::string TimingReport::generateSummaryCSV(hebench::TestHarness::Report::TimingReportEventSummaryC &main_event_summary,
-                                             TimingPrefixUtility::TimeUnit time_unit)
-{
-    char *p_tmp = nullptr;
-    if (!hebench::TestHarness::Report::generateSummaryCSV(m_lib_handle,
-                                                          TimingPrefixUtility::getPrefix(time_unit),
-                                                          &main_event_summary,
-                                                          &p_tmp)
-        || !p_tmp)
-        throw std::runtime_error(INTERNAL_LOG_MSG("Error generating report summary."));
-    std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp, // make RAII to avoid memory leak if exceptions
-                                                                 [](char *p) {
-                                                                     if (p)
-                                                                         hebench::TestHarness::Report::freeCSVContent(p);
-                                                                 });
-    std::string retval                   = sp_csv_content.get();
-    return retval;
-}
+//std::string TimingReport::generateSummaryCSV(hebench::ReportGen::TimingReportEventSummaryC &main_event_summary,
+//                                             TimingPrefixUtility::TimeUnit time_unit)
+//{
+//    char *p_tmp = nullptr;
+//    if (!hebench::ReportGen::generateSummaryCSV(m_lib_handle,
+//                                                          TimingPrefixUtility::getPrefix(time_unit),
+//                                                          &main_event_summary,
+//                                                          &p_tmp)
+//        || !p_tmp)
+//        throw std::runtime_error(INTERNAL_LOG_MSG("Error generating report summary."));
+//    std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp, // make RAII to avoid memory leak if exceptions
+//                                                                 [](char *p) {
+//                                                                     if (p)
+//                                                                         hebench::ReportGen::freeCSVContent(p);
+//                                                                 });
+//    std::string retval                   = sp_csv_content.get();
+//    return retval;
+//}
 
 TimingReport TimingReport::loadReportFromCSV(const std::string &s_csv_content)
 {
     TimingReport retval;
 
     char error_description[MAX_DESCRIPTION_BUFFER_SIZE];
-    retval.m_lib_handle = hebench::TestHarness::Report::loadReportFromCSV(s_csv_content.c_str(), error_description);
+    retval.m_lib_handle = hebench::ReportGen::loadReportFromCSV(s_csv_content.c_str(), error_description);
     if (!retval.m_lib_handle)
         throw std::runtime_error(INTERNAL_LOG_MSG(error_description));
 
@@ -308,7 +316,7 @@ TimingReport TimingReport::loadReportFromCSVFile(const std::string &filename)
     TimingReport retval;
 
     char error_description[MAX_DESCRIPTION_BUFFER_SIZE];
-    retval.m_lib_handle = hebench::TestHarness::Report::loadReportFromCSVFile(filename.c_str(), error_description);
+    retval.m_lib_handle = hebench::ReportGen::loadReportFromCSVFile(filename.c_str(), error_description);
     if (!retval.m_lib_handle)
         throw std::runtime_error(INTERNAL_LOG_MSG(error_description));
 
@@ -316,6 +324,5 @@ TimingReport TimingReport::loadReportFromCSVFile(const std::string &filename)
 }
 
 } // namespace cpp
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench

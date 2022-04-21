@@ -157,8 +157,8 @@ public:
     /**
      * @brief Specifies the time unit for the summary report for this benchmark.
      * @details The time unit is one of `0`, `'s'`, `'m'`, `'u'`, `'n'`, corresponding
-     * to the time units defined in hebench::TestHarness::Report::cpp::TimingPrefixUtility .
-     * @sa hebench::TestHarness::Report::cpp::TimingPrefixUtility
+     * to the time units defined in hebench::ReportGen::cpp::TimingPrefixUtility .
+     * @sa hebench::ReportGen::cpp::TimingPrefixUtility
      */
     char time_unit;
 };

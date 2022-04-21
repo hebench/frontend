@@ -9,11 +9,23 @@
 #include <ostream>
 #include <random>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace hebench {
 namespace Utilities {
 
-constexpr int MaxDecimalDigits = 12;
+constexpr int MaxDecimalDigits  = 12;
+constexpr const char *BlankTrim = " \t\n\r\f\v";
+
+void ltrim(std::string &s, const char *s_trim = BlankTrim);
+void ltrim(std::string_view &s, const char *s_trim = BlankTrim);
+void rtrim(std::string &s, const char *s_trim = BlankTrim);
+void rtrim(std::string_view &s, const char *s_trim = BlankTrim);
+void trim(std::string &s, const char *s_trim = BlankTrim);
+void trim(std::string_view &s, const char *s_trim = BlankTrim);
+
+std::vector<std::string_view> tokenize(std::string_view s, const std::string_view &delim = " ");
 
 /**
  * @brief Converts a C++ string object into a C-string.
@@ -58,6 +70,12 @@ std::string convertDoubleToStr(double x, int up_to_digits_after_dot = MaxDecimal
  * e.g. 1.234e+02 with a width less than 7 is always 1.2e+02.
  */
 std::string convertDoubleToStrScientific(double x, std::size_t max_width);
+
+void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
+                 bool b_binary, bool b_append = false);
+void writeToFile(const std::string &filename,
+                 const char *p_data, std::size_t size,
+                 bool b_binary, bool b_append = false);
 
 } // namespace Utilities
 } // namespace hebench

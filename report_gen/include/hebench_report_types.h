@@ -8,8 +8,7 @@
 #include <stdint.h>
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
 extern "C"
 {
@@ -58,27 +57,6 @@ extern "C"
     };
     typedef struct _TimingReportEventC TimingReportEventC;
 
-    struct _TimingReportEventSummaryC
-    {
-        /**
-         * @brief ID specifying the event type.
-         * @details During summary report, events with the same ID are
-         * grouped together for statistical computations. Users must make sure
-         * that related events are tagged with the correct ID.
-         */
-        uint32_t event_id;
-        double cpu_time_ave;
-        double cpu_time_variance;
-        double wall_time_ave;
-        double wall_time_variance;
-        uint64_t iterations;
-        /**
-         * @brief Event name.
-         */
-        char name[MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE];
-    };
-    typedef struct _TimingReportEventSummaryC TimingReportEventSummaryC;
-
     struct _UnitPrefix
     {
         /**
@@ -104,8 +82,7 @@ extern "C"
     typedef struct _UnitPrefix TimingPrefixedSeconds;
 }
 
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_Report_Types_H_0596d40a3cce4b108a81595c50eb286d

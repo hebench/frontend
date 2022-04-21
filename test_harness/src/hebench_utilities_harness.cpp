@@ -49,37 +49,6 @@ std::string convertToDirectoryName(const std::string &s, bool to_lowercase)
     return ss_retval.str();
 }
 
-void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
-                 bool b_binary, bool b_append)
-{
-    std::fstream output_fnum;
-
-    auto open_flags = (b_append ? std::fstream::app | std::fstream::ate : std::fstream::trunc);
-    if (b_binary)
-        open_flags |= std::fstream::binary;
-    output_fnum.open(filename, std::fstream::out | open_flags);
-    if (!output_fnum.is_open())
-        throw std::ios_base::failure("Failed to open file \"" + filename + "\" for writing.");
-    if (!output_fnum)
-        throw std::ios_base::failure("Error after opening file \"" + filename + "\" for writing.");
-
-    fn(output_fnum);
-
-    output_fnum.close();
-}
-
-void writeToFile(const std::string &filename,
-                 const char *p_data, std::size_t size,
-                 bool b_binary, bool b_append)
-{
-    writeToFile(
-        filename,
-        [p_data, size](std::ostream &os) -> void {
-            os.write(p_data, size);
-        },
-        b_binary, b_append);
-}
-
 void printArraysAsColumns(std::ostream &os,
                           const hebench::APIBridge::NativeDataBuffer **p_buffers, std::size_t count,
                           hebench::APIBridge::DataType data_type,
