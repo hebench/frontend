@@ -398,6 +398,9 @@ int main(int argc, char **argv)
                 } // end for
             } // end else
 
+            if (!config.b_silent)
+                std::cout << std::endl;
+
             ss_overview << std::endl;
         } // end for
 

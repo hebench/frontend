@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <sstream>
+#include <unordered_set>
 
 #include "hebench_report_stats.h"
 #include "modules/general/include/hebench_math_utils.h"
@@ -15,6 +16,41 @@
 
 namespace hebench {
 namespace ReportGen {
+
+void computeStats(StatisticsResult &result, const double *data, std::size_t count)
+{
+    std::vector<double> sorted_data(data, data + count);
+    std::sort(sorted_data.begin(), sorted_data.end());
+    std::size_t trim_start = sorted_data.size() / 10;
+    //std::size_t trim_count = sorted_data.size() - 2 * trim_start;
+
+    hebench::Utilities::Math::EventStats basic_stats;
+    for (std::size_t i = 0; i < count; ++i)
+        basic_stats.newEvent(data[i]);
+    hebench::Utilities::Math::EventStats trimmed_stats;
+    for (std::size_t i = trim_start; i < sorted_data.size() - trim_start; ++i)
+        trimmed_stats.newEvent(sorted_data[i]);
+
+    std::memset(&result, 0, sizeof(StatisticsResult));
+    result.total    = basic_stats.getTotal();
+    result.ave      = basic_stats.getMean();
+    result.variance = basic_stats.getVariance();
+    result.min      = basic_stats.getMin();
+    result.max      = basic_stats.getMax();
+
+#pragma message("Compute correct percentiles.")
+    result.median = sorted_data[sorted_data.size() / 2];
+    result.pct_1  = 0; // 1-th percentile
+    result.pct_10 = 0; // 10-th percentile
+    result.pct_90 = 0; // 90-th percentile
+    result.pct_99 = 0; // 99-th percentile
+
+    result.ave_trim                 = trimmed_stats.getMean(); // trimmed by 10% on each side
+    result.variance_trim            = trimmed_stats.getVariance();
+    result.iterations_per_unit      = basic_stats.getCount() / basic_stats.getTotal(); // = total / iterations
+    result.iterations_per_unit_trim = trimmed_stats.getCount() / trimmed_stats.getTotal(); // = total_trim / iterations_trim
+    result.iterations               = basic_stats.getCount();
+}
 
 /**
  * @brief Extracts and maintains the timing report events of the same type.
@@ -31,6 +67,8 @@ public:
      * @param[in] event_id ID of type of event to extract.
      */
     EventType(const cpp::TimingReport &report, std::uint32_t event_id);
+    EventType(const std::vector<double> &cpu_events, const std::vector<double> &wall_events,
+              std::uint32_t event_id, const std::string_view &event_name);
 
     /**
      * @brief ID of the event type.
@@ -121,10 +159,58 @@ EventType::EventType(const cpp::TimingReport &report, std::uint32_t event_id)
         std::rethrow_exception(p_ex);
 }
 
+EventType::EventType(const std::vector<double> &cpu_events, const std::vector<double> &wall_events,
+                     std::uint32_t event_id, const std::string_view &event_name)
+{
+    if (cpu_events.size() != wall_events.size())
+        throw std::invalid_argument("Number of CPU events and Wall events cannot differ.");
+
+    m_id          = event_id;
+    m_name        = std::string(event_name.begin(), event_name.end());
+    m_cpu_events  = cpu_events;
+    m_wall_events = wall_events;
+}
+
 void EventType::computeStats(ReportEventTypeStats &result) const
 {
-    (void)result;
-    throw std::runtime_error("Not implemented.");
+    //(void)result;
+    //throw std::runtime_error("Not implemented.");
+
+    StatisticsResult stats;
+
+    hebench::ReportGen::computeStats(stats, this->getCPUEvents().data(), this->getCPUEvents().size());
+    result.cpu_time_ave           = stats.ave;
+    result.cpu_time_variance      = stats.variance;
+    result.cpu_time_min           = stats.min;
+    result.cpu_time_max           = stats.max;
+    result.cpu_time_median        = stats.median;
+    result.cpu_time_1             = stats.pct_1;
+    result.cpu_time_10            = stats.pct_10;
+    result.cpu_time_90            = stats.pct_90;
+    result.cpu_time_99            = stats.pct_99;
+    result.cpu_time_ave_trim      = stats.ave_trim;
+    result.cpu_time_variance_trim = stats.variance_trim;
+
+    hebench::ReportGen::computeStats(stats, this->getWallEvents().data(), this->getWallEvents().size());
+    result.wall_time_ave           = stats.ave;
+    result.wall_time_variance      = stats.variance;
+    result.wall_time_min           = stats.min;
+    result.wall_time_max           = stats.max;
+    result.wall_time_median        = stats.median;
+    result.wall_time_1             = stats.pct_1;
+    result.wall_time_10            = stats.pct_10;
+    result.wall_time_90            = stats.pct_90;
+    result.wall_time_99            = stats.pct_99;
+    result.wall_time_ave_trim      = stats.ave_trim;
+    result.wall_time_variance_trim = stats.variance_trim;
+    result.ops_per_sec             = stats.iterations_per_unit;
+    result.ops_per_sec_trim        = stats.iterations_per_unit_trim;
+    result.total_time              = stats.total;
+    result.iterations              = stats.iterations;
+
+    result.event_id    = this->getID();
+    result.name        = this->getName();
+    result.description = std::string();
 }
 
 ////------------------------------
@@ -232,6 +318,25 @@ void EventType::computeStats(ReportEventTypeStats &result) const
 //    } // end for
 //}
 
+//ReportStats::ReportStats(const cpp::TimingReport &report)
+//{
+//    if (report.getEventCount() <= 0)
+//        throw std::invalid_argument("Report belongs to a failed benchmark.");
+
+//    m_header             = report.getHeader();
+//    m_footer             = report.getFooter();
+//    m_main_event_type_id = report.getMainEventType();
+//    m_event_stats.reserve(report.getEventTypeCount());
+//    for (std::uint64_t event_type_i = 0; event_type_i < report.getEventTypeCount(); ++event_type_i)
+//    {
+//        EventType event_type(report, report.getEventType(event_type_i));
+//        m_event_types_2_stat_idx[event_type.getID()]  = m_event_stats.size(); // record the event type ID and match it to the index of the stats
+//        std::shared_ptr<ReportEventTypeStats> p_stats = std::make_shared<ReportEventTypeStats>();
+//        event_type.computeStats(*p_stats);
+//        m_event_stats.push_back(p_stats);
+//    } // end for
+//}
+
 ReportStats::ReportStats(const cpp::TimingReport &report)
 {
     if (report.getEventCount() <= 0)
@@ -241,10 +346,48 @@ ReportStats::ReportStats(const cpp::TimingReport &report)
     m_footer             = report.getFooter();
     m_main_event_type_id = report.getMainEventType();
     m_event_stats.reserve(report.getEventTypeCount());
-    for (std::uint64_t event_type_i = 0; event_type_i < report.getEventTypeCount(); ++event_type_i)
+
+    std::vector<std::uint32_t> event_ids; // used to keep track of all event ids
+    event_ids.reserve(report.getEventTypeCount());
+
+    // map event ID to the event timings
+    std::unordered_map<std::uint32_t, std::vector<double>> cpu_events;
+    std::unordered_map<std::uint32_t, std::vector<double>> wall_events;
+
+    // retrieve the timings and group by event (use a single pass over the report)
+    bool b_added;
+    for (std::uint64_t event_i = 0; event_i < report.getEventCount(); ++event_i)
     {
-        EventType event_type(report, report.getEventType(event_type_i));
-        m_event_types_2_stat_idx[event_type.getID()]  = m_event_stats.size(); // record the event type ID and match it to the index of the stats
+        hebench::ReportGen::TimingReportEventC event;
+        report.getEvent(event, event_i);
+        double cpu_time  = cpp::TimingReport::computeElapsedCPUTime(event) / event.iterations;
+        double wall_time = cpp::TimingReport::computeElapsedWallTime(event) / event.iterations;
+        b_added          = false;
+        if (cpu_events.count(event.event_type_id) <= 0)
+        {
+            cpu_events[event.event_type_id] = std::vector<double>();
+            b_added                         = true;
+        } // end if
+        if (wall_events.count(event.event_type_id) <= 0)
+        {
+            wall_events[event.event_type_id] = std::vector<double>();
+            b_added                          = true;
+        } // end if
+        if (b_added)
+            event_ids.push_back(event.event_type_id);
+        cpu_events[event.event_type_id].push_back(cpu_time);
+        wall_events[event.event_type_id].push_back(wall_time);
+    } // end for
+
+    // sort by event ID
+    std::sort(event_ids.begin(), event_ids.end());
+
+    // compute the stats for each event timing
+    for (std::size_t event_id_i = 0; event_id_i < event_ids.size(); ++event_id_i)
+    {
+        std::uint32_t event_id = event_ids[event_id_i];
+        EventType event_type(cpu_events[event_id], wall_events[event_id], event_id, report.getEventTypeHeader(event_id));
+        m_event_types_2_stat_idx[event_type.getID()]  = event_id_i; // record the event type ID and match it to the index of the stats
         std::shared_ptr<ReportEventTypeStats> p_stats = std::make_shared<ReportEventTypeStats>();
         event_type.computeStats(*p_stats);
         m_event_stats.push_back(p_stats);

@@ -280,25 +280,6 @@ std::string TimingReport::convert2CSV()
     return retval;
 }
 
-//std::string TimingReport::generateSummaryCSV(hebench::ReportGen::TimingReportEventSummaryC &main_event_summary,
-//                                             TimingPrefixUtility::TimeUnit time_unit)
-//{
-//    char *p_tmp = nullptr;
-//    if (!hebench::ReportGen::generateSummaryCSV(m_lib_handle,
-//                                                          TimingPrefixUtility::getPrefix(time_unit),
-//                                                          &main_event_summary,
-//                                                          &p_tmp)
-//        || !p_tmp)
-//        throw std::runtime_error(INTERNAL_LOG_MSG("Error generating report summary."));
-//    std::shared_ptr<char> sp_csv_content = std::shared_ptr<char>(p_tmp, // make RAII to avoid memory leak if exceptions
-//                                                                 [](char *p) {
-//                                                                     if (p)
-//                                                                         hebench::ReportGen::freeCSVContent(p);
-//                                                                 });
-//    std::string retval                   = sp_csv_content.get();
-//    return retval;
-//}
-
 TimingReport TimingReport::loadReportFromCSV(const std::string &s_csv_content)
 {
     TimingReport retval;
