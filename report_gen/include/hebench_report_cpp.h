@@ -205,16 +205,6 @@ public:
     void save2CSV(const std::string &filename);
     std::string convert2CSV();
 
-    /**
-     * @brief Generates the summary CSV for this report.
-     * @param[out] main_event_summary Structure to contain information about the main event
-     * for the report. All timings are in seconds.
-     * @param[in] time_unit Time unit used throughout the report.
-     * @return The summary text that can be directly stored in a CSV file.
-     */
-    //    std::string generateSummaryCSV(TimingReportEventSummaryC &main_event_summary,
-    //                                   TimingPrefixUtility::TimeUnit time_unit = TimingPrefixUtility::TimeUnit::Default);
-
     static TimingReport loadReportFromCSV(const std::string &s_csv_content);
     static TimingReport loadReportFromCSVFile(const std::string &filename);
 

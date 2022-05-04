@@ -154,6 +154,16 @@ typename std::enable_if<std::is_integral<T>::value
 almostEqual(const T *a, const T *b,
             std::uint64_t count, double pct = 0.05);
 
+/**
+ * @brief Computes the percentile value on given pre-sorted data, and a normalized percentile (0 to 1 inclussive).
+ * @param[in] data Points to presorted data.
+ * @param[in] count Number of data points pointed to by \p data .
+ * @param[in] percentile Normalized percentile (0 to 1 inclussive).
+ * @return The percentile value on the specified dataset corresponding to the given percentile.
+ * @details This function uses the same formula for percentile calculation as R.
+ */
+double computePercentile(const double *data, std::size_t count, double percentile);
+
 // inline template implementations
 
 template <typename T>

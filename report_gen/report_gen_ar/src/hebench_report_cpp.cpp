@@ -85,7 +85,6 @@ TimingReport::TimingReport(TimingReport &&src)
 {
     m_lib_handle     = src.m_lib_handle;
     src.m_lib_handle = nullptr;
-    src              = TimingReport();
 }
 
 TimingReport &TimingReport::operator=(TimingReport &&src)
@@ -96,7 +95,6 @@ TimingReport &TimingReport::operator=(TimingReport &&src)
             freeReport(m_lib_handle);
         m_lib_handle     = src.m_lib_handle;
         src.m_lib_handle = nullptr;
-        src              = TimingReport();
     } // end if
     return *this;
 }

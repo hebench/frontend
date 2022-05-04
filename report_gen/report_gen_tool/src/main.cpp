@@ -176,7 +176,8 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument(ProgramConfig::SilentRun, "--silent", 0, "",
                        "    [OPTIONAL] When present, this flag to indicates that the run must be\n"
                        "    silent. Only specifically requested outputs will be displayed to\n"
-                       "    standard output.");
+                       "    standard output. When running silent, important messages, warnings and\n"
+                       "    errors will be sent to standard error stream `stderr`.");
     parser.parse(argc, argv);
 }
 
@@ -192,17 +193,25 @@ std::vector<std::filesystem::path> extractInputFiles(const std::string &filename
     if (!fnum.is_open())
         throw std::ios_base::failure("Could not open file \"" + filename + "\"");
 
+    std::filesystem::path root_path = std::filesystem::canonical(filename).parent_path();
+
     bool b_done = false;
     std::string s_line;
     std::size_t line_num = 0;
     while (!b_done && std::getline(fnum, s_line))
     {
         ++line_num;
+        hebench::Utilities::trim(s_line);
         if (!s_line.empty())
         {
-            if (std::filesystem::is_regular_file(s_line))
+            std::filesystem::path next_filename = s_line;
+            if (next_filename.is_relative())
+                // relative paths are relative to input file
+                next_filename = root_path / next_filename;
+
+            if (std::filesystem::is_regular_file(next_filename))
             {
-                retval.emplace_back(s_line);
+                retval.emplace_back(next_filename.string());
             } // end if
             else // line is not a file
             {
@@ -211,7 +220,7 @@ std::vector<std::filesystem::path> extractInputFiles(const std::string &filename
                     // other lines were already added as files, so,
                     // error out because this line points to non-existing file
                     std::stringstream ss;
-                    ss << filename << ":" << line_num << ": file specified in line not found.";
+                    ss << filename << ":" << line_num << ": file specified in line not found: " << next_filename;
                     throw std::invalid_argument(ss.str());
                 } // end if
 
@@ -234,16 +243,20 @@ int main(int argc, char **argv)
 
     int retval = 0;
 
+    std::stringstream ss_err;
     ProgramConfig config;
     hebench::ArgsParser args_parser;
 
     try
     {
-        std::cout << "HEBench Report Compiler" << std::endl
-                  << std::endl;
-
         initArgsParser(args_parser, argc, argv);
         config.initializeConfig(args_parser);
+
+        if (!config.b_silent)
+        {
+            std::cout << "HEBench Report Compiler" << std::endl
+                      << std::endl;
+        } // end if
 
         if (!config.b_silent)
         {
@@ -275,8 +288,8 @@ int main(int argc, char **argv)
                       << std::endl;
         } // end if
 
-        ss_overview_header << ",,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
-                           << "Workload,Filename,Category,Data type,Cipher text,Scheme,Security,"
+        ss_overview_header << ",,,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
+                           << "Workload,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
                            << "ID,Event,Total Wall Time,Ops per sec,Ops per sec trimmed,"
                            // wall
                            << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,"
@@ -293,109 +306,128 @@ int main(int argc, char **argv)
                           << "=====================" << std::endl
                           << std::endl;
 
-                std::cout << "Report file: " << csv_filenames[csv_file_i] << std::endl;
+                std::cout << "Report file:" << std::endl
+                          << "  ";
             } // end if
+            std::cerr << csv_filenames[csv_file_i] << std::endl;
 
             if (!config.b_silent)
             {
                 std::cout << "Loading report..." << std::endl;
             } // end if
 
-            TimingReport report =
-                TimingReport::loadReportFromCSVFile(csv_filenames[csv_file_i]);
+            std::shared_ptr<TimingReport> p_report;
 
-            if (!config.b_silent)
+            try
             {
-                std::cout << "Parsing report header..." << std::endl;
-            } // end if
+                p_report = std::make_shared<TimingReport>(TimingReport::loadReportFromCSVFile(csv_filenames[csv_file_i]));
+            }
+            catch (...)
+            {
+            }
 
-            hebench::ReportGen::OverviewHeader overview_header;
-            overview_header.parseHeader(csv_filenames[csv_file_i], report.getHeader());
-            // make sure we keep track of the workload parameters
-            if (overview_header.w_params.size() > max_w_params)
+            if (p_report)
             {
-                for (std::size_t i = max_w_params; i < overview_header.w_params.size(); ++i)
-                    ss_overview_header << ",wp" << i;
-                max_w_params = overview_header.w_params.size();
-            } // end if
-            overview_header.outputHeader(ss_overview, false);
-            ss_overview << ",";
+                TimingReport &report = *p_report;
 
-            if (report.getEventCount() <= 0)
-            {
-                if (!config.b_silent)
+                if (report.getEventCount() <= 0)
                 {
-                    std::cout << std::endl
-                              << "The loaded report belongs to a failed benchmark." << std::endl;
+                    std::cerr << "WARNING: The loaded report belongs to a failed benchmark." << std::endl;
+                    ss_overview << "Failed," << csv_filenames[csv_file_i] << ",Validation";
                 } // end if
+                else
+                {
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Parsing report header..." << std::endl;
+                    } // end if
 
-                ss_overview << "Failed";
+                    hebench::ReportGen::OverviewHeader overview_header;
+                    overview_header.parseHeader(csv_filenames[csv_file_i], report.getHeader());
+                    // make sure we keep track of the workload parameters
+                    if (overview_header.w_params.size() > max_w_params)
+                    {
+                        for (std::size_t i = max_w_params; i < overview_header.w_params.size(); ++i)
+                            ss_overview_header << ",wp" << i;
+                        max_w_params = overview_header.w_params.size();
+                    } // end if
+                    overview_header.outputHeader(ss_overview, false);
+                    ss_overview << ",";
+
+                    char tmp_time_unit;
+                    std::filesystem::path stem_filename = csv_filenames[csv_file_i];
+                    std::filesystem::path summary_filename;
+                    std::filesystem::path stats_filename;
+
+                    // remove "report" from input file name
+                    std::string s_tmp = stem_filename.stem();
+                    if (s_tmp.length() >= ReportSuffix.length() && s_tmp.substr(s_tmp.length() - ReportSuffix.length()) == ReportSuffix)
+                        stem_filename.replace_filename(s_tmp.substr(0, s_tmp.length() - ReportSuffix.length()));
+                    summary_filename = stem_filename;
+                    summary_filename += "summary.csv";
+                    stats_filename = stem_filename;
+                    stats_filename += "stats.csv";
+
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Computing statistics..." << std::endl;
+                    } // end if
+
+                    hebench::ReportGen::ReportStats report_stats(report);
+
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Writing summary to:" << std::endl
+                                  << "  " << summary_filename << std::endl;
+                    } // end if
+
+                    tmp_time_unit = config.time_unit_summary;
+                    hebench::Utilities::writeToFile(
+                        summary_filename,
+                        [&report_stats, tmp_time_unit](std::ostream &os) -> void {
+                            report_stats.generateSummaryCSV(os, tmp_time_unit);
+                        },
+                        false);
+
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Writing statistics to:" << std::endl
+                                  << "  " << stats_filename << std::endl;
+                    } // end if
+
+                    tmp_time_unit = config.time_unit_stats;
+                    hebench::Utilities::writeToFile(
+                        stats_filename,
+                        [&report_stats, tmp_time_unit](std::ostream &os) -> void {
+                            report_stats.generateCSV(os, tmp_time_unit);
+                        },
+                        false);
+
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Adding to report overview..." << std::endl;
+                    } // end if
+
+                    report_stats.generateCSV(ss_overview, report_stats.getMainEventTypeStats(), config.time_unit_overview, false);
+                    // add the workload parameters if any was found
+                    if (overview_header.w_params.empty())
+                    {
+                        // on file name
+                        std::cerr << "WARNING: No workload parameters found while parsing." << std::endl;
+                    } // end if
+                    for (std::size_t i = 0; i < overview_header.w_params.size(); ++i)
+                    {
+                        if (overview_header.w_params[i].find_first_of(',') == std::string::npos)
+                            ss_overview << "," << overview_header.w_params[i];
+                        else
+                            ss_overview << ",\"" << overview_header.w_params[i] << "\"";
+                    } // end for
+                } // end else
             } // end if
             else
             {
-                char tmp_time_unit;
-                std::filesystem::path stem_filename = csv_filenames[csv_file_i];
-                std::filesystem::path summary_filename;
-                std::filesystem::path stats_filename;
-
-                // remove "report" from input file name
-                std::string s_tmp = stem_filename.stem();
-                if (s_tmp.length() >= ReportSuffix.length() && s_tmp.substr(s_tmp.length() - ReportSuffix.length()) == ReportSuffix)
-                    stem_filename.replace_filename(s_tmp.substr(0, s_tmp.length() - ReportSuffix.length()));
-                summary_filename = stem_filename;
-                summary_filename += "summary.csv";
-                stats_filename = stem_filename;
-                stats_filename += "stats.csv";
-
-                if (!config.b_silent)
-                {
-                    std::cout << "Computing statistics..." << std::endl;
-                } // end if
-
-                hebench::ReportGen::ReportStats report_stats(report);
-
-                if (!config.b_silent)
-                {
-                    std::cout << "Writing summary to:" << std::endl
-                              << "  " << summary_filename << std::endl;
-                } // end if
-
-                tmp_time_unit = config.time_unit_summary;
-                hebench::Utilities::writeToFile(
-                    summary_filename,
-                    [&report_stats, tmp_time_unit](std::ostream &os) -> void {
-                        report_stats.generateSummaryCSV(os, tmp_time_unit);
-                    },
-                    false);
-
-                if (!config.b_silent)
-                {
-                    std::cout << "Writing statistics to:" << std::endl
-                              << "  " << stats_filename << std::endl;
-                } // end if
-
-                tmp_time_unit = config.time_unit_stats;
-                hebench::Utilities::writeToFile(
-                    stats_filename,
-                    [&report_stats, tmp_time_unit](std::ostream &os) -> void {
-                        report_stats.generateCSV(os, tmp_time_unit);
-                    },
-                    false);
-
-                if (!config.b_silent)
-                {
-                    std::cout << "Adding to report overview..." << std::endl;
-                } // end if
-
-                report_stats.generateCSV(ss_overview, report_stats.getMainEventTypeStats(), config.time_unit_overview, false);
-                // add the workload parameters
-                for (std::size_t i = 0; i < overview_header.w_params.size(); ++i)
-                {
-                    if (overview_header.w_params[i].find_first_of(',') == std::string::npos)
-                        ss_overview << ",\"" << overview_header.w_params[i] << "\"";
-                    else
-                        ss_overview << "," << overview_header.w_params[i];
-                } // end for
+                std::cerr << "WARNING: Failed to load report from file." << std::endl;
+                ss_overview << "Failed," << csv_filenames[csv_file_i] << ",Load";
             } // end else
 
             if (!config.b_silent)
@@ -419,6 +451,14 @@ int main(int argc, char **argv)
                       << "=====================" << std::endl
                       << std::endl;
         } // end if
+
+        if (config.b_show_overview)
+        {
+            if (!config.b_silent)
+                std::cout << "Overview:" << std::endl;
+            std::cout << std::endl
+                      << s_overview << std::endl;
+        } // end if
     }
     catch (hebench::ArgsParser::HelpShown &)
     {
@@ -426,28 +466,31 @@ int main(int argc, char **argv)
     }
     catch (hebench::ArgsParser::InvalidArgument &ap_ex)
     {
-        std::cout << "Error occurred with message: " << std::endl
-                  << ap_ex.what() << std::endl
-                  << std::endl;
-        args_parser.printUsage();
+        ss_err << "Error occurred with message: " << std::endl
+               << ap_ex.what() << std::endl
+               << std::endl;
+        args_parser.printUsage(ss_err);
         retval = -1;
     }
     catch (std::exception &ex)
     {
-        std::cout << "Error occurred with message: " << std::endl
-                  << ex.what() << std::endl;
+        ss_err << "ERROR: " << std::endl
+               << ex.what() << std::endl;
         retval = -1;
     }
     catch (...)
     {
-        std::cout << "Unexpected error occurred!" << std::endl;
+        ss_err << "Unexpected error occurred!" << std::endl;
         retval = -1;
     }
 
     if (retval)
-        std::cout << std::endl
+    {
+        std::cerr << ss_err.str() << std::endl
+                  << std::endl
                   << "Terminated with errors." << std::endl;
-    else
+    } // end if
+    else if (!config.b_silent)
         std::cout << std::endl
                   << "Complete!" << std::endl;
 

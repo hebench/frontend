@@ -2,6 +2,7 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <bitset>
 #include <sstream>
 #include <utility>
 
@@ -63,6 +64,33 @@ std::vector<std::string_view> OverviewHeader::extractInfoFromCSVLine(std::string
     return retval;
 }
 
+std::string OverviewHeader::extractCiphertextBitset(std::vector<std::string_view> s_indices)
+{
+    std::bitset<sizeof(std::uint32_t) << 3> cipher_bits;
+    if (hebench::Utilities::ToLowerCase(s_indices.front()) == "none")
+        cipher_bits.reset();
+    else if (hebench::Utilities::ToLowerCase(s_indices.front()) == "all")
+        cipher_bits.set();
+    else
+    {
+        for (std::size_t i = 0; i < s_indices.size(); ++i)
+        {
+            std::stringstream ss = std::stringstream(std::string(s_indices[i]));
+            std::size_t position;
+            ss >> position;
+            if (!ss)
+                throw std::runtime_error("Invalid value for encrypted parameters index. Expected an integer between 0 and " + std::to_string(sizeof(std::uint32_t) - 1) + ", inclussive, but read \"" + std::string(s_indices[i]) + "\".");
+            cipher_bits.set(position);
+        } // end for
+    } // end else
+
+    std::string retval = cipher_bits.to_string();
+    hebench::Utilities::ltrim(retval, "0");
+    if (retval.empty())
+        retval = "0";
+    return retval;
+}
+
 void OverviewHeader::parseHeader(const std::string &filename, const std::string &s_header)
 {
     static const std::string s_trim = std::string(",") + hebench::Utilities::BlankTrim;
@@ -92,6 +120,12 @@ void OverviewHeader::parseHeader(const std::string &filename, const std::string 
             if (values.size() > 0)
                 this->data_type.assign(values.front().begin(), values.front().end());
         } // end if
+        if (this->cipher_text.empty())
+        {
+            values = extractInfoFromCSVLine(s_line, "Encrypted op parameters (index),", sizeof(std::uint32_t));
+            if (values.size() > 0)
+                this->cipher_text = extractCiphertextBitset(values);
+        } // end if
         if (this->scheme.empty())
         {
             values = extractInfoFromCSVLine(s_line, "Scheme,", 1);
@@ -100,9 +134,19 @@ void OverviewHeader::parseHeader(const std::string &filename, const std::string 
         } // end if
         if (this->security.empty())
         {
-            values = extractInfoFromCSVLine(s_line, "Scheme,", 1);
+            values = extractInfoFromCSVLine(s_line, "Security,", 1);
             if (values.size() > 0)
                 this->security.assign(values.front().begin(), values.front().end());
+        } // end if
+
+        values = extractInfoFromCSVLine(s_line, "Extra,", 1);
+        if (values.size() > 0)
+        {
+            std::string s_tmp(values.front());
+            std::stringstream ss_value(s_tmp);
+            ss_value >> this->other;
+            if (!ss_value)
+                throw std::runtime_error("Invalid value for \"Extra\" tag. Expected an integer, but read \"" + s_tmp + "\".");
         } // end if
     } // end while
 
@@ -129,10 +173,8 @@ void OverviewHeader::outputHeader(std::ostream &os, bool new_line)
          os << this->workload_name :
          os << "\"" << this->workload_name << "\"");
     os << ",";
-    (this->report_file.find_first_of(',') == std::string::npos ?
-         os << this->report_file :
-         os << "\"" << this->report_file << "\"");
-    os << ",";
+    os << "\"" << this->report_file << "\""
+       << ",";
     (this->category.find_first_of(',') == std::string::npos ?
          os << this->category :
          os << "\"" << this->category << "\"");
@@ -152,6 +194,7 @@ void OverviewHeader::outputHeader(std::ostream &os, bool new_line)
     (this->security.find_first_of(',') == std::string::npos ?
          os << this->security :
          os << "\"" << this->security << "\"");
+    os << "," << this->other;
     if (new_line)
         os << std::endl;
 }

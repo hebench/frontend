@@ -47,6 +47,18 @@ void trim(std::string_view &s, const char *s_trim)
     rtrim(s, s_trim);
 }
 
+void ToLowerCaseInPlace(std::string &s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+}
+
+void ToUpperCaseInPlace(std::string &s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
+}
+
 std::vector<std::string_view> tokenize(std::string_view s, const std::string_view &delim)
 {
     std::vector<std::string_view> retval;

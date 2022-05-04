@@ -188,18 +188,22 @@ ArgsParser::args_unique_id ArgsParser::findArgID(const std::string &arg) const
 
 void ArgsParser::printUsage() const
 {
+    printUsage(std::cout);
+}
 
-    std::cout << "Usage:" << std::endl
-              << "    ";
-    m_program_name.empty() ? std::cout << "program" : std::cout << m_program_name;
+void ArgsParser::printUsage(std::ostream &os) const
+{
+    os << "Usage:" << std::endl
+       << "    ";
+    m_program_name.empty() ? os << "program" : os << m_program_name;
     if (count_positional() > 0)
     {
         for (std::size_t i = 0; i < count_positional(); ++i)
-            std::cout << " " << m_positional_args[i].first;
+            os << " " << m_positional_args[i].first;
     } // end if
     if (!m_map_help.empty())
-        std::cout << " OPTIONS";
-    std::cout << std::endl;
+        os << " OPTIONS";
+    os << std::endl;
 }
 
 bool ArgsParser::checkShowHelp(args_unique_id id)
@@ -218,26 +222,31 @@ bool ArgsParser::checkShowHelp(args_unique_id id)
 
 void ArgsParser::showHelp() const
 {
+    showHelp(std::cout);
+}
+
+void ArgsParser::showHelp(std::ostream &os) const
+{
     // build and display the help text
     if (!m_help_text.empty())
-        std::cout << m_help_text << std::endl
-                  << std::endl;
-    printUsage();
+        os << m_help_text << std::endl
+           << std::endl;
+    printUsage(os);
     if (count_positional() > 0)
     {
-        std::cout << std::endl
-                  << "POSITIONAL ARGUMENTS: " << count_positional() << std::endl;
+        os << std::endl
+           << "POSITIONAL ARGUMENTS: " << count_positional() << std::endl;
         for (std::size_t i = 0; i < count_positional(); ++i)
         {
-            std::cout << m_positional_args[i].first << std::endl
-                      << m_positional_args[i].second << std::endl
-                      << std::endl;
+            os << m_positional_args[i].first << std::endl
+               << m_positional_args[i].second << std::endl
+               << std::endl;
         } // end for
     } // end if
     if (!m_map_help.empty())
     {
-        std::cout << std::endl
-                  << "OPTIONS:" << std::endl;
+        os << std::endl
+           << "OPTIONS:" << std::endl;
         for (auto help_data : m_map_help)
         {
             const std::vector<std::string> &arr_help_data = help_data.second;
@@ -256,19 +265,19 @@ void ArgsParser::showHelp() const
                     else
                     {
                         if (help_idx < 0 && i > 0)
-                            std::cout << ", ";
+                            os << ", ";
                         else if (help_idx == 0)
-                            std::cout << " ";
-                        std::cout << arr_help_data[i];
+                            os << " ";
+                        os << arr_help_data[i];
                         if (help_idx == 0)
                         {
-                            std::cout << std::endl;
+                            os << std::endl;
                             help_idx = 1;
                         } // end if
                     } // end else
                 } // end for
-                std::cout << std::endl
-                          << std::endl;
+                os << std::endl
+                   << std::endl;
             } // end if
         } // end for
     } // end if

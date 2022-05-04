@@ -25,6 +25,21 @@ void rtrim(std::string_view &s, const char *s_trim = BlankTrim);
 void trim(std::string &s, const char *s_trim = BlankTrim);
 void trim(std::string_view &s, const char *s_trim = BlankTrim);
 
+void ToLowerCaseInPlace(std::string &s);
+inline std::string ToLowerCase(const std::string_view &s)
+{
+    std::string retval(s);
+    ToLowerCaseInPlace(retval);
+    return retval;
+}
+void ToUpperCaseInPlace(std::string &s);
+inline std::string ToUpperCase(const std::string_view &s)
+{
+    std::string retval(s);
+    ToUpperCaseInPlace(retval);
+    return retval;
+}
+
 std::vector<std::string_view> tokenize(std::string_view s, const std::string_view &delim = " ");
 
 /**
