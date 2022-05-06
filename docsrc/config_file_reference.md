@@ -15,13 +15,11 @@ A configuration file is a YAML file with the following syntax:
 ```yaml
 default_min_test_time: <fallback_min_test_time_ms>
 default_sample_size: <fallback_sample_size>
-report_time_unit: <time_unit_scale>
 random_seed: <seed>
 
 benchmark:
   - ID: <benchmark_id>
     dataset: <file_name>
-    report_time_unit: <time_unit_scale>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -45,7 +43,6 @@ benchmark:
       ...
   - ID: <benchmark_id>
     dataset: <file_name>
-    report_time_unit: <time_unit_scale>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
       0: <sample_size>
@@ -142,21 +139,13 @@ The configuration file can have settings for certain default behaviors. These ar
     
     When this setting is missing or set to `0` in the configuration file, this indicates that the sample sizes pre-defined in the workload specification are to be used for parameters supporting flexible sample sizes. See @ref tests_overview for the specifications of all supported workloads.
 
-- `report_time_unit` - type: `string`. Specifies the report time unit scale that will be used to output benchmark timings. This global configuration value will be used if one is not specified in a benchmark description. If this is missing or value is `null`, time units default behavior is to use the variable scale that best matches the benchmark results such that the value is in the range between `1` and `1000` units when possible. The values supported for <time_unit_scale> are:
-
-  - `null`: default time scale
-  - `s`: seconds
-  - `ms`: milliseconds
-  - `us`: microseconds
-  - `ns`: nanoseconds
-
 - `random_seed` - type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
 
 ### Benchmark Description Section
 
 Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and its description.
 
-A benchmark description is composed by `ID`, `dataset`, `report_time_unit`, `default_min_test_time`, `default_sample_sizes` and `params`.
+A benchmark description is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
 
 A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Frontend during initialization.
 
@@ -166,7 +155,7 @@ The `dataset` field is optional and `<file_name>` is a string specifying a file 
 
 For formats supported by the Test Harness dataset loader see @ref dataset_loader_overview .
 
-If `report_time_unit`, `default_min_test_time`, or `default_sample_sizes` are specified, their values override those from the global configuration as per **Configuration Scope** above.
+If `default_min_test_time`, or `default_sample_sizes` are specified, their values override those from the global configuration as per **Configuration Scope** above.
 
 #### Workload parameters
 
@@ -225,7 +214,6 @@ For example, if a backend exported configuration looks like below:
 ```yaml
 default_min_test_time: 0
 default_sample_size: 0
-report_time_unit: ~
 random_seed: 0
 
 benchmark:
@@ -236,7 +224,6 @@ benchmark:
 #   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
   - ID: 3
     dataset: ~
-    report_time_unit: ~
     default_min_test_time: 0
     default_sample_size:
       0: 0
