@@ -21,6 +21,7 @@
 #include "modules/logging/include/logging.h"
 
 #include "dynamic_lib_load.h"
+#include "hebench_report_compiler.h"
 
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
@@ -108,8 +109,7 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     }
 
     parser.getValue<decltype(b_show_run_overview)>(b_show_run_overview, "--run_overview", true);
-#pragma message("Default value for \"--compile_reports\" should be `true`.")
-    parser.getValue<decltype(b_compile_reports)>(b_compile_reports, "--compile_reports", false);
+    parser.getValue<decltype(b_compile_reports)>(b_compile_reports, "--compile_reports", true);
 
     b_single_path_report = parser.hasArgument("--single_path_report");
 }
@@ -137,6 +137,7 @@ void ProgramConfig::showConfig(std::ostream &os) const
            << "    Validate results: " << (b_validate_results ? "Yes" : "No") << std::endl
            << "    Report delay (ms): " << report_delay_ms << std::endl
            << "    Report Root Path: " << report_root_path << std::endl
+           << "    Compile reports: " << (b_compile_reports ? "Yes" : "No") << std::endl
            << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl;
     } // end if
     os << "    Run configuration file: ";
@@ -635,11 +636,25 @@ int main(int argc, char **argv)
             if (config.b_compile_reports)
             {
                 std::cout << std::endl
-                          << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing report compiler...") << std::endl
-                          << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Compiling reports...") << std::endl
-                          << std::endl;
+                          << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing report compiler...") << std::endl;
 
-                throw std::runtime_error("Report compiler integration not implemented yet.");
+                hebench::ReportGen::Compiler::ReportCompilerConfigC compiler_config;
+                std::vector<char> c_error_msg(1024, 0);
+                std::string compile_filename       = benchmark_list_filename.string();
+                compiler_config.input_file         = compile_filename.c_str();
+                compiler_config.b_show_overview    = 0; // do not show the overview result file here
+                compiler_config.b_silent           = 0;
+                compiler_config.time_unit          = 0;
+                compiler_config.time_unit_stats    = 0;
+                compiler_config.time_unit_overview = 0;
+                compiler_config.time_unit_summary  = 0;
+
+                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Compiling reports using default compiler options...") << std::endl
+                          << std::endl;
+                if (!hebench::ReportGen::Compiler::compile(&compiler_config, c_error_msg.data(), c_error_msg.size()))
+                    throw std::runtime_error(c_error_msg.data());
+                std::cout << IOS_MSG_DONE << hebench::Logging::GlobalLogger::log("Reports Compiled.") << std::endl
+                          << std::endl;
             } // end if
 
             // display overview of the run results
@@ -650,12 +665,9 @@ int main(int argc, char **argv)
                           << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating overview...") << std::endl
                           << std::endl;
                 generateOverview(std::cout, report_paths, config.report_root_path, config.b_single_path_report);
-            } // end if
 
-            // display any failed benchmarks
+                // display any failed benchmarks
 
-            if (config.b_show_run_overview)
-            {
                 ss = std::stringstream();
                 ss << "Failed benchmarks: " << failed_benchmarks.size() << std::endl
                    << std::endl;

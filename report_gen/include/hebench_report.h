@@ -148,28 +148,6 @@ extern "C"
      */
     int32_t convert2CSV(void *p_report, char **pp_csv_content);
     /**
-     * @brief generateSummaryCSV
-     * @param p_report
-     * @param[in] ch_prefix Prefix of time unit to use for the report.
-     * @param[out] p_main_event_summary TimingReportEventSummaryC struct where to store the
-     * summary of the main event.
-     * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
-     * @returns `true` on success.
-     * @details
-     * Values for \p ch_prefix are:
-     *
-     * @code
-     * 0 - default
-     * 's' - seconds
-     * 'm' - milliseconds
-     * 'u' - microseconds
-     * 'n' - nanoseconds
-     * @endcode
-     *
-     * Using any other value results in failure.
-     */
-    //int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
-    /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.
      * @param[in] p_csv_content Pointer to the string buffer allocated by
