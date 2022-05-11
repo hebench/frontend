@@ -1,7 +1,5 @@
-/*
-* Copyright (C) 2022 Intel Corporation
-* SPDX-License-Identifier: Apache-2.0
-*/
+// Copyright (C) 2021 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 #ifndef __HEBENCH_DATASET_LOADER_FUNCTIONAL_TEST__H__
 #define __HEBENCH_DATASET_LOADER_FUNCTIONAL_TEST__H__
