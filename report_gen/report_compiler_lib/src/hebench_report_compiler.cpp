@@ -181,11 +181,11 @@ extern "C"
 
             ss_overview_header << ",,,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
                                << "Workload,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
-                               << "ID,Event,Total Wall Time,Ops per sec,Ops per sec trimmed,"
+                               << "ID,Event,Total Wall Time,Samples per sec,Samples per sec trimmed,"
                                // wall
                                << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,"
                                // cpu
-                               << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,Iterations";
+                               << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,Input Samples";
 
             for (std::size_t csv_file_i = 0; csv_file_i < csv_filenames.size(); ++csv_file_i)
             {

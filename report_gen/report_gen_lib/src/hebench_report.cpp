@@ -550,43 +550,6 @@ extern "C"
         return retval;
     }
 
-    //    int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content)
-    //    {
-    //        int32_t retval      = 0;
-    //        char *p_csv_content = nullptr;
-    //        try
-    //        {
-    //            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
-    //            if (!p || !p_main_event_summary || !pp_csv_content)
-    //                throw std::invalid_argument("");
-
-    //            std::stringstream ss;
-    //            std::string s_csv_content;
-
-    //            ReportStats report_summary(*p);
-    //            report_summary.generateCSV(ss, ch_prefix);
-    //            *p_main_event_summary = report_summary.getMainEventStats();
-    //            s_csv_content         = ss.str();
-    //            ss                    = std::stringstream();
-
-    //            p_csv_content = new char[s_csv_content.length() + 1];
-    //            if (!p_csv_content)
-    //                throw std::bad_alloc();
-    //            std::strcpy(p_csv_content, s_csv_content.c_str());
-    //            *pp_csv_content = p_csv_content;
-
-    //            retval = 1;
-    //        }
-    //        catch (...)
-    //        {
-    //            if (p_csv_content)
-    //                delete[] p_csv_content;
-    //            retval = 0;
-    //        }
-
-    //        return retval;
-    //    }
-
     void freeCSVContent(char *p_csv_content)
     {
         if (p_csv_content)

@@ -81,7 +81,7 @@ TimingReportEx::convert2C(const hebench::Common::TimingReportEvent &timing_event
     retval.cpu_time_end            = timing_event.timeEndCPU<TimeInterval>();
     retval.wall_time_start         = timing_event.timeStartWall<TimeInterval>();
     retval.wall_time_end           = timing_event.timeEndWall<TimeInterval>();
-    retval.iterations              = timing_event.iterations();
+    retval.input_sample_count      = timing_event.iterations();
     copyString(retval.description, MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE, timing_event.description);
 
     return retval;

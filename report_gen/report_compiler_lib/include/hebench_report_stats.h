@@ -33,9 +33,9 @@ struct StatisticsResult
     double pct_99; // 99-th percentile
     double ave_trim; // trimmed by 10% on each side
     double variance_trim;
-    double iterations_per_unit; // = total / iterations
-    double iterations_per_unit_trim; // = total_trim / iterations_trim
-    uint64_t iterations;
+    double samples_per_unit; // = total / input_sample_count
+    double samples_per_unit_trim; // = total_trim / input_sample_count_trim
+    uint64_t input_sample_count;
 };
 
 struct ReportEventTypeStats
@@ -77,7 +77,7 @@ struct ReportEventTypeStats
      * @details This is, if the operation were a latency operation,
      * it was executed once for each input sample.
      */
-    uint64_t iterations;
+    uint64_t input_sample_count;
     /**
      * @brief Event name.
      */

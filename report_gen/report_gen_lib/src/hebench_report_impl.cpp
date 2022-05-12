@@ -116,7 +116,7 @@ std::ostream &TimingReportImpl::convert2CSV(std::ostream &os) const
         os << TagReportData << std::endl // start of the report table
            << ",idx,ID,Event,Description,Time ratio num,Time ratio den,"
            << "Wall time start,Wall time end,Elapsed wall time,"
-           << "CPU time start,CPU time end,Elapsed CPU time,Iterations"
+           << "CPU time start,CPU time end,Elapsed CPU time,Input Samples"
            << std::endl;
         if (!os)
             throw std::ios_base::failure("Error writing table header to stream.");
@@ -133,7 +133,7 @@ std::ostream &TimingReportImpl::convert2CSV(std::ostream &os) const
                << hebench::Utilities::convertDoubleToStr(timing_event.wall_time_end - timing_event.wall_time_start) << ","
                << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_start) << "," << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end) << ","
                << hebench::Utilities::convertDoubleToStr(timing_event.cpu_time_end - timing_event.cpu_time_start) << ","
-               << timing_event.iterations;
+               << timing_event.input_sample_count;
 
             os << std::endl;
 
@@ -252,12 +252,12 @@ void TimingReportImpl::parseTimingEvent(std::string &s_out_event_header,
         std::string event_description;
         double cpu_start_time, cpu_end_time, wall_start_time, wall_end_time;
         int64_t time_interval_num, time_interval_den;
-        std::uint64_t iterations;
+        std::uint64_t input_sample_count;
 
         s_line_view = std::string_view(s_line.c_str());
 
         // parse order:
-        // ,idx,ID,Event,Description,Time ratio num, Time ratio den,Wall time start,Wall time end,Elapsed wall time,CPU time start,CPU time end,Elapsed CPU time,Iterations"
+        // ,idx,ID,Event,Description,Time ratio num, Time ratio den,Wall time start,Wall time end,Elapsed wall time,CPU time start,CPU time end,Elapsed CPU time,Input Samples"
 
         // skip any empty columns at the start
         std::string_view sv_tmp;
@@ -393,16 +393,16 @@ void TimingReportImpl::parseTimingEvent(std::string &s_out_event_header,
             ++value_length;
         s_line_view.remove_prefix(value_start + value_length);
 
-        // Iterations
+        // Number of input samples
         s_value = to_string(findNextValueCSV(value_start, value_length, s_line_view.data()));
         if (value_start + value_length < s_line_view.length())
             ++value_length;
         s_line_view.remove_prefix(value_start + value_length);
         ss = std::stringstream(s_value);
-        if (s_value.empty() || !(ss >> iterations))
+        if (s_value.empty() || !(ss >> input_sample_count))
         {
             ss = std::stringstream();
-            ss << "Invalid timing event format. Expected type uint64_t for Iterations, but read value \"" << s_value << "\".";
+            ss << "Invalid timing event format. Expected type uint64_t for number of Input Samples, but read value \"" << s_value << "\".";
             throw std::runtime_error(ss.str());
         } // end if
 
@@ -413,7 +413,7 @@ void TimingReportImpl::parseTimingEvent(std::string &s_out_event_header,
         retval->cpu_time_end            = cpu_end_time;
         retval->wall_time_start         = wall_start_time;
         retval->wall_time_end           = wall_end_time;
-        retval->iterations              = iterations;
+        retval->input_sample_count      = input_sample_count;
         retval->time_interval_ratio_num = time_interval_num;
         retval->time_interval_ratio_den = time_interval_den;
 
@@ -635,46 +635,6 @@ void TimingReportImpl::computeTimingPrefix(TimingPrefixedSeconds &prefix, double
         break;
     } // end switch
 }
-
-////------------------------------
-//// class ReportMainEventSummary
-////------------------------------
-
-//ReportMainEventSummary::ReportMainEventSummary(const TimingReportImpl &report)
-//{
-//    hebench::Utilities::Math::EventStats stats_wall;
-//    hebench::Utilities::Math::EventStats stats_cpu;
-
-//    // compute the stats on the main event
-//    for (const std::shared_ptr<TimingReportEventC> &p_event : report.getEvents())
-//    {
-//        if (p_event->event_type_id == report.getMainEventID())
-//        {
-//            double wall_time = TimingReportImpl::computeElapsedWallTime(*p_event) / p_event->iterations;
-//            double cpu_time  = TimingReportImpl::computeElapsedCPUTime(*p_event) / p_event->iterations;
-//            for (std::uint64_t i = 0; i < p_event->iterations; ++i)
-//            {
-//                stats_wall.newEvent(wall_time);
-//                stats_cpu.newEvent(cpu_time);
-//            } // end for
-//        } // end if
-//    } // end for
-
-//    m_event_summary.event_id = report.getMainEventID();
-//    m_event_summary.iterations = stats_wall.getCount();
-//    m_event_summary.total_time = stats_wall.getTotal();
-//    m_event_summary.wall_time_ave = stats_wall.getMean();
-//    m_event_summary.wall_time_max = stats_wall.getMax();
-//    m_event_summary.wall_time_min = stats_wall.getMin();
-//    m_event_summary.wall_time_variance = stats_wall.getVariance();
-//    m_event_summary.cpu_time_ave = stats_cpu.getMean();
-//    m_event_summary.cpu_time_max = stats_cpu.getMax();
-//    m_event_summary.cpu_time_min = stats_cpu.getMin();
-//    m_event_summary.cpu_time_variance = stats_cpu.getVariance();
-//    hebench::Utilities::copyString(m_event_summary.name,
-//                                   MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE,
-//                                   report.getEventTypes().at(m_event_summary.event_id));
-//}
 
 } // namespace ReportGen
 } // namespace hebench

@@ -145,7 +145,7 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "      \"ms\" - milliseconds\n"
                        "      \"us\" - microseconds\n"
                        "      \"ns\" - nanoseconds\n"
-                       "    If missing, an appropriapriate unit will be automatically selected per\n"
+                       "    If missing, an appropriate unit will be automatically selected per\n"
                        "    benchmark.");
     parser.addArgument(ProgramConfig::TimeUnitOverview, "-tuo", 1, "<time_unit_name>",
                        "    [OPTIONAL] Specifies the time unit to be used for the generated overview.\n"
@@ -166,7 +166,7 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "    [OPTIONAL] Specifies whether or not to display report overview to\n"
                        "    standard output. If option is missing, default is \"true\".");
     parser.addArgument(ProgramConfig::SilentRun, "--silent", 0, "",
-                       "    [OPTIONAL] When present, this flag to indicates that the run must be\n"
+                       "    [OPTIONAL] When present, this flag indicates that the run must be\n"
                        "    silent. Only specifically requested outputs will be displayed to\n"
                        "    standard output. When running silent, important messages, warnings and\n"
                        "    errors will be sent to standard error stream `stderr`.");

@@ -44,11 +44,11 @@ void computeStats(StatisticsResult &result, const double *data, std::size_t coun
     result.pct_90 = hebench::Utilities::Math::computePercentile(sorted_data.data(), sorted_data.size(), 0.9); // 90-th percentile
     result.pct_99 = hebench::Utilities::Math::computePercentile(sorted_data.data(), sorted_data.size(), 0.95); // 99-th percentile
 
-    result.ave_trim                 = trimmed_stats.getMean(); // trimmed by 10% on each side
-    result.variance_trim            = trimmed_stats.getVariance();
-    result.iterations_per_unit      = basic_stats.getCount() / basic_stats.getTotal(); // = total / iterations
-    result.iterations_per_unit_trim = trimmed_stats.getCount() / trimmed_stats.getTotal(); // = total_trim / iterations_trim
-    result.iterations               = basic_stats.getCount();
+    result.ave_trim              = trimmed_stats.getMean(); // trimmed by 10% on each side
+    result.variance_trim         = trimmed_stats.getVariance();
+    result.samples_per_unit      = basic_stats.getCount() / basic_stats.getTotal(); // = total / iterations
+    result.samples_per_unit_trim = trimmed_stats.getCount() / trimmed_stats.getTotal(); // = total_trim / iterations_trim
+    result.input_sample_count    = basic_stats.getCount();
 }
 
 /**
@@ -131,14 +131,14 @@ EventType::EventType(const cpp::TimingReport &report, std::uint32_t event_id)
                 report.getEvent(event, event_i);
                 if (!p_ex && event.event_type_id == event_id)
                 {
-                    double wall_time = cpp::TimingReport::computeElapsedWallTime(event) / event.iterations;
-                    double cpu_time  = cpp::TimingReport::computeElapsedCPUTime(event) / event.iterations;
+                    double wall_time = cpp::TimingReport::computeElapsedWallTime(event) / event.input_sample_count;
+                    double cpu_time  = cpp::TimingReport::computeElapsedCPUTime(event) / event.input_sample_count;
                     //#pragma omp critical
                     {
                         try
                         {
-                            m_wall_events.insert(m_wall_events.end(), event.iterations, wall_time);
-                            m_cpu_events.insert(m_cpu_events.end(), event.iterations, cpu_time);
+                            m_wall_events.insert(m_wall_events.end(), event.input_sample_count, wall_time);
+                            m_cpu_events.insert(m_cpu_events.end(), event.input_sample_count, cpu_time);
                         }
                         catch (...)
                         {
@@ -199,55 +199,15 @@ void EventType::computeStats(ReportEventTypeStats &result) const
     result.wall_time_99            = stats.pct_99;
     result.wall_time_ave_trim      = stats.ave_trim;
     result.wall_time_variance_trim = stats.variance_trim;
-    result.ops_per_sec             = stats.iterations_per_unit;
-    result.ops_per_sec_trim        = stats.iterations_per_unit_trim;
+    result.ops_per_sec             = stats.samples_per_unit;
+    result.ops_per_sec_trim        = stats.samples_per_unit_trim;
     result.total_time              = stats.total;
-    result.iterations              = stats.iterations;
+    result.input_sample_count      = stats.input_sample_count;
 
     result.event_id    = this->getID();
     result.name        = this->getName();
     result.description = std::string();
 }
-
-////------------------------------
-//// class ReportMainEventSummary
-////------------------------------
-
-//ReportMainEventSummary::ReportMainEventSummary(const TimingReport &report)
-//{
-//    hebench::Utilities::Math::EventStats stats_wall;
-//    hebench::Utilities::Math::EventStats stats_cpu;
-
-//    // compute the stats on the main event
-//    for (const std::shared_ptr<TimingReportEventC> &p_event : report.getEvents())
-//    {
-//        if (p_event->event_type_id == report.getMainEventID())
-//        {
-//            double wall_time = TimingReport::computeElapsedWallTime(*p_event) / p_event->iterations;
-//            double cpu_time  = TimingReport::computeElapsedCPUTime(*p_event) / p_event->iterations;
-//            for (std::uint64_t i = 0; i < p_event->iterations; ++i)
-//            {
-//                stats_wall.newEvent(wall_time);
-//                stats_cpu.newEvent(cpu_time);
-//            } // end for
-//        } // end if
-//    } // end for
-
-//    m_event_summary.event_id = report.getMainEventID();
-//    m_event_summary.iterations = stats_wall.getCount();
-//    m_event_summary.total_time = stats_wall.getTotal();
-//    m_event_summary.wall_time_ave = stats_wall.getMean();
-//    m_event_summary.wall_time_max = stats_wall.getMax();
-//    m_event_summary.wall_time_min = stats_wall.getMin();
-//    m_event_summary.wall_time_variance = stats_wall.getVariance();
-//    m_event_summary.cpu_time_ave = stats_cpu.getMean();
-//    m_event_summary.cpu_time_max = stats_cpu.getMax();
-//    m_event_summary.cpu_time_min = stats_cpu.getMin();
-//    m_event_summary.cpu_time_variance = stats_cpu.getVariance();
-//    hebench::Utilities::copyString(m_event_summary.name,
-//                                   MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE,
-//                                   report.getEventTypes().at(m_event_summary.event_id));
-//}
 
 ReportStats::ReportStats(const cpp::TimingReport &report)
 {
@@ -272,8 +232,8 @@ ReportStats::ReportStats(const cpp::TimingReport &report)
     {
         hebench::ReportGen::TimingReportEventC event;
         report.getEvent(event, event_i);
-        double cpu_time  = cpp::TimingReport::computeElapsedCPUTime(event) / event.iterations;
-        double wall_time = cpp::TimingReport::computeElapsedWallTime(event) / event.iterations;
+        double cpu_time  = cpp::TimingReport::computeElapsedCPUTime(event) / event.input_sample_count;
+        double wall_time = cpp::TimingReport::computeElapsedWallTime(event) / event.input_sample_count;
         b_added          = false;
         if (cpu_events.count(event.event_type_id) <= 0)
         {
@@ -347,11 +307,11 @@ void ReportStats::generateCSV(std::ostream &os, char ch_prefix)
        << "Main event," << this->getMainEventTypeStats().event_id << "," << this->getMainEventTypeStats().name << std::endl
        << std::endl
        << ",,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
-       << "ID,Event,Total Wall Time,Ops per sec,Ops per sec trimmed,"
+       << "ID,Event,Total Wall Time,Samples per sec,Samples per sec trimmed,"
        // wall
        << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,"
        // cpu
-       << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,Iterations" << std::endl;
+       << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,Input Samples" << std::endl;
     if (!os)
         throw std::ios_base::failure("Error writing statistics report header to stream.");
     for (std::uint64_t event_stats_i = 0; event_stats_i < m_event_stats.size(); ++event_stats_i)
@@ -397,7 +357,7 @@ void ReportStats::generateCSV(std::ostream &os, const ReportEventTypeStats &stat
        << hebench::Utilities::convertDoubleToStr(stats.cpu_time_10 * prefix_cpu.time_interval_ratio_den) << ","
        << hebench::Utilities::convertDoubleToStr(stats.cpu_time_90 * prefix_cpu.time_interval_ratio_den) << ","
        << hebench::Utilities::convertDoubleToStr(stats.cpu_time_99 * prefix_cpu.time_interval_ratio_den) << ","
-       << stats.iterations;
+       << stats.input_sample_count;
     if (new_line)
         os << std::endl;
 
@@ -418,9 +378,9 @@ void ReportStats::generateSummaryCSV(std::ostream &os, char ch_prefix)
        << "Main event," << this->getMainEventTypeStats().event_id << "," << this->getMainEventTypeStats().name << std::endl
        << std::endl
        << ",,,Wall Time,,,,CPU Time" << std::endl
-       << "ID,Event,Ops per sec,"
+       << "ID,Event,Samples per sec,"
        << "Average,Standard Deviation,Time Unit,Time Factor,"
-       << "Average,Standard Deviation,Time Unit,Time Factor,Iterations" << std::endl;
+       << "Average,Standard Deviation,Time Unit,Time Factor,Input Samples" << std::endl;
     if (!os)
         throw std::ios_base::failure("Error writing summary report header to stream.");
     for (std::uint64_t event_stats_i = 0; event_stats_i < m_event_stats.size(); ++event_stats_i)
@@ -445,7 +405,7 @@ void ReportStats::generateSummaryCSV(std::ostream &os, const ReportEventTypeStat
        << hebench::Utilities::convertDoubleToStr(stats.cpu_time_ave * prefix_cpu.time_interval_ratio_den) << ","
        << hebench::Utilities::convertDoubleToStr(std::sqrt(stats.cpu_time_variance) * prefix_cpu.time_interval_ratio_den) << ","
        << prefix_cpu.symbol << "s," << hebench::Utilities::convertDoubleToStr(1.0 / prefix_cpu.time_interval_ratio_den) << ","
-       << stats.iterations;
+       << stats.input_sample_count;
     if (new_line)
         os << std::endl;
 

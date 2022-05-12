@@ -1,6 +1,8 @@
 Adding Latency Category Using Pre-existing Implementation                {#extend_test_harness_l}
 ========================
 
+[TOC]
+
 Class `hebench::TestHarness::BenchmarkLatency` offers a default implementation for **Latency** category. If a Latency category with default workflow needs to be added to a workload, clients should inherit from this class.
 
 ## Default Latency Workflow

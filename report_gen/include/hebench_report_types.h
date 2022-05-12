@@ -48,7 +48,7 @@ extern "C"
          * @sa time_interval_ratio_num
          */
         int64_t time_interval_ratio_den;
-        uint64_t iterations;
+        uint64_t input_sample_count;
         /**
          * @brief Description attached to this event.
          * @details Set to empty string if no description.

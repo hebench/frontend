@@ -1,6 +1,8 @@
 Adding Offline Category Using Pre-existing Implementation                {#extend_test_harness_o}
 ========================
 
+[TOC]
+
 Class `hebench::TestHarness::BenchmarkOffline` offers a default implementation for **Offline** category. If a Offline category with default workflow needs to be added to a workload, clients should inherit from this class.
 
 ## Default Offline Workflow

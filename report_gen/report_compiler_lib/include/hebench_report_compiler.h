@@ -73,7 +73,6 @@ extern "C"
     int32_t compile(const ReportCompilerConfigC *p_config, char *s_error, size_t s_error_size);
 
     } // namespace Compiler
-
     } // namespace ReportGen
     } // namespace hebench
 }

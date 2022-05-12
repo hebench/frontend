@@ -1,6 +1,8 @@
 Quickstart C++ Wrapper Backend Tutorial - Benchmark Implementation {#be_tutorial_impl_seal}
 ========================
 
+[TOC]
+
 The previous steps were all about getting the new backend project, engine, and benchmark description setup to run. Now we need to actually implement our benchmark logic by implementing each of the 7 virtual functions defined in `hebench::cpp::BaseBenchmark` which map to the `hebench::APIBridge` backend interface. For this example, we will go over each function and provide an overview of what that function needs to do and the tutorial implemention using SEAL.
 
 We already have our original workflow that executes the element-wise addition operation, and we want to benchmark, as shown during the introduction. To write our test into HEBench, we must understand the detailed workload description. All supported workloads can be found at @ref tests_overview . In particular, @ref elementwise_add contains the detailed information for our workload, including number, format, and layout of the parameters; a detailed description of the benchmarks algorithm and how each of the previously described parameters are used; and the expected format and data layout of the benchmark input and results.
