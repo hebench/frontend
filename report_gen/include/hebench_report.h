@@ -10,8 +10,7 @@
 #include "hebench_report_types.h"
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
 extern "C"
 {
@@ -93,6 +92,15 @@ extern "C"
     uint64_t getEventTypeHeader(void *p_report, uint32_t event_type_id, char *event_type_header, uint64_t size);
     uint64_t getEventTypeCount(void *p_report);
     /**
+     * @brief Retrieve an event type ID.
+     * @param p_report
+     * @param[in] index Index of the event type to retrieve.
+     * Must be less than getEventTypeCount() .
+     * @return ID of the event type corresponding to the specified index, or
+     * maximum uint32_t value on error.
+     */
+    uint32_t getEventType(void *p_report, uint64_t index);
+    /**
      * @brief getMainEventType
      * @param p_report
      * @param p_event_type_id
@@ -139,28 +147,6 @@ extern "C"
      * @returns `true` on success.
      */
     int32_t convert2CSV(void *p_report, char **pp_csv_content);
-    /**
-     * @brief generateSummaryCSV
-     * @param p_report
-     * @param[in] ch_prefix Prefix of time unit to use for the report.
-     * @param[out] p_main_event_summary TimingReportEventSummaryC struct where to store the
-     * summary of the main event.
-     * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
-     * @returns `true` on success.
-     * @details
-     * Values for \p ch_prefix are:
-     *
-     * @code
-     * 0 - default
-     * 's' - seconds
-     * 'm' - milliseconds
-     * 'u' - microseconds
-     * 'n' - nanoseconds
-     * @endcode
-     *
-     * Using any other value results in failure.
-     */
-    int32_t generateSummaryCSV(void *p_report, char ch_prefix, TimingReportEventSummaryC *p_main_event_summary, char **pp_csv_content);
     /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.
@@ -221,8 +207,7 @@ extern "C"
     int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds);
 }
 
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_Report_H_0596d40a3cce4b108a81595c50eb286d

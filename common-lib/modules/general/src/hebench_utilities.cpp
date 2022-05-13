@@ -13,6 +13,70 @@
 namespace hebench {
 namespace Utilities {
 
+void ltrim(std::string &s, const char *s_trim)
+{
+    s.erase(0, s.find_first_not_of(s_trim));
+}
+
+void ltrim(std::string_view &s, const char *s_trim)
+{
+    auto pos = s.find_first_not_of(s_trim);
+    s.remove_prefix((pos > s.size() ? s.size() : pos));
+}
+
+void rtrim(std::string &s, const char *s_trim)
+{
+    s.erase(s.find_last_not_of(s_trim) + 1);
+}
+
+void rtrim(std::string_view &s, const char *s_trim)
+{
+    auto pos = s.find_last_not_of(s_trim);
+    s.remove_suffix(s.size() - (pos > s.size() ? 0 : pos + 1));
+}
+
+void trim(std::string &s, const char *s_trim)
+{
+    s.erase(0, s.find_first_not_of(s_trim));
+    s.erase(s.find_last_not_of(s_trim) + 1);
+}
+
+void trim(std::string_view &s, const char *s_trim)
+{
+    ltrim(s, s_trim);
+    rtrim(s, s_trim);
+}
+
+void ToLowerCaseInPlace(std::string &s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+}
+
+void ToUpperCaseInPlace(std::string &s)
+{
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c) { return std::toupper(c); });
+}
+
+std::vector<std::string_view> tokenize(std::string_view s, const std::string_view &delim)
+{
+    std::vector<std::string_view> retval;
+
+    while (!s.empty())
+    {
+        auto pos = s.find(delim);
+        if (pos == std::string_view::npos)
+            pos = s.size();
+        retval.emplace_back(s.substr(0, pos));
+        s.remove_prefix(pos);
+        if (!s.empty())
+            s.remove_prefix(delim.size());
+    }
+
+    return retval;
+}
+
 std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src)
 {
     std::uint64_t retval = src.size() + 1;
@@ -98,6 +162,37 @@ std::string convertDoubleToStrScientific(double x, std::size_t max_width)
     } // end else
 
     return retval;
+}
+
+void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
+                 bool b_binary, bool b_append)
+{
+    std::fstream output_fnum;
+
+    auto open_flags = (b_append ? std::fstream::app | std::fstream::ate : std::fstream::trunc);
+    if (b_binary)
+        open_flags |= std::fstream::binary;
+    output_fnum.open(filename, std::fstream::out | open_flags);
+    if (!output_fnum.is_open())
+        throw std::ios_base::failure("Failed to open file \"" + filename + "\" for writing.");
+    if (!output_fnum)
+        throw std::ios_base::failure("Error after opening file \"" + filename + "\" for writing.");
+
+    fn(output_fnum);
+
+    output_fnum.close();
+}
+
+void writeToFile(const std::string &filename,
+                 const char *p_data, std::size_t size,
+                 bool b_binary, bool b_append)
+{
+    writeToFile(
+        filename,
+        [p_data, size](std::ostream &os) -> void {
+            os.write(p_data, size);
+        },
+        b_binary, b_append);
 }
 
 } // namespace Utilities

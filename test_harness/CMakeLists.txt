@@ -147,6 +147,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE hebench_dataset_loader)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../report_gen/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_reportgen_lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_reportgen)
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_report_compiler)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
 

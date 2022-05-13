@@ -5,17 +5,17 @@
 #ifndef _HEBench_Harness_Report_CPP_H_0596d40a3cce4b108a81595c50eb286d
 #define _HEBench_Harness_Report_CPP_H_0596d40a3cce4b108a81595c50eb286d
 
+#include <ratio>
 #include <stdexcept>
 #include <string>
 
 #include "hebench_report_types.h"
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 namespace cpp {
 
-class ReportSummary;
+//class ReportSummary;
 
 class TimingPrefixUtility
 {
@@ -180,6 +180,15 @@ public:
     bool hasEventType(uint32_t event_type_id) const;
     std::string getEventTypeHeader(uint32_t event_type_id) const;
     uint64_t getEventTypeCount() const;
+    /**
+     * @brief Retrieve an event type ID.
+     * @param p_report
+     * @param[in] index Index of the event type to retrieve.
+     * Must be less than getEventTypeCount() .
+     * @return ID of the event type corresponding to the specified index.
+     * @exception Instance of std::except on error.
+     */
+    uint32_t getEventType(uint64_t index) const;
     uint32_t getMainEventType() const;
 
     // events management
@@ -196,35 +205,45 @@ public:
     void save2CSV(const std::string &filename);
     std::string convert2CSV();
 
-    /**
-     * @brief Generates the summary CSV for this report.
-     * @param[out] main_event_summary Structure to contain information about the main event
-     * for the report. All timings are in seconds.
-     * @param[in] time_unit Time unit used throughout the report.
-     * @return The summary text that can be directly stored in a CSV file.
-     */
-    std::string generateSummaryCSV(TimingReportEventSummaryC &main_event_summary,
-                                   TimingPrefixUtility::TimeUnit time_unit = TimingPrefixUtility::TimeUnit::Default);
-
     static TimingReport loadReportFromCSV(const std::string &s_csv_content);
     static TimingReport loadReportFromCSVFile(const std::string &filename);
+
+    template <class TimeInterval = std::ratio<1, 1>>
+    static double computeElapsedWallTime(const TimingReportEventC &event);
+    template <class TimeInterval = std::ratio<1, 1>>
+    static double computeElapsedCPUTime(const TimingReportEventC &event);
 
 private:
     void *m_lib_handle;
 };
 
-class ReportSummary
+template <class TimeInterval>
+double TimingReport::computeElapsedWallTime(const TimingReportEventC &event)
 {
-private:
-    static constexpr const char *m_private_class_name = "ReportSummary";
+    return (std::abs(event.wall_time_end - event.wall_time_start)
+            * (event.time_interval_ratio_num * TimeInterval::den))
+           / (event.time_interval_ratio_den * TimeInterval::num);
+}
 
-public:
-    ReportSummary(const TimingReport &report);
-};
+template <class TimeInterval>
+double TimingReport::computeElapsedCPUTime(const TimingReportEventC &event)
+{
+    return (std::abs(event.cpu_time_end - event.cpu_time_start)
+            * (event.time_interval_ratio_num * TimeInterval::den))
+           / (event.time_interval_ratio_den * TimeInterval::num);
+}
+
+//class ReportSummary
+//{
+//private:
+//    static constexpr const char *m_private_class_name = "ReportSummary";
+
+//public:
+//    ReportSummary(const TimingReport &report);
+//};
 
 } // namespace cpp
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_Report_CPP_H_0596d40a3cce4b108a81595c50eb286d

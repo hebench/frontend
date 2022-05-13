@@ -1,5 +1,8 @@
 Quickstart C++ Wrapper Backend Tutorial - SEAL {#simple_cpp_example_seal}
 ========================
+
+[TOC]
+
 ## Backend Creation Tutorial
 This tutorial details the steps involved in implementing a new backend utilizing the [C++ wrapper](@ref CPP_overview) for use with the testing framework.
 

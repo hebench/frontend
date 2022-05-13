@@ -8,6 +8,7 @@
 
 #include <cctype>
 #include <map>
+#include <ostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -101,6 +102,7 @@ public:
     ArgsParser(bool bshow_help = true, const std::string &help_text = std::string(), bool buse_exit = false);
 
     void printUsage() const;
+    void printUsage(std::ostream &os) const;
 
     /**
      * @brief Adds a positional argument to this parser's list of positional arguments.
@@ -516,6 +518,7 @@ private:
     args_unique_id findArgID(const std::string &arg) const;
     bool checkShowHelp(args_unique_id id);
     void showHelp() const;
+    void showHelp(std::ostream &os) const;
     bool hasArgument(args_unique_id id) const;
 
     bool m_buse_exit;

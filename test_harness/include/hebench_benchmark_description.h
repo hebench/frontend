@@ -109,8 +109,7 @@ public:
     Configuration() :
         default_min_test_time_ms(0),
         fallback_default_sample_size(0),
-        b_single_path_report(false),
-        time_unit(0)
+        b_single_path_report(false)
     {
     }
 
@@ -154,13 +153,6 @@ public:
      * @brief Defines if the workload report will be created in a single-level directory
      */
     bool b_single_path_report;
-    /**
-     * @brief Specifies the time unit for the summary report for this benchmark.
-     * @details The time unit is one of `0`, `'s'`, `'m'`, `'u'`, `'n'`, corresponding
-     * to the time units defined in hebench::TestHarness::Report::cpp::TimingPrefixUtility .
-     * @sa hebench::TestHarness::Report::cpp::TimingPrefixUtility
-     */
-    char time_unit;
 };
 
 class Description

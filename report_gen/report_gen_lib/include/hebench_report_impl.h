@@ -16,10 +16,9 @@
 #include "hebench_report.h"
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
-class TimingReport
+class TimingReportImpl
 {
 public:
     // section indicators for parsing generated CSV
@@ -31,15 +30,11 @@ public:
     static constexpr const char *TagReportFooter = "#8E00"; // start of the footer
     static constexpr const char *TagReportEnd    = "#8FFF"; // end of the report
 
-    template <class TimeInterval = std::ratio<1, 1>>
-    static double computeElapsedWallTime(const TimingReportEventC &event);
-    template <class TimeInterval = std::ratio<1, 1>>
-    static double computeElapsedCPUTime(const TimingReportEventC &event);
-
-    TimingReport();
+    TimingReportImpl();
 
     void newEventType(std::uint32_t set_id, const std::string &set_header, bool is_main_event = false);
     const std::unordered_map<std::uint32_t, std::string> &getEventTypes() const { return m_event_headers; }
+    const std::vector<std::uint32_t> &getEventTypeIDs() const { return m_event_types; }
 
     std::uint32_t getMainEventID() const { return m_main_event; }
 
@@ -60,8 +55,8 @@ public:
 
     std::ostream &convert2CSV(std::ostream &os) const;
 
-    static TimingReport loadCSV(std::istream &is);
-    static TimingReport loadCSV(const std::string &csv_content);
+    static TimingReportImpl loadCSV(std::istream &is);
+    static TimingReportImpl loadCSV(const std::string &csv_content);
 
     static void setTimingPrefix(TimingPrefixedSeconds &prefix, double seconds, char ch_prefix);
     static void computeTimingPrefix(TimingPrefixedSeconds &prefix, double seconds);
@@ -148,49 +143,11 @@ private:
     std::string m_footer;
     std::uint32_t m_main_event;
     std::unordered_map<std::uint32_t, std::string> m_event_headers; // maps event id to event header
+    std::vector<std::uint32_t> m_event_types; // all keys to map m_event_headers
     std::vector<std::shared_ptr<TimingReportEventC>> m_events;
 };
 
-template <class TimeInterval>
-double TimingReport::computeElapsedWallTime(const TimingReportEventC &event)
-{
-    return (std::abs(event.wall_time_end - event.wall_time_start)
-            * (event.time_interval_ratio_num * TimeInterval::den))
-           / (event.time_interval_ratio_den * TimeInterval::num);
-}
-
-template <class TimeInterval>
-double TimingReport::computeElapsedCPUTime(const TimingReportEventC &event)
-{
-    return (std::abs(event.cpu_time_end - event.cpu_time_start)
-            * (event.time_interval_ratio_num * TimeInterval::den))
-           / (event.time_interval_ratio_den * TimeInterval::num);
-}
-
-class ReportSummary
-{
-public:
-    ReportSummary(const TimingReport &report);
-
-    const std::string &getHeader() const { return m_header; }
-    const std::string &getFooter() const { return m_footer; }
-
-    std::uint64_t getEventSummaryCount() const { return m_event_summaries.size(); }
-    const TimingReportEventSummaryC &getEventSummary(std::uint64_t index) const;
-    std::uint64_t getMainEventSummaryIndex() const { return m_main_event_index; }
-    const TimingReportEventSummaryC &getMainEventSummary() const;
-
-    void generateCSV(std::ostream &os, char ch_prefix);
-
-private:
-    std::string m_header;
-    std::string m_footer;
-    std::size_t m_main_event_index;
-    std::vector<std::shared_ptr<TimingReportEventSummaryC>> m_event_summaries;
-};
-
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_TimingReport_H_0596d40a3cce4b108a81595c50eb286d
