@@ -128,7 +128,9 @@ void BenchmarkDescriptor::destroyBenchmark(PartialBenchmark *p_bench)
 
 Benchmark::Benchmark(std::shared_ptr<Engine> p_engine,
                      const IBenchmarkDescriptor::DescriptionToken &description_token) :
-    BenchmarkOffline(p_engine, description_token)
+    BenchmarkOffline(p_engine, description_token),
+    m_op_input_count(0),
+    m_op_output_count(0)
 {
 }
 

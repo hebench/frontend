@@ -46,8 +46,8 @@ void computeStats(StatisticsResult &result, const double *data, std::size_t coun
 
     result.ave_trim              = trimmed_stats.getMean(); // trimmed by 10% on each side
     result.variance_trim         = trimmed_stats.getVariance();
-    result.samples_per_unit      = basic_stats.getCount() / basic_stats.getTotal(); // = total / iterations
-    result.samples_per_unit_trim = trimmed_stats.getCount() / trimmed_stats.getTotal(); // = total_trim / iterations_trim
+    result.samples_per_unit      = (basic_stats.getTotal() == 0.0 ? 0.0 : basic_stats.getCount() / basic_stats.getTotal()); // = total / iterations
+    result.samples_per_unit_trim = (basic_stats.getTotal() == 0.0 ? 0.0 : trimmed_stats.getCount() / trimmed_stats.getTotal()); // = total_trim / iterations_trim
     result.input_sample_count    = basic_stats.getCount();
 }
 
