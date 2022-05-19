@@ -641,7 +641,7 @@ int main(int argc, char **argv)
                 std::string compile_filename       = benchmark_list_filename.string();
                 compiler_config.input_file         = compile_filename.c_str();
                 compiler_config.b_show_overview    = 0; // do not show the overview result file here
-                compiler_config.b_silent           = 0;
+                compiler_config.b_silent           = 1;
                 compiler_config.time_unit          = 0;
                 compiler_config.time_unit_stats    = 0;
                 compiler_config.time_unit_overview = 0;
