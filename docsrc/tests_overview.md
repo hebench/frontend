@@ -1,4 +1,4 @@
-HEBench tests                {#tests_overview}
+HEBench Supported Workloads                {#tests_overview}
 ========================
 
 ##Description
