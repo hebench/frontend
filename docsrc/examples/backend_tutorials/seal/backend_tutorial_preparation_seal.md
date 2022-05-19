@@ -1,5 +1,8 @@
 Quickstart C++ Wrapper Backend Tutorial - Preparation {#be_tutorial_preparation_seal}
 ========================
+
+[TOC]
+
 ## Steps
 
 Before attempting these steps, you must have a built version of the API Bridge.

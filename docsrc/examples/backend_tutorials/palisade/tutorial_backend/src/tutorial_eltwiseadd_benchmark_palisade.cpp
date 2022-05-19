@@ -69,7 +69,7 @@ TutorialEltwiseAddBenchmarkDescription::TutorialEltwiseAddBenchmarkDescription()
     //! [b_desc constructor workload_params]
     // specify default arguments for this workload flexible parameters:
     hebench::cpp::WorkloadParams::EltwiseAdd default_workload_params;
-    default_workload_params.n = 400;
+    default_workload_params.n() = 400;
     this->addDefaultParameters(default_workload_params);
     //! [b_desc constructor workload_params]
 }
@@ -94,7 +94,7 @@ std::string TutorialEltwiseAddBenchmarkDescription::getBenchmarkDescription(cons
         hebench::cpp::WorkloadParams::EltwiseAdd w_params(*p_w_params);
         ss << std::endl
            << ", Workload parameters" << std::endl
-           << ", , n, " << w_params.n;
+           << ", , n, " << w_params.n();
     } // end if
     return ss.str();
 }
@@ -241,8 +241,8 @@ TutorialEltwiseAddBenchmark::TutorialEltwiseAddBenchmark(hebench::cpp::BaseEngin
 
     // check values of the workload parameters and make sure they are supported by benchmark:
     hebench::cpp::WorkloadParams::EltwiseAdd w_params(bench_params);
-    if (w_params.n <= 0
-        || w_params.n - 1 > TutorialEltwiseAddBenchmarkDescription::PolyModulusDegree / 2)
+    if (w_params.n() <= 0
+        || w_params.n() - 1 > TutorialEltwiseAddBenchmarkDescription::PolyModulusDegree / 2)
         throw hebench::cpp::HEBenchError(HEBERROR_MSG_CLASS("Invalid workload parameters. This workload only supports vectors of size up to "
                                                             + std::to_string(TutorialEltwiseAddBenchmarkDescription::PolyModulusDegree / 2)),
                                          HEBENCH_ECODE_INVALID_ARGS);
@@ -250,7 +250,7 @@ TutorialEltwiseAddBenchmark::TutorialEltwiseAddBenchmark(hebench::cpp::BaseEngin
     // Do any extra workload-parameter-based initialization here, if needed.
 
     // initialize original Workload (this initializes PALISADE BFV context)
-    m_p_workload = std::make_shared<Workload>(w_params.n);
+    m_p_workload = std::make_shared<Workload>(w_params.n());
 }
 //! [benchmark constructor]
 

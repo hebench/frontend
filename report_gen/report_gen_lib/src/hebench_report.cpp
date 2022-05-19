@@ -4,28 +4,29 @@
 
 #include <cstring>
 #include <fstream>
+#include <limits>
 #include <new>
 #include <sstream>
 #include <string>
 
 #include "hebench_report.h"
 #include "hebench_report_impl.h"
-#include "hebench_report_utils.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
 extern "C"
 {
 
     void *allocateReport()
     {
-        TimingReport *p_retval = nullptr;
+        TimingReportImpl *p_retval = nullptr;
 
         try
         {
-            p_retval = new TimingReport();
+            p_retval = new TimingReportImpl();
         }
         catch (...)
         {
@@ -43,7 +44,7 @@ extern "C"
     {
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (p)
                 delete p;
         }
@@ -58,7 +59,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -79,7 +80,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -100,7 +101,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -121,7 +122,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -140,7 +141,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -161,7 +162,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -182,7 +183,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -203,7 +204,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -222,7 +223,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -243,7 +244,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -264,7 +265,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -283,7 +284,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -306,7 +307,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -320,12 +321,31 @@ extern "C"
         return retval;
     }
 
+    uint32_t getEventType(void *p_report, uint64_t index)
+    {
+        uint32_t retval = std::numeric_limits<uint32_t>::max();
+        try
+        {
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
+            if (!p || p->getEventTypeIDs().size() <= index)
+                throw std::invalid_argument("");
+
+            retval = p->getEventTypeIDs().at(index);
+        }
+        catch (...)
+        {
+            retval = std::numeric_limits<uint32_t>::max();
+        }
+
+        return retval;
+    }
+
     int32_t getMainEventType(void *p_report, uint32_t *p_event_type_id)
     {
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p || !p_event_type_id)
                 throw std::invalid_argument("");
 
@@ -348,7 +368,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p || !p_event)
                 throw std::invalid_argument("");
 
@@ -373,7 +393,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p || !p_event || index >= p->getEvents().size())
                 throw std::invalid_argument("");
 
@@ -394,7 +414,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -413,7 +433,7 @@ extern "C"
         uint64_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -432,7 +452,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -453,7 +473,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p)
                 throw std::invalid_argument("");
 
@@ -474,7 +494,7 @@ extern "C"
         int32_t retval = 0;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p || !filename || filename[0] == '\0')
                 throw std::invalid_argument("");
 
@@ -501,7 +521,7 @@ extern "C"
         char *p_csv_content = nullptr;
         try
         {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
+            TimingReportImpl *p = reinterpret_cast<TimingReportImpl *>(p_report);
             if (!p || !pp_csv_content)
                 throw std::invalid_argument("");
 
@@ -509,41 +529,6 @@ extern "C"
             std::string s_csv_content;
 
             p->convert2CSV(ss);
-            s_csv_content = ss.str();
-            ss            = std::stringstream();
-
-            p_csv_content = new char[s_csv_content.length() + 1];
-            if (!p_csv_content)
-                throw std::bad_alloc();
-            std::strcpy(p_csv_content, s_csv_content.c_str());
-            *pp_csv_content = p_csv_content;
-
-            retval = 1;
-        }
-        catch (...)
-        {
-            if (p_csv_content)
-                delete[] p_csv_content;
-            retval = 0;
-        }
-
-        return retval;
-    }
-
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content)
-    {
-        int32_t retval      = 0;
-        char *p_csv_content = nullptr;
-        try
-        {
-            TimingReport *p = reinterpret_cast<TimingReport *>(p_report);
-            if (!p || !p_main_event_summary || !pp_csv_content)
-                throw std::invalid_argument("");
-
-            std::stringstream ss;
-            std::string s_csv_content;
-
-            ReportSummary::generateCSV(ss, *p_main_event_summary, *p);
             s_csv_content = ss.str();
             ss            = std::stringstream();
 
@@ -573,10 +558,10 @@ extern "C"
 
     void *loadReportFromCSV(const char *p_csv_content, char error_description[MAX_DESCRIPTION_BUFFER_SIZE])
     {
-        TimingReport *p_retval = nullptr;
+        TimingReportImpl *p_retval = nullptr;
         try
         {
-            p_retval = new TimingReport(TimingReport::loadCSV(p_csv_content));
+            p_retval = new TimingReportImpl(TimingReportImpl::loadCSV(p_csv_content));
         }
         catch (std::exception &ex)
         {
@@ -601,7 +586,7 @@ extern "C"
 
     void *loadReportFromCSVFile(const char *filename, char error_description[MAX_DESCRIPTION_BUFFER_SIZE])
     {
-        TimingReport *p_retval = nullptr;
+        TimingReportImpl *p_retval = nullptr;
         try
         {
             std::ifstream fnum;
@@ -610,7 +595,7 @@ extern "C"
             fnum.open(filename, std::ios_base::in);
             if (!fnum.is_open())
                 throw std::ios_base::failure("Could not open file \"" + std::string(filename) + "\"");
-            p_retval = new TimingReport(TimingReport::loadCSV(fnum));
+            p_retval = new TimingReportImpl(TimingReportImpl::loadCSV(fnum));
         }
         catch (std::exception &ex)
         {
@@ -634,7 +619,7 @@ extern "C"
     }
 }
 
-int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)
+int32_t setTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds, char prefix)
 {
     int32_t retval = 1;
 
@@ -642,7 +627,7 @@ int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)
     {
         if (!retval)
             throw std::invalid_argument("p_prefix");
-        TimingReport::computeTimingPrefix(*p_prefix, seconds);
+        TimingReportImpl::setTimingPrefix(*p_prefix, seconds, prefix);
     }
     catch (...)
     {
@@ -652,6 +637,23 @@ int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)
     return retval;
 }
 
-} // namespace Report
-} // namespace TestHarness
+int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds)
+{
+    int32_t retval = 1;
+
+    try
+    {
+        if (!retval)
+            throw std::invalid_argument("p_prefix");
+        TimingReportImpl::computeTimingPrefix(*p_prefix, seconds);
+    }
+    catch (...)
+    {
+        retval = 0;
+    }
+
+    return retval;
+}
+
+} // namespace ReportGen
 } // namespace hebench

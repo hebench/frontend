@@ -8,13 +8,13 @@
 #include <stdint.h>
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
 extern "C"
 {
 
 #define MAX_DESCRIPTION_BUFFER_SIZE            256
+#define MAX_SYMBOL_BUFFER_SIZE                 4
 #define MAX_TIME_REPORT_EVENT_DESCRIPTION_SIZE 256
 
     struct _TimingReportEventC
@@ -48,7 +48,7 @@ extern "C"
          * @sa time_interval_ratio_num
          */
         int64_t time_interval_ratio_den;
-        uint64_t iterations;
+        uint64_t input_sample_count;
         /**
          * @brief Description attached to this event.
          * @details Set to empty string if no description.
@@ -57,7 +57,6 @@ extern "C"
     };
     typedef struct _TimingReportEventC TimingReportEventC;
 
-#define MAX_SYMBOL_BUFFER_SIZE 4
     struct _UnitPrefix
     {
         /**
@@ -83,8 +82,7 @@ extern "C"
     typedef struct _UnitPrefix TimingPrefixedSeconds;
 }
 
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_Report_Types_H_0596d40a3cce4b108a81595c50eb286d

@@ -1,6 +1,8 @@
 Adding a New Workload to Test Harness                {#extend_test_harness}
 ========================
 
+[TOC]
+
 Refer to @ref glossary for a list of terms that will be mentioned throughout this tutorial.
 
 To add a new workload to HEBench, the first step is to define it, followed by adding it into the Test Harness. Since Test Harness is the program that tests backends on workloads, if it doesn't know the workload, it will not test for it.

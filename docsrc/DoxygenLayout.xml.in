@@ -4,6 +4,16 @@
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
     <tab type="pages" visible="no" title="" intro=""/>
+    <tab type="usergroup" visible="yes" url="@ref tests_overview" title="HEBench Supported Workloads" intro="">
+      <tab type="usergroup" visible="yes" url="@ref generic_workload" title="Generic Workload" intro="">
+        <tab type="user" visible="yes" url="@ref generic_wl_example" title="Generic Workload Example" intro=""/>
+      </tab>
+      <tab type="user" visible="yes" url="@ref dot_product" title="Dot Product" intro=""/>
+      <tab type="user" visible="yes" url="@ref elementwise_add" title="Elementwise Addition" intro=""/>
+      <tab type="user" visible="yes" url="@ref elementwise_mult" title="Elementwise Multiplication" intro=""/>
+      <tab type="user" visible="yes" url="@ref logistic_regression" title="Logistic Regression Inference" intro=""/>
+      <tab type="user" visible="yes" url="@ref matrix_multiplication" title="Matrix Multiplication" intro=""/>
+    </tab>
     <tab type="usergroup" visible="yes" url="@ref backend_overview" title="Backend Overview" intro="">
       <tab type="user" visible="yes" url="@ref APIBridge_overview" title="APIBridge Overview" intro=""/>
       <tab type="user" visible="yes" url="@ref function_pipeline_chart" title="API Bridge Function Pipeline" intro=""/>
@@ -26,7 +36,7 @@
     </tab>
     <tab type="usergroup" visible="yes" url="@ref frontend_overview" title="Frontend Overview" intro="">
       <tab type="usergroup" visible="yes" url="@ref test_harness_overview" title="Test Harness Overview" intro="">
-        <tab type="user" visible="yes" url="@ref test_harness_usage_guide" title="Test Harness Usage Guide" intro=""/>
+        <tab type="user" visible="yes" url="@ref test_harness_usage_guide" title="Test Harness User Guide" intro=""/>
         <tab type="user" visible="yes" url="@ref config_file_reference" title="Benchmark Configuration File Reference" intro=""/>
         <tab type="usergroup" visible="yes" url="@ref dataset_loader_overview" title="External Dataset Loader" intro="">
           <tab type="user" visible="yes" url="@ref dataset_csv_reference" title="CSV Format Reference" intro=""/>
@@ -35,15 +45,10 @@
         <tab type="user" visible="yes" url="@ref extend_test_harness_l" title="Add latency Category to Workload" intro=""/>
         <tab type="user" visible="yes" url="@ref extend_test_harness_o" title="Add offline Category to Workload" intro=""/>
       </tab>
-      <tab type="usergroup" visible="yes" url="@ref tests_overview" title="HEBench tests overview" intro="">
-        <tab type="usergroup" visible="yes" url="@ref generic_workload" title="Generic Workload" intro="">
-          <tab type="user" visible="yes" url="@ref generic_wl_example" title="Generic Workload Example" intro=""/>
-        </tab>
-        <tab type="user" visible="yes" url="@ref dot_product" title="Dot Product" intro=""/>
-        <tab type="user" visible="yes" url="@ref elementwise_add" title="Elementwise Addition" intro=""/>
-        <tab type="user" visible="yes" url="@ref elementwise_mult" title="Elementwise Multiplication" intro=""/>
-        <tab type="user" visible="yes" url="@ref logistic_regression" title="Logistic Regression Inference" intro=""/>
-        <tab type="user" visible="yes" url="@ref matrix_multiplication" title="Matrix Multiplication" intro=""/>
+      <tab type="usergroup" visible="yes" url="@ref report_compiler_overview" title="Report Compiler Overview" intro="">
+        <tab type="user" visible="yes" url="@ref report_compiler_usage_guide" title="Report Compiler User Guide" intro=""/>
+        <tab type="user" visible="yes" url="@ref stats_n_summary_format" title="Statistics and Summary Output Format" intro=""/>
+        <tab type="user" visible="yes" url="@ref overview_file_format" title="Run Overview Output Format" intro=""/>
       </tab>
     </tab>
     <tab type="modules" visible="yes" title="" intro=""/>

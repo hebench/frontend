@@ -10,8 +10,7 @@
 #include "hebench_report_types.h"
 
 namespace hebench {
-namespace TestHarness {
-namespace Report {
+namespace ReportGen {
 
 extern "C"
 {
@@ -63,14 +62,13 @@ extern "C"
     int32_t prependReportFooter(void *p_report, const char *new_footer, int32_t new_line);
     uint64_t getReportFooter(void *p_report, char *footer, uint64_t size);
 
-    // event type: groups a collection of events under the same type
-
     /**
      * @brief addEventType
      * @param p_report
      * @param event_type_id
      * @param event_type_header
      * @returns `true` on success.
+     * @details event type: groups a collection of events under the same type.
      */
     int32_t addEventType(void *p_report, uint32_t event_type_id, const char *event_type_header);
     /**
@@ -93,6 +91,15 @@ extern "C"
     int32_t hasEventType(void *p_report, uint32_t event_type_id);
     uint64_t getEventTypeHeader(void *p_report, uint32_t event_type_id, char *event_type_header, uint64_t size);
     uint64_t getEventTypeCount(void *p_report);
+    /**
+     * @brief Retrieve an event type ID.
+     * @param p_report
+     * @param[in] index Index of the event type to retrieve.
+     * Must be less than getEventTypeCount() .
+     * @return ID of the event type corresponding to the specified index, or
+     * maximum uint32_t value on error.
+     */
+    uint32_t getEventType(void *p_report, uint64_t index);
     /**
      * @brief getMainEventType
      * @param p_report
@@ -141,15 +148,6 @@ extern "C"
      */
     int32_t convert2CSV(void *p_report, char **pp_csv_content);
     /**
-     * @brief generateSummaryCSV
-     * @param p_report
-     * @param[out] p_main_event_summary TimingReportEventC struct where to store the
-     * summary of the main event.
-     * @param[out] pp_csv_content Deallocate using `freeCSVContent()`
-     * @returns `true` on success.
-     */
-    int32_t generateSummaryCSV(void *p_report, TimingReportEventC *p_main_event_summary, char **pp_csv_content);
-    /**
      * @brief Releases resources allocated by functions that generate CSV
      * formatted reports from a timing report.
      * @param[in] p_csv_content Pointer to the string buffer allocated by
@@ -163,6 +161,36 @@ extern "C"
     void *loadReportFromCSVFile(const char *filename, char error_description[MAX_DESCRIPTION_BUFFER_SIZE]);
 
     // misc/utilities
+
+    /**
+     * @brief Computes the value for the time unit based on a specified prefix.
+     * @param[out] p_prefix Structure where to store the result.
+     * @param[in] seconds Time in seconds for which to compute prefix.
+     * @param[in] prefix Timing prefix specification. See details.
+     * @details
+     * Given a timing in seconds and the metric prefix, this function will compute
+     * the corresponding value.
+     *
+     * Values for \p prefix are:
+     *
+     * 0: behaves as computeTimingPrefix()
+     * `'s'`: result is in seconds.
+     * `'m'`: result is in milliseconds.
+     * `'u'`: result is in microseconds.
+     * `'n'`: result is in nanoseconds.
+     *
+     * Any other value makes the function return a failure.
+     *
+     * For example, if \p seconds is `0.05` and \p prefix is `m`, then, the result is:
+     *
+     * @code
+     * p_prefix->value                   = 50;
+     * p_prefix->time_interval_ratio_den = 1000;
+     * p_prefix->symbol                  = 'm';
+     * p_prefix->prefix                  = 'milli';
+     * @endcode
+     */
+    int32_t setTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds, char prefix);
 
     /**
      * @brief Retrieves the prefix for the time unit.
@@ -179,8 +207,7 @@ extern "C"
     int32_t computeTimingPrefix(TimingPrefixedSeconds *p_prefix, double seconds);
 }
 
-} // namespace Report
-} // namespace TestHarness
+} // namespace ReportGen
 } // namespace hebench
 
 #endif // defined _HEBench_Harness_Report_H_0596d40a3cce4b108a81595c50eb286d

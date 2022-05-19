@@ -2,11 +2,13 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#include <cassert>
 #include <chrono>
 #include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <ostream>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -14,14 +16,17 @@
 
 #include "modules/args_parser/include/args_parser.h"
 #include "modules/general/include/error.h"
+#include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/hebench_utilities.h"
 #include "modules/logging/include/logging.h"
 
 #include "dynamic_lib_load.h"
+#include "hebench_report_compiler.h"
 
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_types_harness.h"
-#include "include/hebench_utilities.h"
+#include "include/hebench_utilities_harness.h"
 #include "include/hebench_version.h"
 
 // enforce floating point standard compatibility
@@ -41,6 +46,7 @@ struct ProgramConfig
     std::size_t report_delay_ms;
     std::filesystem::path report_root_path;
     bool b_show_run_overview;
+    bool b_compile_reports;
 
     static constexpr const char *DefaultConfigFile    = "";
     static constexpr std::uint64_t DefaultMinTestTime = 0;
@@ -103,6 +109,7 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     }
 
     parser.getValue<decltype(b_show_run_overview)>(b_show_run_overview, "--run_overview", true);
+    parser.getValue<decltype(b_compile_reports)>(b_compile_reports, "--compile_reports", true);
 
     b_single_path_report = parser.hasArgument("--single_path_report");
 }
@@ -130,6 +137,7 @@ void ProgramConfig::showConfig(std::ostream &os) const
            << "    Validate results: " << (b_validate_results ? "Yes" : "No") << std::endl
            << "    Report delay (ms): " << report_delay_ms << std::endl
            << "    Report Root Path: " << report_root_path << std::endl
+           << "    Compile reports: " << (b_compile_reports ? "Yes" : "No") << std::endl
            << "    Show run overview: " << (b_show_run_overview ? "Yes" : "No") << std::endl;
     } // end if
     os << "    Run configuration file: ";
@@ -170,6 +178,9 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "   YAML file specifying the selection of benchmarks and their workload\n"
                        "   parameters to run. If not present, all backend benchmarks will be run\n"
                        "   with default parameters.");
+    parser.addArgument("--compile_reports", "--compile", "-C", 1, "<bool: 0|false|1|true>",
+                       "   [OPTIONAL] Enables (TRUE) or disables (FALSE) inline compilation of\n"
+                       "   benchmark reports into summaries and statistics. Defaults to \"TRUE\".");
     parser.addArgument("--dump_config", "--dump", 0, "",
                        "   [OPTIONAL] If specified, Test Harness will dump a general configuration\n"
                        "   file with the possible benchmarks that the backend can run. This file can\n"
@@ -194,156 +205,133 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
                        "   [OPTIONAL] Directory where to store the report output files.\n"
                        "   Must exist and be accessible for writing. Any files with the same name will\n"
                        "   be overwritten. Defaults to current working directory \".\"");
-    parser.addArgument("--version", 0, "",
-                       "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
-                       "   currently linked API Bridge version. Application exists after this.");
     parser.addArgument("--single_path_report", "--single_path", 0, "",
                        "   [OPTIONAL] Allows the user to choose if the benchmark's report (s) will be\n"
                        "   created in a single-level directory or not.");
+    parser.addArgument("--version", 0, "",
+                       "   [OPTIONAL] Outputs Test Harness version, required API Bridge version and\n"
+                       "   currently linked API Bridge version. Application exits after this.");
     parser.parse(argc, argv);
 }
 
-std::string toDoubleVariableFrac(double x, int up_to_digits_after_dot)
+void generateOverview(std::ostream &os,
+                      const std::vector<std::string> &report_paths,
+                      const std::string &input_root_path,
+                      bool b_single_path_reports)
 {
-    // Prints a floating point value with up to a number of digits after decimal point
-    // with no trailing zeroes.
-    std::string retval;
-    std::stringstream ss;
-    if (up_to_digits_after_dot < 0)
-        up_to_digits_after_dot = 0;
-    ss << std::fixed << std::setprecision(up_to_digits_after_dot) << x;
-    retval = ss.str();
-    retval.erase(retval.find_last_not_of(".0") + 1);
-    return retval;
-}
+    // Generates a condensed, pretty print version summarizing each benchmark result.
 
-void generateSummary(const hebench::TestHarness::Engine &engine,
-                     const std::vector<hebench::Utilities::BenchmarkRequest> &benchmarks_ran,
-                     const std::string &input_root_path, const std::string &output_root_path,
-                     bool do_stdout_summary = true)
-{
-    // Generates summary files from report and, if requested, a condensed version
-    // summarizing each benchmark result is displayed to stdout.
-
-    constexpr int ScreenColSize  = 80;
-    constexpr int AveWallColSize = ScreenColSize / 8;
-    constexpr int AveCPUColSize  = ScreenColSize / 8;
-    //constexpr int BenchNameColSize = ScreenColSize * 9 / 16;
+    constexpr int ScreenColSize    = 80;
+    constexpr int AveWallColSize   = ScreenColSize / 8;
+    constexpr int AveCPUColSize    = ScreenColSize / 8;
     constexpr int BenchNameColSize = ScreenColSize - AveWallColSize - AveCPUColSize - 15;
 
     std::stringstream ss;
 
-    if (do_stdout_summary)
-    {
-        std::cout << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << std::string("Benchmark").substr(0, BenchNameColSize) << " | "
-                  << std::setw(AveWallColSize + 3) << std::right << std::string("Ave Wall time").substr(0, AveWallColSize + 3) << " | "
-                  << std::setw(AveWallColSize + 3) << std::right << std::string("Ave CPU time").substr(0, AveCPUColSize + 3) << std::endl;
-        std::cout << std::setfill('=') << std::setw(ScreenColSize) << std::left << "=" << std::endl;
-    } // end if
+    os << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << std::string("Benchmark").substr(0, BenchNameColSize) << " | "
+       << std::setw(AveWallColSize + 3) << std::right << std::string("Ave Wall time").substr(0, AveWallColSize + 3) << " | "
+       << std::setw(AveWallColSize + 3) << std::right << std::string("Ave CPU time").substr(0, AveCPUColSize + 3) << std::endl;
+    os << std::setfill('=') << std::setw(ScreenColSize) << std::left << "=" << std::endl;
 
-    for (std::size_t bench_i = 0; bench_i < benchmarks_ran.size(); ++bench_i)
+    for (std::size_t report_i = 0; report_i < report_paths.size(); ++report_i)
     {
-        hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr description_token =
-            engine.describeBenchmark(benchmarks_ran[bench_i].index, benchmarks_ran[bench_i].configuration);
-
         // retrieve the correct input and output paths
-        std::filesystem::path report_filename = description_token->getDescription().path;
+        std::filesystem::path report_location = report_paths[report_i]; // path where report was saved
         std::filesystem::path report_path;
-        std::filesystem::path output_path;
 
-        if (report_filename.is_absolute())
-        {
-            report_path = report_filename;
-            output_path = report_filename;
-        } // end if
+        if (report_location.is_absolute())
+            report_path = report_location;
         else
-        {
-            report_path = input_root_path / report_filename;
-            output_path = output_root_path / report_filename;
-        } // end else
+            report_path = std::filesystem::canonical(input_root_path) / report_location;
 
-        // No need to create dir if single path is enabled.
-        if (!benchmarks_ran[bench_i].configuration.b_single_path_report)
-        {
-            // Generate output directory if it doesn't exits.
-            std::filesystem::create_directories(output_path);
-
-            // complete the paths to the input and output files
-            report_path /= hebench::TestHarness::FileNameNoExtReport;
-            output_path /= hebench::TestHarness::FileNameNoExtSummary;
-        }
-        else
-        {
-            // complete the paths to the input and output files
+        if (b_single_path_reports)
             report_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
-            output_path += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtSummary));
-        }
+        else
+            report_path /= hebench::TestHarness::FileNameNoExtReport;
         // Adding the file extension
         report_path += ".csv";
-        output_path += ".csv";
 
-        if (do_stdout_summary)
-        {
-            ss = std::stringstream();
-            ss << (bench_i + 1) << ". " << report_filename.generic_string();
-            std::cout << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << ss.str().substr(0, BenchNameColSize) << " | ";
-        } // end if
+        ss = std::stringstream();
+        ss << (report_i + 1) << ". " << report_location.generic_string();
+        os << " " << std::setfill(' ') << std::setw(BenchNameColSize) << std::left << ss.str().substr(0, BenchNameColSize) << " | ";
 
         try
         {
             // load input report
-            hebench::TestHarness::Report::cpp::TimingReport report =
-                hebench::TestHarness::Report::cpp::TimingReport::loadReportFromCSVFile(report_path);
+            hebench::ReportGen::cpp::TimingReport report =
+                hebench::ReportGen::cpp::TimingReport::loadReportFromCSVFile(report_path);
             // generate summary
             if (report.getEventCount() > 0)
             {
-                // output summary to file
-                hebench::TestHarness::Report::TimingReportEventC tre;
-                std::string csv_report = report.generateSummaryCSV(tre);
-                hebench::Utilities::writeToFile(output_path, csv_report.c_str(), csv_report.size(), false, false);
+                // compute simple stats on the main event for this report
+
+                hebench::Utilities::Math::EventStats stats_wall;
+                hebench::Utilities::Math::EventStats stats_cpu;
+
+                for (std::uint64_t i = 0; i < report.getEventCount(); ++i)
+                {
+                    hebench::ReportGen::TimingReportEventC event;
+                    report.getEvent(event, i);
+                    if (event.event_type_id == report.getMainEventType())
+                    {
+                        double wall_time = hebench::ReportGen::cpp::TimingReport::computeElapsedWallTime(event) / event.input_sample_count;
+                        double cpu_time  = hebench::ReportGen::cpp::TimingReport::computeElapsedCPUTime(event) / event.input_sample_count;
+                        for (std::uint64_t i = 0; i < event.input_sample_count; ++i)
+                        {
+                            stats_wall.newEvent(wall_time);
+                            stats_cpu.newEvent(cpu_time);
+                        } // end for
+                    } // end if
+                } // end for
 
                 // output overview of summary to stdout
-                if (do_stdout_summary)
-                {
-                    hebench::TestHarness::Report::TimingPrefixedSeconds timing_prefix;
-                    double elapsed_time_secs;
+                hebench::ReportGen::TimingPrefixedSeconds timing_prefix;
+                double elapsed_time_secs;
+                std::string s_elapsed_time;
 
-                    elapsed_time_secs = (tre.wall_time_end - tre.wall_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
-                    ss = std::stringstream();
-                    ss << timing_prefix.symbol << "s";
-                    std::cout << std::setw(AveWallColSize) << std::right
-                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveWallColSize)
-                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
+                // wall time average
 
-                    elapsed_time_secs = (tre.cpu_time_end - tre.cpu_time_start) * tre.time_interval_ratio_num / tre.time_interval_ratio_den;
-                    hebench::TestHarness::Report::cpp::TimingReport::computeTimingPrefix(timing_prefix, elapsed_time_secs);
-                    ss = std::stringstream();
-                    ss << timing_prefix.symbol << "s";
-                    std::cout << std::setw(AveCPUColSize) << std::right
-                              << toDoubleVariableFrac(timing_prefix.value, 2).substr(0, AveCPUColSize)
-                              << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
-                } // end if
+                elapsed_time_secs = stats_wall.getMean();
+                // convert to timing prefix that fits the value between 1 and 1000
+                hebench::ReportGen::cpp::TimingPrefixUtility::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                ss = std::stringstream();
+                ss << timing_prefix.symbol << "s";
+                // convert to string with, at most, 2 decimal places
+                s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                // if string doesn't fit in the column, attempt to use scientific notation
+                if (timing_prefix.value < 0.1 || s_elapsed_time.size() > AveWallColSize)
+                    s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveWallColSize);
+                // output value
+                os << std::setw(AveWallColSize) << std::right
+                   << s_elapsed_time
+                   << std::setfill(' ') << std::setw(3) << std::right << ss.str() << " | ";
+
+                // cpu time average
+
+                elapsed_time_secs = stats_cpu.getMean();
+                // convert to timing prefix that fits the value between 1 and 1000
+                hebench::ReportGen::cpp::TimingPrefixUtility::computeTimingPrefix(timing_prefix, elapsed_time_secs);
+                ss = std::stringstream();
+                ss << timing_prefix.symbol << "s";
+                // convert to string with, at most, 2 decimal places
+                s_elapsed_time = hebench::Utilities::convertDoubleToStr(timing_prefix.value, 2);
+                // if string doesn't fit in the column, attempt to use scientific notation
+                if (timing_prefix.value < 0.1 || s_elapsed_time.size() > AveCPUColSize)
+                    s_elapsed_time = hebench::Utilities::convertDoubleToStrScientific(timing_prefix.value, AveCPUColSize);
+                // output value
+                os << std::setw(AveCPUColSize) << std::right
+                   << s_elapsed_time
+                   << std::setfill(' ') << std::setw(3) << std::right << ss.str() << std::endl;
             } // end if
-            else if (do_stdout_summary)
-                std::cout << "Validation Failed" << std::endl;
+            else
+                os << "Validation Failed" << std::endl;
         }
         catch (...)
         {
-            if (do_stdout_summary)
-                std::cout << "Load Failed" << std::endl;
+            os << "Load Failed" << std::endl;
         }
-        if (do_stdout_summary)
-            std::cout << std::setfill('-') << std::setw(ScreenColSize) << std::left << "-" << std::endl;
+        os << std::setfill('-') << std::setw(ScreenColSize) << std::left << "-" << std::endl;
     } // end for
-}
-
-void generateSummary(const hebench::TestHarness::Engine &engine,
-                     const std::vector<hebench::Utilities::BenchmarkRequest> &benchmarks_ran,
-                     const std::string &input_root_path,
-                     bool do_stdout_summary = true)
-{
-    generateSummary(engine, benchmarks_ran, input_root_path, input_root_path, do_stdout_summary);
 }
 
 int main(int argc, char **argv)
@@ -357,7 +345,8 @@ int main(int argc, char **argv)
 
     std::vector<hebench::Utilities::BenchmarkRequest> benchmarks_to_run;
     std::size_t total_runs = 0;
-    std::vector<std::string> failed_benchmarks;
+    std::vector<std::string> report_paths;
+    std::vector<std::size_t> failed_benchmarks;
 
     try
     {
@@ -515,7 +504,7 @@ int main(int argc, char **argv)
                     if (!b_succeeded)
                     {
                         std::cout << IOS_MSG_FAILED << hebench::Logging::GlobalLogger::log(bench_token->getDescription().workload_name) << std::endl;
-                        failed_benchmarks.push_back(bench_path);
+                        failed_benchmarks.push_back(report_paths.size());
                         report.clear(); // report event data is no longer valid for a failed run
                     } // end if
                 }
@@ -532,7 +521,7 @@ int main(int argc, char **argv)
 
                         b_critical_error = false;
 
-                        failed_benchmarks.push_back(bench_path);
+                        failed_benchmarks.push_back(report_paths.size());
                         report.clear(); // report event data is no longer valid for a failed run
 
                         ss = std::stringstream();
@@ -548,6 +537,8 @@ int main(int argc, char **argv)
                     throw; // critical failure
                 }
 
+                report_paths.emplace_back(bench_path);
+
                 // create the path to output report
                 std::filesystem::path report_filename = bench_path;
                 std::filesystem::path report_path     = report_filename.is_absolute() ?
@@ -557,13 +548,9 @@ int main(int argc, char **argv)
                 // output CSV report
                 report_filename = report_path;
                 if (!config.b_single_path_report)
-                {
                     report_filename /= hebench::TestHarness::FileNameNoExtReport;
-                }
                 else
-                {
                     report_filename += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
-                }
                 report_filename += ".csv";
 
                 ss = std::stringstream();
@@ -596,6 +583,15 @@ int main(int argc, char **argv)
                 // benchmark cleaned up here automatically
             } // end for
 
+            // clean-up engine before final report (engine can clean up
+            // automatically, but better to release when no longer needed)
+            p_engine.reset();
+
+            // At this point all benchmarks have been run and reports generated.
+            // All that's left to do is to perform output that summarizes the run.
+
+            assert(report_paths.size() == total_runs);
+
             ss = std::stringstream();
             ss << " Progress: 100%" << std::endl
                << "           " << total_runs << "/" << total_runs;
@@ -604,34 +600,87 @@ int main(int argc, char **argv)
                       << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl
                       << "==================" << std::endl;
 
-            // benchmark summary
+            // benchmark summary list
 
             std::cout << std::endl
-                      << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating summary...") << std::endl
-                      << std::endl;
-            generateSummary(*p_engine, benchmarks_to_run,
-                            config.report_root_path, config.b_show_run_overview);
+                      << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating benchmark list...") << std::endl;
 
-            // clean-up engine before final report (engine can clean up
-            // automatically, but better to release when no longer needed)
-            p_engine.reset();
+            std::filesystem::path benchmark_list_filename = std::filesystem::canonical(config.report_root_path);
+            benchmark_list_filename /= "benchmark_list.txt";
+            hebench::Utilities::writeToFile(
+                benchmark_list_filename,
+                [&config, &report_paths](std::ostream &os) {
+                    for (std::size_t report_i = 0; report_i < report_paths.size(); ++report_i)
+                    {
+                        std::filesystem::path report_filename = report_paths[report_i];
+                        if (!config.b_single_path_report)
+                            report_filename /= hebench::TestHarness::FileNameNoExtReport;
+                        else
+                            report_filename += (hebench::TestHarness::hyphen + std::string(hebench::TestHarness::FileNameNoExtReport));
+                        report_filename += ".csv";
 
-            // benchmark overall summary
+                        os << report_filename.string() << std::endl;
+                    } // end for
+                },
+                false, false);
 
-            if (config.b_show_run_overview && !failed_benchmarks.empty())
+            ss = std::stringstream();
+            ss << "Benchmark list saved to: " << std::endl
+               << benchmark_list_filename;
+            std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+
+            // compile reports into stats and summary files
+
+            if (config.b_compile_reports)
             {
+                std::cout << std::endl
+                          << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing report compiler...") << std::endl;
+
+                hebench::ReportGen::Compiler::ReportCompilerConfigC compiler_config;
+                std::vector<char> c_error_msg(1024, 0);
+                std::string compile_filename       = benchmark_list_filename.string();
+                compiler_config.input_file         = compile_filename.c_str();
+                compiler_config.b_show_overview    = 0; // do not show the overview result file here
+                compiler_config.b_silent           = 1;
+                compiler_config.time_unit          = 0;
+                compiler_config.time_unit_stats    = 0;
+                compiler_config.time_unit_overview = 0;
+                compiler_config.time_unit_summary  = 0;
+
+                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Compiling reports using default compiler options...") << std::endl
+                          << std::endl;
+                if (!hebench::ReportGen::Compiler::compile(&compiler_config, c_error_msg.data(), c_error_msg.size()))
+                    throw std::runtime_error(c_error_msg.data());
+                std::cout << IOS_MSG_DONE << hebench::Logging::GlobalLogger::log("Reports Compiled.") << std::endl
+                          << std::endl;
+            } // end if
+
+            // display overview of the run results
+
+            if (config.b_show_run_overview)
+            {
+                std::cout << std::endl
+                          << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating overview...") << std::endl
+                          << std::endl;
+                generateOverview(std::cout, report_paths, config.report_root_path, config.b_single_path_report);
+
+                // display any failed benchmarks
+
                 ss = std::stringstream();
-                ss << "Failed benchmarks:" << std::endl
+                ss << "Failed benchmarks: " << failed_benchmarks.size() << std::endl
                    << std::endl;
                 for (std::size_t i = 0; i < failed_benchmarks.size(); ++i)
                 {
                     if (i > 0)
                         ss << std::endl;
-                    ss << i + 1 << ". " << failed_benchmarks[i] << std::endl;
+                    assert(failed_benchmarks[i] < report_paths.size());
+                    ss << i + 1 << ". " << report_paths.at(failed_benchmarks[i]) << std::endl;
                 } // end for
-                std::cout << std::endl
-                          << hebench::Logging::GlobalLogger::log(ss.str());
             } // end if
+            std::cout << std::endl
+                      << hebench::Logging::GlobalLogger::log(ss.str());
+
+            // benchmark overall summary
 
             std::cout << std::endl
                       << "=================================" << std::endl

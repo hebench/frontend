@@ -1,5 +1,8 @@
 External Dataset CSV Format Reference {#dataset_csv_reference}
 ========================
+
+[TOC]
+
 The following defines the format for a file of comma-separated values (CSV) specifying the dataset for a benchmark.
 
 A CSV file is loaded and parsed line by line in order from the first line to the last line of the file. The first line is line 1, the top-most line of the file.

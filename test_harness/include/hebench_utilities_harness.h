@@ -39,12 +39,6 @@ namespace Utilities {
  * @endcode
  */
 std::string convertToDirectoryName(const std::string &s, bool to_lowercase = true);
-std::uint64_t copyString(char *dst, std::uint64_t size, const std::string &src);
-void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
-                 bool b_binary, bool b_append = false);
-void writeToFile(const std::string &filename,
-                 const char *p_data, std::size_t size,
-                 bool b_binary, bool b_append = false);
 
 /**
  * @brief Writes the collection of `NativeDataBuffer` as columns to the specified
@@ -96,10 +90,10 @@ public:
     static void setRandomSeed();
 };
 
-class TimingReportEx : public hebench::TestHarness::Report::cpp::TimingReport
+class TimingReportEx : public hebench::ReportGen::cpp::TimingReport
 {
 private:
-    using Base = hebench::TestHarness::Report::cpp::TimingReport;
+    using Base = hebench::ReportGen::cpp::TimingReport;
 
 public:
     TimingReportEx(const std::string &header = std::string()) :
@@ -115,7 +109,7 @@ public:
     //std::string generateSummaryCSV(TimingReportEventC &main_event_summary);
 
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>
-    static hebench::TestHarness::Report::TimingReportEventC convert2C(const hebench::Common::TimingReportEvent &timing_event);
+    static hebench::ReportGen::TimingReportEventC convert2C(const hebench::Common::TimingReportEvent &timing_event);
 
 private:
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>
@@ -126,6 +120,6 @@ private:
 } // namespace Utilities
 } // namespace hebench
 
-#include "inl/hebench_utilities.inl"
+#include "inl/hebench_utilities_harness.inl"
 
 #endif // defined _HEBench_Harness_Utilities_H_0596d40a3cce4b108a81595c50eb286d

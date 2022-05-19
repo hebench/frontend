@@ -1,6 +1,8 @@
 Vector Element-wise Addition Workload {#elementwise_add}
 ========================
 
+[TOC]
+
 ## Operation Description
 
 ### Summary

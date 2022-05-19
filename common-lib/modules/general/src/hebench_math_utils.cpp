@@ -5,11 +5,25 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "include/hebench_math_utils.h"
+#include "../include/hebench_math_utils.h"
 
 namespace hebench {
 namespace Utilities {
 namespace Math {
+
+double computePercentile(const double *data, std::size_t count, double percentile)
+{
+    // uses percentile formula from R
+    double rank          = std::clamp(percentile, 0.0, 1.0) * (count - 1);
+    std::uint64_t rank_i = static_cast<std::uint64_t>(rank);
+    double rank_f        = rank - rank_i;
+
+    return data[rank_i] + rank_f * (data[rank_i + 1] - data[rank_i]);
+}
+
+//------------------------
+// class ComponentCounter
+//------------------------
 
 ComponentCounter::ComponentCounter(std::vector<std::size_t> component_sizes) :
     m_count(component_sizes.size()), m_sizes(component_sizes)

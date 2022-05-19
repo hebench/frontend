@@ -1,5 +1,8 @@
 Quickstart C++ Wrapper Backend Tutorial - Engine Initialization and Benchmark Description {#be_tutorial_init_palisade}
 ========================
+
+[TOC]
+
 ## Steps
     
 ### 1. Benchmark description initialization
