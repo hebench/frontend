@@ -1,23 +1,41 @@
 # HEBench
+HEBench is a flexible benchmarking framework for Homomorphic Encryption that allows fair performance comparison among different implementations (in hardware and/or software) of a collection of homomorphic encryption workloads.
+
+For an overview of HEBench, please visit the homepage here [HEBench Home](https://hebench.github.io/).
+
+This repo contains the frontend for HEBench which is the starting point for all HEBench framework functionality.
 
 ## Table of Contents
-1. [Requirements](#requirements1)
-2. [Online Documentation](#online-documentation)
-3. [Test Harness](#test-harness)
-4. [Build Configuration](#build-configuration)
+1. [About Frontend](#about-frontend)
+   1. [Test Harness](#test-harness)
+   2. [Online Documentation](#online-documentation)
+2. [Build Requirements](#requirements1)
+3. [Build Configuration](#build-configuration)
    1. [Build Type](#build-type)
    2. [Third-Party Components](#third-party-components) 
    3. [Advanced Configuration](#advanced-configuration)
       1. [Required Third-party Components](#required-third-party-components)
       2. [Configuring Pre-Installed API Bridge](#configuring-pre-installed-api-bridge)
       3. [Configuring Pre-Installed YAML CPP](#configuring-pre-installed-yaml)
-5. [Building](#building)
-6. [Running the Benchmark](#running-the-benchmark)
-7. [Building the Documentation](#building-the-documentation)
-8. [Contributing](#contributing)
+4. [Building](#building)
+5. [Running a Benchmark](#running-a-benchmark)
+6. [Building the Documentation](#building-the-documentation)
+7. [Contributing](#contributing)
 
 
-## Requirements <a name="requirements1"></a>
+## About Frontend <a name="about-frontend"></a>
+
+The frontend is the starting point for all HEBench benchmarking framework functionality. It consists of the components relevant to users running benchmarks, extending the test harness with custom workloads, or contributing to the framework.
+
+### Test Harness <a name="test-harness"></a>
+
+Test Harness is the core component for HEBench frontend. It orchestrates the benchmarking operations, submits and times requests to backends. A user wanting to run any HEBench benchmark should start here as they must call the Test Harness executable with appropriate arguments in order for the benchmarking to occur.
+
+### Online Documentation <a name="online-documentation"></a>
+
+The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](https://hebench.github.io/frontend).
+
+## Build Requirements <a name="requirements1"></a>
 Current build system uses CMake.
 
 - Ubuntu 16.04, 18.04, or 20.04
@@ -25,14 +43,6 @@ Current build system uses CMake.
 - CMake 3.13 or above
 - Git 2.7.4 or above
 - Doxygen 1.9.1 (optional - for documentation generation)
-
-## Online Documentation <a name="online-documentation"></a>
-For an overview of HEBench, please visit the homepage here [HEBench Home](https://hebench.github.io/).
-
-The detailed online documentation for HEBench Framework can be found here [HEBench online documentation](https://hebench.github.io/frontend).
-
-## Test Harness
-The Test Harness is the core frontend of HEBench. It orchestrates the benchmarking operations, submits and times requests to backends.
 
 ## Build Configuration <a name="build-configuration"></a>
 
@@ -109,9 +119,11 @@ make install
 
 The install step will copy the executable binaries, libraries, and includes into `bin`, `lib`, and `include`, respectively.
 
-## Running the Benchmark <a name="running-the-benchmark"></a>
+## Running a Benchmark <a name="running-a-benchmark"></a>
 
-The executable for the Test Harness is `test_harness`. To benchmark a HEBench backend, users must specify the `--backend_lib_path` flag and point to the shared library implementing the API Bridge.
+The executable for the Test Harness is `test_harness`.
+
+A benchmark is implemented into a shared library that exposes the API Bridge interface. This library is called a HEBench backend. To benchmark a HEBench backend, users must specify the `--backend_lib_path` flag to point to the shared library when calling the Test Harness executable.
 
 ```bash
 cd $INSTALL_LOCATION/bin
@@ -120,12 +132,15 @@ cd $INSTALL_LOCATION/bin
 
 The Test Harness will save the reports and summary of the run to the path specified in `$REPORT_OUTPUT_PATH`.
 
+
 The API Bridge builds with an included simple backend example. Assuming the API Bridge has been built and installed (also in `$INSTALL_LOCATION`) successfully, users may then run as follows:
 
 ```bash
 cd $INSTALL_LOCATION/bin
 ./test_harness --backend_lib_path $INSTALL_LOCATION/lib/libhebench_example_backend.so --report_root_path $REPORT_OUTPUT_PATH
 ```
+
+Note that a backend can implement multiple benchmarks that may support multiple configurations. Configuration files are supported to selected which benchmarks to run and what configuration parameters to use beyond default behavior.
 
 Full details on using the Test Harness can be found in the [Test Harness User Guide](https://hebench.github.io/frontend/test_harness_usage_guide.html).
 
