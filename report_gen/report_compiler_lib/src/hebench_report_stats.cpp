@@ -247,8 +247,11 @@ ReportStats::ReportStats(const cpp::TimingReport &report)
         } // end if
         if (b_added)
             event_ids.push_back(event.event_type_id);
-        cpu_events[event.event_type_id].push_back(cpu_time);
-        wall_events[event.event_type_id].push_back(wall_time);
+        for (std::uint64_t i = 0; i < event.input_sample_count; ++i)
+        {
+            cpu_events[event.event_type_id].push_back(cpu_time);
+            wall_events[event.event_type_id].push_back(wall_time);
+        } // end for
     } // end for
 
     // sort by event ID
