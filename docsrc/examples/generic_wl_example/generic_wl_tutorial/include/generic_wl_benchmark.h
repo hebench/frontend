@@ -41,8 +41,8 @@ public:
                      const hebench::APIBridge::WorkloadParams &bench_params);
     ~ExampleBenchmark() override;
 
-    hebench::APIBridge::Handle encode(const hebench::APIBridge::PackedData *p_parameters) override;
-    void decode(hebench::APIBridge::Handle encoded_data, hebench::APIBridge::PackedData *p_native) override;
+    hebench::APIBridge::Handle encode(const hebench::APIBridge::DataPackCollection *p_parameters) override;
+    void decode(hebench::APIBridge::Handle encoded_data, hebench::APIBridge::DataPackCollection *p_native) override;
     hebench::APIBridge::Handle encrypt(hebench::APIBridge::Handle encoded_data) override;
     hebench::APIBridge::Handle decrypt(hebench::APIBridge::Handle encrypted_data) override;
 

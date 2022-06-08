@@ -12,8 +12,8 @@ The following pseudo-code depicts the default Latency workflow as implemented by
 Note: all data is cleaned up and handles are released as appropriate. Boiler plate logic has been omited. Exceptions are thrown on errors. `ErrorException` objects are used as exceptions with error numbers from backend. Test Harness handles these exceptions as appropriate based on the documentation specified for error codes in the [API Bridge](@ref APIBridge_overview).
 
 ```cpp
-PackedData packed_params_plain;
-PackedData packed_params_cipher;
+DataPackCollection packed_params_plain;
+DataPackCollection packed_params_cipher;
 
 vector<Handle> local_handles;
 
@@ -120,7 +120,7 @@ for (i = 0; i < h_local_results.size(); ++i)
 for (Handle h_plain_result : h_plain_results)
 {
     // decode
-    PackedData packed_raw_result; // pre-allocated
+    DataPackCollection packed_raw_result; // pre-allocated
     startTiming();
     decode(Handle h_benchmark, h_plain_result, &packed_raw_result);
     stopTiming();
