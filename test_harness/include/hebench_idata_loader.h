@@ -54,16 +54,16 @@ public:
     /**
      * @brief Creates shallow packed data that self cleans up.
      * @param[in] data_pack_count Number of DataPack objects that will be pointed to
-     * by this PackedData.
-     * @return A smart pointer to a PackedData structure.
-     * @details The returned PackedData will self clean up its p_data_packs field
+     * by this DataPackCollection.
+     * @return A smart pointer to a DataPackCollection structure.
+     * @details The returned DataPackCollection will self clean up its p_data_packs field
      * when it goes out of scope.
      *
-     * Clients can use the created PackedData by pointing to their DataPack objects
+     * Clients can use the created DataPackCollection by pointing to their DataPack objects
      * in the pre-allocated p_data_packs field array.
      */
-    static unique_ptr_custom_deleter<hebench::APIBridge::PackedData>
-    createPackedData(std::uint64_t data_pack_count);
+    static unique_ptr_custom_deleter<hebench::APIBridge::DataPackCollection>
+    createDataPackCollection(std::uint64_t data_pack_count);
     /**
      * @brief Creates shallow data pack that self cleans up.
      * @param[in] buffer_count Number of NativeDataBuffer objects pointed to by this

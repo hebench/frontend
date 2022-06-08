@@ -82,7 +82,7 @@ IBenchmarkDescriptor::DescriptionToken::Ptr BenchmarkFactory::matchBenchmarkDesc
     std::vector<std::shared_ptr<IBenchmarkDescriptor>> &registered_benchmarks =
         getRegisteredBenchmarks();
     for (std::size_t i = 0; !retval && i < registered_benchmarks.size(); ++i)
-        retval = registered_benchmarks[i]->matchBenchmarkDescriptor(engine, backend_desc, config);
+        retval = registered_benchmarks[i]->matchDescriptor(engine, backend_desc, config);
 
     return retval;
 }

@@ -53,7 +53,8 @@ public:
      * the actual benchmark.
      *
      * When returned by IBenchmarkDescriptor::matchBenchmarkDescriptor(), this token fields
-     * are fully and correctly set and can be used to describe the benchmark.
+     * are fully and correctly set, including the backend `BenchmarkDescriptor` with concrete values
+     * instead of configurable placeholder values. This token can be used to describe the benchmark.
      */
     class DescriptionToken
     {
@@ -107,16 +108,17 @@ public:
      * @returns `null` otherwise.
      * @details
      * The token returned by this method can be passed to createBenchmark() to instantiate
-     * the actual benchmark. All fields in the returned token must be fully and correctly set
-     * and can be used to describe the benchmark.
+     * the actual benchmark. All fields in the returned token must be fully and correctly set,
+     * including the backend `BenchmarkDescriptor` with concrete values
+     * instead of configurable placeholder values. This token can be used to describe the benchmark.
      *
      * This method is used by `BenchmarkFactory::createBenchmark()` to select
      * the appropriate benchmark to create based on the descriptor and the
      * workload parameters.
      */
-    virtual DescriptionToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
-                                                           const BenchmarkDescription::Backend &backend_desc,
-                                                           const BenchmarkDescription::Configuration &config) const = 0;
+    virtual DescriptionToken::Ptr matchDescriptor(const Engine &engine,
+                                                  const BenchmarkDescription::Backend &backend_desc,
+                                                  const BenchmarkDescription::Configuration &config) const = 0;
 
     /**
      * @brief Creates the represented IBenchmark object that can perform the workload
@@ -222,19 +224,19 @@ public:
     ~PartialBenchmarkDescriptor() override;
 
     /**
-     * @brief Implementation of IBenchmarkDescription::matchBenchmarkDescriptor().
-     * @details Clients should not override this method.
+     * @brief Implementation of IBenchmarkDescriptor::matchDescriptor().
+     * @details
+     * Clients cannot override this method.
      *
-     * This method calls the internal overload
-     * PartialBenchmarkDescriptor::matchBenchmarkDescriptor()
-     * which clients must implement. If this overload returns true, then method
+     * This method calls the internal PartialBenchmarkDescriptor::matchBenchmarkDescriptor()
+     * which clients must implement. If matchBenchmarkDescriptor() returns `true`, then method
      * PartialBenchmarkDescriptor::completeWorkloadDescription() is called to complete
      * the description with information specific to the workload.
-     * @sa PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &, const std::vector<hebench::APIBridge::WorkloadParam> &) const
+     * @sa PartialBenchmarkDescriptor::matchBenchmarkDescriptor(), IBenchmarkDescriptor::matchDescriptor()
      */
-    DescriptionToken::Ptr matchBenchmarkDescriptor(const Engine &engine,
-                                                   const BenchmarkDescription::Backend &backend_desc,
-                                                   const BenchmarkDescription::Configuration &config) const override;
+    DescriptionToken::Ptr matchDescriptor(const Engine &engine,
+                                          const BenchmarkDescription::Backend &backend_desc,
+                                          const BenchmarkDescription::Configuration &config) const override final;
 
 protected:
     static std::unordered_set<std::size_t> getCipherParamPositions(std::uint32_t cipher_param_mask);
@@ -253,6 +255,10 @@ protected:
          * @brief Number of parameters for the represented workload operation.
          */
         std::size_t operation_params_count;
+        /**
+         * @brief Benchmark descriptor completed with concrete values assigned to configurable fields.
+         */
+        hebench::APIBridge::BenchmarkDescriptor concrete_descriptor;
         /**
          * @brief Human-readable friendly name for the represented workload to be used for
          * its description on the report.
@@ -276,6 +282,7 @@ protected:
      * @details
      * This method is used by `BenchmarkFactory::createBenchmark()` to select
      * the appropriate benchmark to create based on the descriptor.
+     * @sa `IBenchmarkDescriptor::matchDescriptor()`
      */
     virtual bool matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
                                           const std::vector<hebench::APIBridge::WorkloadParam> &w_params) const = 0;
@@ -292,13 +299,16 @@ protected:
      * `PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::BenchmarkDescriptor &, const std::vector<hebench::APIBridge::WorkloadParam> &)`
      * returns `true`.
      *
-     * All fields in \p config are valid. All fields in \p backend_desc are valid, except
-     * for `operation_params_count` which is expected to be returned by this method. Use these
-     * values to complete the description in the \p output.
+     * All fields in \p config are valid. In \p backend_desc: field `operation_params_count`
+     * is expected to be returned by this method; field `descriptor` is the original returned
+     * from the backend, and it is expected that this method returns the final, concrete version.
+     * All other input parameters are valid. Use these values to complete all fields in \p output.
      *
      * This method must fill out all fields in the \p output structure. Field `workload_header`
      * may be set to empty string, but `workload_name` and `operation_params_count` must be
-     * set to the correct values.
+     * set to the correct values. Field `concrete_descriptor` must be set to the completed
+     * benchmark descriptor, where all configurable values are replaced by the concrete, final values.
+     * See `WorkloadDescriptionOutput` for more details.
      *
      * If extra header information returned in `workload_header` is not empty, it will be
      * appended in the report to a pre-generated header in CSV format. The following is an
@@ -321,7 +331,8 @@ protected:
      * , , Encrypted parameters, All
      * @endcode
      *
-     * \p output`.workload_header` will be appended in the next line immediately after this.
+     * \p output `.workload_header` will be appended at the next line immediately after this.
+     * @sa `WorkloadDescriptionOutput`
      */
     virtual void completeWorkloadDescription(WorkloadDescriptionOutput &output,
                                              const Engine &engine,
@@ -470,10 +481,11 @@ public:
      * benchmark corresponding to the description token used during construction.
      */
     void initBackend(hebench::Utilities::TimingReportEx &out_report, const FriendPrivateKey &);
+
     /**
      * @brief Called automatically during initialization after the backend has
      * been initialized.
-     * @details This method is provided to allow clients to perform polymorphic
+     * @details This method allows clients to perform polymorphic
      * initialization outside of the class constructor after the backend benchmark
      * has been initialized, if needed.
      *

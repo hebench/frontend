@@ -30,6 +30,9 @@ private:
 public:
     typedef std::shared_ptr<Engine> Ptr;
 
+    static void completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
+                                            const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor);
+
     static std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code);
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;
     static Engine::Ptr create();

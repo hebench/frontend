@@ -191,6 +191,26 @@ IBenchmarkDescriptor::DescriptionToken::Ptr Engine::describeBenchmark(std::size_
     return retval;
 }
 
+void Engine::completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
+                                         const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor)
+{
+    hebench::APIBridge::BenchmarkDescriptor &output = backend_description.m_backend_description.m_descriptor;
+    if (output.workload != completed_descriptor.workload
+        || output.data_type != completed_descriptor.data_type
+        || output.category != completed_descriptor.category
+        || output.cipher_param_mask != completed_descriptor.cipher_param_mask
+        || output.scheme != completed_descriptor.scheme
+        || output.security != completed_descriptor.security
+        || output.other != completed_descriptor.other)
+        throw std::runtime_error(IL_LOG_MSG_CLASS("Completed benchmark descriptor differs from backend specification."));
+
+    if (output.cat_params.min_test_time_ms == 0)
+        output.cat_params.min_test_time_ms = completed_descriptor.cat_params.min_test_time_ms;
+    for (std::uint64_t i = 0; i < HEBENCH_MAX_CATEGORY_PARAMS; ++i)
+        if (output.cat_params.reserved[i] == 0)
+            output.cat_params.reserved[i] = completed_descriptor.cat_params.reserved[i];
+}
+
 std::vector<std::vector<hebench::APIBridge::WorkloadParam>>
 Engine::getDefaultWorkloadParams(std::size_t index) const
 {

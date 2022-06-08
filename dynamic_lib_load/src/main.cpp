@@ -36,17 +36,22 @@ ErrorCode describeBenchmark(Handle h_engine, Handle h_bench_desc, BenchmarkDescr
     return DynamicLibLoad::describeBenchmark(h_engine, h_bench_desc, p_bench_desc, p_default_params);
 }
 
-ErrorCode initBenchmark(Handle h_engine, Handle h_bench_desc, const WorkloadParams *p_params, Handle *h_benchmark)
+ErrorCode createBenchmark(Handle h_engine, Handle h_bench_desc, const WorkloadParams *p_params, Handle *h_benchmark)
 {
-    return DynamicLibLoad::initBenchmark(h_engine, h_bench_desc, p_params, h_benchmark);
+    return DynamicLibLoad::createBenchmark(h_engine, h_bench_desc, p_params, h_benchmark);
 }
 
-ErrorCode encode(Handle h_benchmark, const PackedData *p_parameters, Handle *h_plaintext)
+ErrorCode initBenchmark(Handle h_benchmark, const BenchmarkDescriptor *p_concrete_desc)
+{
+    return DynamicLibLoad::initBenchmark(h_benchmark, p_concrete_desc);
+}
+
+ErrorCode encode(Handle h_benchmark, const DataPackCollection *p_parameters, Handle *h_plaintext)
 {
     return DynamicLibLoad::encode(h_benchmark, p_parameters, h_plaintext);
 }
 
-ErrorCode decode(Handle h_benchmark, Handle h_plaintext, PackedData *p_native)
+ErrorCode decode(Handle h_benchmark, Handle h_plaintext, DataPackCollection *p_native)
 {
     return DynamicLibLoad::decode(h_benchmark, h_plaintext, p_native);
 }

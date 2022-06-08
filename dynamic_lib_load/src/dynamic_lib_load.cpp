@@ -30,18 +30,21 @@ typedef ErrorCode (*DescribeBenchmark)(Handle h_engine,
                                        BenchmarkDescriptor *p_bench_desc,
                                        WorkloadParams *p_default_params);
 
-typedef ErrorCode (*InitBenchmark)(Handle h_engine,
-                                   Handle h_bench_desc,
-                                   const WorkloadParams *p_params,
-                                   Handle *h_benchmark);
+typedef ErrorCode (*CreateBenchmark)(Handle h_engine,
+                                     Handle h_bench_desc,
+                                     const WorkloadParams *p_params,
+                                     Handle *h_benchmark);
+
+typedef ErrorCode (*InitBenchmark)(Handle h_benchmark,
+                                   const BenchmarkDescriptor *p_concrete_desc);
 
 typedef ErrorCode (*Encode)(Handle h_benchmark,
-                            const PackedData *p_parameters,
+                            const DataPackCollection *p_parameters,
                             Handle *h_plaintext);
 
 typedef ErrorCode (*Decode)(Handle h_benchmark,
                             Handle h_plaintext,
-                            PackedData *p_native);
+                            DataPackCollection *p_native);
 
 typedef ErrorCode (*Encrypt)(Handle h_benchmark,
                              Handle h_plaintext,
@@ -93,6 +96,7 @@ struct ExternFunctions
     SubscribeBenchmarks subscribeBenchmarks;
     GetWorkloadParamsDetails getWorkloadParamsDetails;
     DescribeBenchmark describeBenchmark;
+    CreateBenchmark createBenchmark;
     InitBenchmark initBenchmark;
     Encode encode;
     Decode decode;
@@ -144,6 +148,7 @@ void DynamicLibLoad::loadLibrary(const std::string &path)
     m_functions.subscribeBenchmarks       = (SubscribeBenchmarks)loadSymbol(m_lib->handle, "subscribeBenchmarks");
     m_functions.getWorkloadParamsDetails  = (GetWorkloadParamsDetails)loadSymbol(m_lib->handle, "getWorkloadParamsDetails");
     m_functions.describeBenchmark         = (DescribeBenchmark)loadSymbol(m_lib->handle, "describeBenchmark");
+    m_functions.createBenchmark           = (CreateBenchmark)loadSymbol(m_lib->handle, "createBenchmark");
     m_functions.initBenchmark             = (InitBenchmark)loadSymbol(m_lib->handle, "initBenchmark");
     m_functions.encode                    = (Encode)loadSymbol(m_lib->handle, "encode");
     m_functions.decode                    = (Decode)loadSymbol(m_lib->handle, "decode");
@@ -208,17 +213,23 @@ ErrorCode DynamicLibLoad::describeBenchmark(Handle h_engine, Handle h_bench_desc
     return m_functions.describeBenchmark(h_engine, h_bench_desc, p_bench_desc, p_default_params);
 }
 
-ErrorCode DynamicLibLoad::initBenchmark(Handle h_engine, Handle h_bench_desc, const WorkloadParams *p_params, Handle *h_benchmark)
+ErrorCode DynamicLibLoad::createBenchmark(Handle h_engine, Handle h_bench_desc, const WorkloadParams *p_params, Handle *h_benchmark)
 {
-    return m_functions.initBenchmark(h_engine, h_bench_desc, p_params, h_benchmark);
+    return m_functions.createBenchmark(h_engine, h_bench_desc, p_params, h_benchmark);
 }
 
-ErrorCode DynamicLibLoad::encode(Handle h_benchmark, const PackedData *p_parameters, Handle *h_plaintext)
+ErrorCode DynamicLibLoad::initBenchmark(Handle h_benchmark,
+                                        const BenchmarkDescriptor *p_concrete_desc)
+{
+    return m_functions.initBenchmark(h_benchmark, p_concrete_desc);
+}
+
+ErrorCode DynamicLibLoad::encode(Handle h_benchmark, const DataPackCollection *p_parameters, Handle *h_plaintext)
 {
     return m_functions.encode(h_benchmark, p_parameters, h_plaintext);
 }
 
-ErrorCode DynamicLibLoad::decode(Handle h_benchmark, Handle h_plaintext, PackedData *p_native)
+ErrorCode DynamicLibLoad::decode(Handle h_benchmark, Handle h_plaintext, DataPackCollection *p_native)
 {
     return m_functions.decode(h_benchmark, h_plaintext, p_native);
 }

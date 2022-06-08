@@ -106,7 +106,6 @@ public:
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>
     void addEvent(hebench::Common::TimingReportEvent::Ptr p_event,
                   const std::string &event_type_name);
-    //std::string generateSummaryCSV(TimingReportEventC &main_event_summary);
 
     template <class TimeInterval> // TimeInterval must be a std::ratio<num, den>
     static hebench::ReportGen::TimingReportEventC convert2C(const hebench::Common::TimingReportEvent &timing_event);

@@ -58,7 +58,7 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     assert(OpParameterCount == output.operation_params_count);
 
     std::stringstream ss;
-    std::uint64_t batch_sizes[OpParameterCount];
+    std::uint64_t *batch_sizes                         = output.concrete_descriptor.cat_params.offline.data_count;
     std::uint64_t vector_size                          = fetchVectorSize(config.w_params);
     hebench::APIBridge::BenchmarkDescriptor bench_desc = backend_desc.descriptor;
 
