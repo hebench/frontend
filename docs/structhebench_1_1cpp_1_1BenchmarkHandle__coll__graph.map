@@ -1,0 +1,8 @@
+<map id="hebench::cpp::BenchmarkHandle" name="hebench::cpp::BenchmarkHandle">
+<area shape="rect" id="node1" title="Bundles a benchmark and its description to cross the API Bridge as a handle." alt="" coords="151,303,387,329"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1BenchmarkDescription.html" title="Base class for objects representing a specific benchmark based on an HEBench benchmark descriptor." alt="" coords="253,213,517,240"/>
+<area shape="rect" id="node3" href="$classhebench_1_1cpp_1_1ITaggedObject.html" title="Represents an object with a tag." alt="" coords="54,117,262,143"/>
+<area shape="rect" id="node6" href="$classhebench_1_1cpp_1_1BaseBenchmark.html" title="Top level opaque benchmark class." alt="" coords="5,213,228,240"/>
+<area shape="rect" id="node4" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1BenchmarkDescriptor" title="Defines a benchmark test." alt="" coords="299,109,470,151"/>
+<area shape="rect" id="node5" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1CategoryParams" title="Specifies parameters for a category." alt="" coords="311,5,459,47"/>
+</map>

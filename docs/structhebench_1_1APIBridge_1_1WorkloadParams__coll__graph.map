@@ -1,0 +1,4 @@
+<map id="hebench::APIBridge::WorkloadParams" name="hebench::APIBridge::WorkloadParams">
+<area shape="rect" id="node1" title="Specifies the parameters for a workload." alt="" coords="5,109,153,151"/>
+<area shape="rect" id="node2" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1WorkloadParam" title="Defines a single workload parameter." alt="" coords="5,5,153,47"/>
+</map>

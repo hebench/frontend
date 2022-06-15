@@ -1,0 +1,18 @@
+var searchData=
+[
+  ['saveconfiguration_938',['saveConfiguration',['../classhebench_1_1Utilities_1_1BenchmarkConfigurator.html#aedb7ae75f351b17115adcd8ca728a95c',1,'hebench::Utilities::BenchmarkConfigurator']]],
+  ['schemename_939',['schemeName',['../classhebench_1_1cpp_1_1BaseEngine.html#a575f36d517e38b62d93a4f99de3e6d5b',1,'hebench::cpp::BaseEngine']]],
+  ['securityname_940',['securityName',['../classhebench_1_1cpp_1_1BaseEngine.html#a35eb21deaec1c29d88239963b40a6549',1,'hebench::cpp::BaseEngine']]],
+  ['set_941',['set',['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#a3757f0a072d59259a9eb6a978b7cac3e',1,'hebench::cpp::WorkloadParams::Common::set(std::size_t index, const T &amp;value, const std::string &amp;name)'],['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#af0dc281a5eaf580ab2faeaa58b11cf6d',1,'hebench::cpp::WorkloadParams::Common::set(std::size_t index, const T &amp;value)'],['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#af7395514be875ceb41a6819def67d4e7',1,'hebench::cpp::WorkloadParams::Common::set(std::size_t index, const double &amp;value, const std::string &amp;name)'],['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#ad7e7f32a5a42f360bc6f8d386968eeea',1,'hebench::cpp::WorkloadParams::Common::set(std::size_t index, const double &amp;value)']]],
+  ['setdescriptor_942',['setDescriptor',['../classhebench_1_1cpp_1_1BaseBenchmark.html#af451cfc4eaf3571ea61f6b7a3907f8d4',1,'hebench::cpp::BaseBenchmark']]],
+  ['setlasterror_943',['setLastError',['../classhebench_1_1cpp_1_1BaseEngine.html#a9a5cc7e007830a1fb69d557aa4fa73b9',1,'hebench::cpp::BaseEngine::setLastError(hebench::APIBridge::ErrorCode value)'],['../classhebench_1_1cpp_1_1BaseEngine.html#a6d9b053fe9b7c04815b167c2261404ab',1,'hebench::cpp::BaseEngine::setLastError(hebench::APIBridge::ErrorCode value, const std::string &amp;err_desc)']]],
+  ['setrandomseed_944',['setRandomSeed',['../classhebench_1_1Utilities_1_1RandomGenerator.html#a15d477f71b36a6789612804c045c33ef',1,'hebench::Utilities::RandomGenerator::setRandomSeed()'],['../classhebench_1_1Utilities_1_1RandomGenerator.html#a99c434096eec85c9c81f392aa77fefcd',1,'hebench::Utilities::RandomGenerator::setRandomSeed(std::uint64_t seed)']]],
+  ['showbenchmarkdefaults_945',['showBenchmarkDefaults',['../structProgramConfig.html#abafb228219709820ebba1dbfea338994',1,'ProgramConfig']]],
+  ['showconfig_946',['showConfig',['../structProgramConfig.html#a7b85759f6b0fdb9a7fb5fbd47da73e0e',1,'ProgramConfig']]],
+  ['showversion_947',['showVersion',['../structProgramConfig.html#acb9b67507ba33f07740dfd313c878990',1,'ProgramConfig']]],
+  ['sizeof_948',['sizeOf',['../classhebench_1_1TestHarness_1_1IDataLoader.html#a07d555e0cfc5f07aaf400483fb054366',1,'hebench::TestHarness::IDataLoader']]],
+  ['store_949',['store',['../classhebench_1_1cpp_1_1BaseBenchmark.html#a49e7f7508f8cbbcc1e0895b13cc356e7',1,'hebench::cpp::BaseBenchmark::store()'],['../namespacehebench_1_1APIBridge.html#a5696b351ec3db4f7f3bc28dfb4ef77f4',1,'hebench::APIBridge::store()']]],
+  ['subscribebenchmarkcount_950',['subscribeBenchmarkCount',['../classhebench_1_1cpp_1_1BaseEngine.html#ac12385ead403155c480ccbb76a4bb5fc',1,'hebench::cpp::BaseEngine']]],
+  ['subscribebenchmarks_951',['subscribeBenchmarks',['../classhebench_1_1cpp_1_1BaseEngine.html#a34a9bc67e5505924766df748ed24517d',1,'hebench::cpp::BaseEngine::subscribeBenchmarks()'],['../namespacehebench_1_1APIBridge.html#a125c869021eef8dc090f61ada182b759',1,'hebench::APIBridge::subscribeBenchmarks(Handle h_engine, Handle *p_h_bench_descs)']]],
+  ['subscribebenchmarkscount_952',['subscribeBenchmarksCount',['../namespacehebench_1_1APIBridge.html#af263b51d05957aa3152d3ea998523b65',1,'hebench::APIBridge']]]
+];

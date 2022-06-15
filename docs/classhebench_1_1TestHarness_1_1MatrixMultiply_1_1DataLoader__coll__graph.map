@@ -1,0 +1,6 @@
+<map id="hebench::TestHarness::MatrixMultiply::DataLoader" name="hebench::TestHarness::MatrixMultiply::DataLoader">
+<area shape="rect" id="node1" title=" " alt="" coords="5,273,212,315"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1DataLoaderCompute.html" title=" " alt="" coords="27,184,191,225"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1PartialDataLoader.html" title="Base class for data loaders and data generators." alt="" coords="27,95,191,136"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1IDataLoader.html" title=" " alt="" coords="27,5,191,47"/>
+</map>

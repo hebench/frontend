@@ -1,0 +1,43 @@
+<map id="benchmarks" name="benchmarks">
+<area shape="rect" id="node1" href="dir_766d4271b02f1b8d299fdb9a4f74e558.html" title="include" alt="" coords="225,255,297,303"/>
+<area shape="rect" id="node11" href="dir_ab18a57d722ab5e7d9cd22a6af7c563b.html" title="api_bridge" alt="" coords="593,351,684,399"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000024_000000.html" title="7" alt="" coords="573,342,582,357"/>
+<area shape="rect" id="node3" href="dir_ce60114e581ae5a2dffb3f3208a6304f.html" title="categories" alt="" coords="313,159,404,207"/>
+<area shape="rect" id="edge28-headlabel" href="dir_000021_000024.html" title="4" alt="" coords="299,241,309,255"/>
+<area shape="rect" id="edge29-headlabel" href="dir_000021_000000.html" title="3" alt="" coords="576,329,585,344"/>
+<area shape="rect" id="node4" href="dir_d97442055d470e122db745db472f81e1.html" title="datagen_helper" alt="" coords="428,159,551,207"/>
+<area shape="rect" id="edge11-headlabel" href="dir_000012_000024.html" title="2" alt="" coords="313,258,322,273"/>
+<area shape="rect" id="edge10-headlabel" href="dir_000012_000000.html" title="1" alt="" coords="595,325,605,340"/>
+<area shape="rect" id="node5" href="dir_411cbdceb1bf66fc6b62b71922a8447c.html" title="DotProduct" alt="" coords="590,63,685,111"/>
+<area shape="rect" id="edge9-headlabel" href="dir_000026_000024.html" title="3" alt="" coords="261,229,270,243"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000026_000021.html" title="2" alt="" coords="419,158,429,172"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000026_000012.html" title="1" alt="" coords="541,149,550,163"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000026_000000.html" title="5" alt="" coords="700,358,709,372"/>
+<area shape="rect" id="node6" href="dir_7af58f6bd31a9dd8ff640235b3e6c2af.html" title="EltwiseAdd" alt="" coords="206,63,301,111"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000035_000024.html" title="3" alt="" coords="218,228,227,243"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000035_000021.html" title="2" alt="" coords="320,133,330,148"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000035_000012.html" title="1" alt="" coords="413,137,423,151"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000035_000000.html" title="5" alt="" coords="649,326,659,341"/>
+<area shape="rect" id="node7" href="dir_9ffd399e74652206240705f5dfeb52c0.html" title="EltwiseMult" alt="" coords="325,63,424,111"/>
+<area shape="rect" id="edge26-headlabel" href="dir_000044_000024.html" title="3" alt="" coords="238,227,247,242"/>
+<area shape="rect" id="edge27-headlabel" href="dir_000044_000021.html" title="2" alt="" coords="369,135,379,149"/>
+<area shape="rect" id="edge25-headlabel" href="dir_000044_000012.html" title="1" alt="" coords="448,133,457,148"/>
+<area shape="rect" id="edge24-headlabel" href="dir_000044_000000.html" title="5" alt="" coords="660,330,670,344"/>
+<area shape="rect" id="node8" href="dir_ebf78b5e22cd690c286b82405f1faca3.html" title="Generic" alt="" coords="709,63,781,111"/>
+<area shape="rect" id="edge22-headlabel" href="dir_000053_000024.html" title="3" alt="" coords="276,232,285,247"/>
+<area shape="rect" id="edge23-headlabel" href="dir_000053_000021.html" title="2" alt="" coords="419,158,428,173"/>
+<area shape="rect" id="edge21-headlabel" href="dir_000053_000012.html" title="1" alt="" coords="566,158,575,172"/>
+<area shape="rect" id="edge20-headlabel" href="dir_000053_000000.html" title="5" alt="" coords="699,366,708,381"/>
+<area shape="rect" id="node9" href="dir_e0137c357dd83a18ee62a55ba9256cba.html" title="LogisticRegression" alt="" coords="37,63,181,111"/>
+<area shape="rect" id="edge12-headlabel" href="dir_000062_000024.html" title="3" alt="" coords="215,229,225,244"/>
+<area shape="rect" id="edge14-headlabel" href="dir_000062_000021.html" title="2" alt="" coords="295,139,304,153"/>
+<area shape="rect" id="edge15-headlabel" href="dir_000062_000012.html" title="1" alt="" coords="408,142,417,156"/>
+<area shape="rect" id="edge13-headlabel" href="dir_000062_000000.html" title="5" alt="" coords="633,324,643,338"/>
+<area shape="rect" id="node10" href="dir_9c4bcebe3bcbd762ce8a6e0526548418.html" title="MatrixMultiply" alt="" coords="448,63,565,111"/>
+<area shape="rect" id="edge16-headlabel" href="dir_000071_000024.html" title="3" alt="" coords="250,227,259,242"/>
+<area shape="rect" id="edge18-headlabel" href="dir_000071_000021.html" title="2" alt="" coords="410,149,420,163"/>
+<area shape="rect" id="edge19-headlabel" href="dir_000071_000012.html" title="1" alt="" coords="501,135,510,150"/>
+<area shape="rect" id="edge17-headlabel" href="dir_000071_000000.html" title="5" alt="" coords="691,338,700,353"/>
+<area shape="rect" id="clust2" href="dir_ce49fa1ec6deb0b42cbd398e98e821ce.html" alt="" coords="27,52,920,217"/>
+<area shape="rect" id="clust1" href="dir_ed90da1922a0c391021c3ade376f0db6.html" title="test_harness" alt="" coords="16,16,931,313"/>
+</map>

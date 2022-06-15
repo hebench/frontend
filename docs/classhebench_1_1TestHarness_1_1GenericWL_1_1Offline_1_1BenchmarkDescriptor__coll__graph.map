@@ -1,0 +1,6 @@
+<map id="hebench::TestHarness::GenericWL::Offline::BenchmarkDescriptor" name="hebench::TestHarness::GenericWL::Offline::BenchmarkDescriptor">
+<area shape="rect" id="node1" title=" " alt="" coords="45,288,215,344"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1GenericWL_1_1BenchmarkDescriptorCategory.html" title=" " alt="" coords="5,184,255,240"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1PartialBenchmarkDescriptor.html" title="Provides boilerplate implementation to common methods of interface IBenchmarkDescription and implemen..." alt="" coords="24,95,236,136"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1IBenchmarkDescriptor.html" title="Base interface for Benchmark Descriptors." alt="" coords="43,5,217,47"/>
+</map>

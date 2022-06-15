@@ -1,0 +1,4 @@
+<map id="hebench::cpp::BaseEngine" name="hebench::cpp::BaseEngine">
+<area shape="rect" id="node1" title="Base class that encapsulates common behavior of backend engines." alt="" coords="13,80,205,107"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1ITaggedObject.html" title="Represents an object with a tag." alt="" coords="5,5,213,32"/>
+</map>

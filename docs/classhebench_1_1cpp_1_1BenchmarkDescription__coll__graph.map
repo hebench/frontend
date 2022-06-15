@@ -1,0 +1,6 @@
+<map id="hebench::cpp::BenchmarkDescription" name="hebench::cpp::BenchmarkDescription">
+<area shape="rect" id="node1" title="Base class for objects representing a specific benchmark based on an HEBench benchmark descriptor." alt="" coords="41,213,305,240"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1ITaggedObject.html" title="Represents an object with a tag." alt="" coords="5,117,213,143"/>
+<area shape="rect" id="node3" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1BenchmarkDescriptor" title="Defines a benchmark test." alt="" coords="237,109,408,151"/>
+<area shape="rect" id="node4" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1CategoryParams" title="Specifies parameters for a category." alt="" coords="249,5,397,47"/>
+</map>

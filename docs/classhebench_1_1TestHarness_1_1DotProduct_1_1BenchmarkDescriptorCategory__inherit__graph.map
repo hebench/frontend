@@ -1,0 +1,7 @@
+<map id="hebench::TestHarness::DotProduct::BenchmarkDescriptorCategory" name="hebench::TestHarness::DotProduct::BenchmarkDescriptorCategory">
+<area shape="rect" id="node1" title=" " alt="" coords="488,45,739,101"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1DotProduct_1_1Latency_1_1BenchmarkDescriptor.html" title=" " alt="" coords="787,5,957,61"/>
+<area shape="rect" id="node5" href="$classhebench_1_1TestHarness_1_1DotProduct_1_1Offline_1_1BenchmarkDescriptor.html" title=" " alt="" coords="787,85,957,141"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1PartialBenchmarkDescriptor.html" title="Provides boilerplate implementation to common methods of interface IBenchmarkDescription and implemen..." alt="" coords="228,53,440,94"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1IBenchmarkDescriptor.html" title="Base interface for Benchmark Descriptors." alt="" coords="5,53,180,94"/>
+</map>

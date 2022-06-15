@@ -1,0 +1,7 @@
+<map id="hebench::cpp::ITaggedObject" name="hebench::cpp::ITaggedObject">
+<area shape="rect" id="node1" title="Represents an object with a tag." alt="" coords="5,81,213,108"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1BaseBenchmark.html" title="Top level opaque benchmark class." alt="" coords="282,5,505,32"/>
+<area shape="rect" id="node3" href="$classhebench_1_1cpp_1_1BaseEngine.html" title="Base class that encapsulates common behavior of backend engines." alt="" coords="297,56,489,83"/>
+<area shape="rect" id="node4" href="$classhebench_1_1cpp_1_1BenchmarkDescription.html" title="Base class for objects representing a specific benchmark based on an HEBench benchmark descriptor." alt="" coords="261,107,525,133"/>
+<area shape="rect" id="node5" href="$classhebench_1_1cpp_1_1EngineObject.html" title="Helper class to encapsulate objects that will cross the boundary of the API Bridge." alt="" coords="292,157,495,184"/>
+</map>
