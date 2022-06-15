@@ -262,7 +262,7 @@ TutorialEltwiseAddBenchmark::~TutorialEltwiseAddBenchmark()
 //! [benchmark destructor]
 
 //! [benchmark encode]
-hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::APIBridge::PackedData *p_parameters)
+hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::APIBridge::DataPackCollection *p_parameters)
 {
     assert(p_parameters && p_parameters->pack_count > 0 && p_parameters->p_data_packs);
 
@@ -312,7 +312,7 @@ hebench::APIBridge::Handle TutorialEltwiseAddBenchmark::encode(const hebench::AP
 
 //! [benchmark decode]
 void TutorialEltwiseAddBenchmark::decode(hebench::APIBridge::Handle h_encoded_data,
-                                         hebench::APIBridge::PackedData *p_native)
+                                         hebench::APIBridge::DataPackCollection *p_native)
 {
     assert(p_native && p_native->p_data_packs && p_native->pack_count > 0);
 

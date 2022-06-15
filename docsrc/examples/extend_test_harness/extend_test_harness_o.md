@@ -13,8 +13,8 @@ Note: all data is cleaned up and handles are released as appropriate. Boiler pla
 
 ```cpp
 // each parameter contains a batch of samples for the offline test
-PackedData packed_params_plain;
-PackedData packed_params_cipher;
+DataPackCollection packed_params_plain;
+DataPackCollection packed_params_cipher;
 
 vector<Handle> local_handles;
 
@@ -96,7 +96,7 @@ decrypt(h_benchmark, h_local_results[i], &h_plain_result);
 stopTiming();
 
 // decode
-PackedData packed_raw_result; // pre-allocated
+DataPackCollection packed_raw_result; // pre-allocated
 startTiming();
 decode(Handle h_benchmark, h_plain_result, &packed_raw_result);
 stopTiming();

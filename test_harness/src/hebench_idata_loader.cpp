@@ -50,18 +50,18 @@ std::size_t IDataLoader::sizeOf(hebench::APIBridge::DataType data_type)
     return retval;
 }
 
-IDataLoader::unique_ptr_custom_deleter<hebench::APIBridge::PackedData>
-IDataLoader::createPackedData(std::uint64_t data_pack_count)
+IDataLoader::unique_ptr_custom_deleter<hebench::APIBridge::DataPackCollection>
+IDataLoader::createDataPackCollection(std::uint64_t data_pack_count)
 {
-    unique_ptr_custom_deleter<hebench::APIBridge::PackedData> retval;
+    unique_ptr_custom_deleter<hebench::APIBridge::DataPackCollection> retval;
     hebench::APIBridge::DataPack *p_data_packs = nullptr;
 
     try
     {
         p_data_packs = new hebench::APIBridge::DataPack[data_pack_count];
-        retval       = unique_ptr_custom_deleter<hebench::APIBridge::PackedData>(
-            new hebench::APIBridge::PackedData(),
-            [](hebench::APIBridge::PackedData *p) {
+        retval       = unique_ptr_custom_deleter<hebench::APIBridge::DataPackCollection>(
+            new hebench::APIBridge::DataPackCollection(),
+            [](hebench::APIBridge::DataPackCollection *p) {
                 if (p)
                 {
                     if (p->p_data_packs)

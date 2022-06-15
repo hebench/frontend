@@ -66,8 +66,11 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
                                                               const BenchmarkDescription::Configuration &config) const
 {
     (void)engine;
-    (void)backend_desc;
     std::stringstream ss;
+
+    output.concrete_descriptor = backend_desc.descriptor;
+    if (output.concrete_descriptor.cat_params.min_test_time_ms == 0)
+        output.concrete_descriptor.cat_params.min_test_time_ms = config.default_min_test_time_ms;
 
     // workload name
 

@@ -28,28 +28,32 @@ For appropriate API Bridge versioning, check <b>API Bridge Versioning General Gu
 #### (Optional) Add a C++ wrapper for the workload parameters.
 If the new workload requires flexible workload parameters, adding a wrapper to ease development of backends is optional, but encouraged.
 
-To add a wrapper, extend class `hebench::cpp::WorkloadParams::Generic` from `workload_params.h`. Check this header file for examples of other wrappers already implemented for existing workloads.
+To add a wrapper, extend class `hebench::cpp::WorkloadParams::Common` from `workload_params.h`. Check this header file for examples of other wrappers already implemented for existing workloads.
 
 ### 3. Implement workload in Test Harness.
 
 This step entails the addition of the workload implementation into the Test Harness.
 
-There are two ways to extend the Test Harness with a new workload. Which one is used depends on how much flexibility is required for the new workload and whether it fits in the predefined category behavior. For full flexibility, check first option. For pre-defined behavior, see the second option.
+There are two ways to extend the Test Harness with a new workload. Which one is used depends on how much flexibility is required for the new workload and whether it fits in the predefined category behavior. For pre-defined behavior, see the first option. For full flexibility, check the second option.
 
-1. For full flexibility, inherit from `hebench::TestHarness::PartialBenchmark` to have common implementations to trivial methods declared by interface `IBenchmark`.
-    
-    Method `hebench::TestHarness::PartialBenchmark::init()` must be implemented to perform initialization after construction, but before the backend itself is initialized. Data loading or generation should take place in this method. Errors during initialization should be reported as exceptions derived from `std::exception`.
-    
-    Method `hebench::TestHarness::PartialBenchmark::postInit()` can be overriden to provide initialization that requires the backend to already exist. Note that overrides of this method must call the base method as their first operation.
-    
-    The implementation of method `IBenchmark::run()` is the most important since it is the implementation of the actual benchmark. For correct statistical computations of reported events during the run, make sure that events of the same type are added to the `hebench::Utilities::TimingReportEx` `out_report` parameter under the same event ID, and the event which is the main benchmarking operation is clearly specified when adding the event type.
-    
-2. If default behavior for any of the categories (**Latency**, **Offline**, etc.) is needed, then, the new workload benchmark class can inherit from the corresponding implementation of `IBenchmark`:
+#### Option 1: Pre-defined Category Behavior
 
-    * ```hebench::TestHarness::BenchmarkLatency``` for [Latency](extend_test_harness_l.md)
-    * ```hebench::TestHarness::BenchmarkOffline``` for [Offline](extend_test_harness_o.md)
+If default behavior for any of the categories (**Latency**, **Offline**, etc.) is needed, then, the new workload benchmark class can inherit from the corresponding implementation of `IBenchmark`:
 
-    The `run()` method has already been implemented in each of these classes to follow the default measuring methodology for the category. See the corresponding documentation on extending from each and explanation of the default flow for each category as implemented by these classes.
+* ```hebench::TestHarness::BenchmarkLatency``` for [Latency](extend_test_harness_l.md)
+* ```hebench::TestHarness::BenchmarkOffline``` for [Offline](extend_test_harness_o.md)
+
+The `run()` method has already been implemented in each of these classes to follow the default measuring methodology for the category. See the corresponding documentation on extending from each and explanation of the default flow for each category as implemented by these classes.
+
+#### Option 2: Full Flexibility (Advanced)
+
+For full flexibility, inherit from `hebench::TestHarness::PartialBenchmark` to have common implementations to trivial methods declared by interface `IBenchmark`.
+    
+Method `hebench::TestHarness::PartialBenchmark::init()` must be implemented to perform initialization after construction, but before the backend itself is initialized. Data loading or generation should take place in this method. Errors during initialization should be reported as exceptions derived from `std::exception`.
+    
+Method `hebench::TestHarness::PartialBenchmark::postInit()` can be overriden to provide initialization that requires the backend to already exist. Note that overrides of this method must call the base method as their first operation.
+    
+The implementation of method `IBenchmark::run()` is the most important since it is the implementation of the actual benchmark. For correct statistical computations of reported events during the run, make sure that events of the same type are added to the `hebench::Utilities::TimingReportEx` `out_report` parameter under the same event ID, and the event which is the main benchmarking operation is clearly specified when adding the event type.
 
 ### 4. Make Test Harness aware of the new workload.
 
@@ -76,4 +80,4 @@ Once the workload is implemented, the final step is to make the Test Harness awa
 
 Once registered, `BenchmarkFactory` will call the methods in benchmark description objects to pick the right benchmark for a workload, create it, and destroy it once the benchmark completes execution.
 
-For an example of registering a benchmark workload with the `BenchmarkFactory`, check the mechanism implementation in `hebench_eltwiseadd_l.h` and `hebench_eltwiseadd_l.cpp`.
+For an example of registering a benchmark workload with the `BenchmarkFactory` and all the corresponding nuances, check the mechanism implementation in `hebench_eltwiseadd_l.h` and `hebench_eltwiseadd_l.cpp`.

@@ -55,16 +55,18 @@ public:
                                        Handle h_bench_desc,
                                        BenchmarkDescriptor *p_bench_desc,
                                        WorkloadParams *p_default_params);
-    static ErrorCode initBenchmark(Handle h_engine,
-                                   Handle h_bench_desc,
-                                   const WorkloadParams *p_params,
-                                   Handle *h_benchmark);
+    static ErrorCode createBenchmark(Handle h_engine,
+                                     Handle h_bench_desc,
+                                     const WorkloadParams *p_params,
+                                     Handle *h_benchmark);
+    static ErrorCode initBenchmark(Handle h_benchmark,
+                                   const BenchmarkDescriptor *p_concrete_desc);
     static ErrorCode encode(Handle h_benchmark,
-                            const PackedData *p_parameters,
+                            const DataPackCollection *p_parameters,
                             Handle *h_plaintext);
     static ErrorCode decode(Handle h_benchmark,
                             Handle h_plaintext,
-                            PackedData *p_native);
+                            DataPackCollection *p_native);
     static ErrorCode encrypt(Handle h_benchmark,
                              Handle h_plaintext,
                              Handle *h_ciphertext);
@@ -86,10 +88,6 @@ public:
     static std::uint64_t getSchemeName(Handle h_engine, Scheme s, char *p_name, std::uint64_t size);
     static std::uint64_t getSchemeSecurityName(Handle h_engine, Scheme s, Security sec,
                                                char *p_name, std::uint64_t size);
-    //    static std::uint64_t getBenchmarkDescriptionEx(Handle h_engine,
-    //                                                   const BenchmarkDescriptor *p_bench_desc,
-    //                                                   const hebench::APIBridge::WorkloadParams *p_w_params,
-    //                                                   char *p_description, std::uint64_t size);
     static std::uint64_t getBenchmarkDescriptionEx(Handle h_engine,
                                                    Handle h_bench_desc,
                                                    const hebench::APIBridge::WorkloadParams *p_w_params,
