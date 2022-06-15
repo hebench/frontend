@@ -59,7 +59,7 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     assert(OpParameterCount == output.operation_params_count);
 
     std::stringstream ss;
-    std::uint64_t batch_sizes[OpParameterCount];
+    std::uint64_t *batch_sizes = output.concrete_descriptor.cat_params.offline.data_count;
     std::array<std::pair<std::uint64_t, std::uint64_t>, OpParameterCount> mat_dims =
         fetchMatrixSizes(config.w_params);
 

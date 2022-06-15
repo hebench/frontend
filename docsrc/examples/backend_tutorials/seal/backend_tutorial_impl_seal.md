@@ -17,7 +17,7 @@ Benchmarks are required to implement a number of functions as defined in the API
 
 For more information on the pipeline flow, check @ref function_pipeline_chart .
 
-To enable a high amount of flexibility and enable the widest variety of implementations with the exception of the encode and decode's `hebench::APIBridge::PackedData` parameters, all communication is done via `hebench::APIBridge::Handle objects`. These handle objects are completely opaque to the Test Harness and it is up to the backend to decide what is stored in each handle at each step of the pipeline.
+To enable a high amount of flexibility and enable the widest variety of implementations with the exception of the encode and decode's `hebench::APIBridge::DataPackCollection` parameters, all communication is done via `hebench::APIBridge::Handle objects`. These handle objects are completely opaque to the Test Harness and it is up to the backend to decide what is stored in each handle at each step of the pipeline.
 
 C++ wrapper offers a series of helper methods to ease the creation and data wrapping in these handles. While it is not necessary to use these methods, it is recommended for code correctness, robustness, and clarity. See `hebench::cpp::BaseEngine::createHandle()` and `hebench::cpp::BaseEngine::retrieveFromHandle()` for details.
 
@@ -249,7 +249,7 @@ Having our internal representation, we call the original workload version to dec
 
 Finally, we rearrange the result clear text in the format expected by Test Harness, respecting the specifications.
 
-The `hebench::APIBridge::PackedData*` parameter points to pre-allocated memory into which the decoded results must be written. The exact size, format, data type, etc. is detailed in the workload description which for this example is @ref elementwise_add .
+The `hebench::APIBridge::DataPackCollection*` parameter points to pre-allocated memory into which the decoded results must be written. The exact size, format, data type, etc. is detailed in the workload description which for this example is @ref elementwise_add .
 
 We are returning the result, so, we find the data pack corresponding to this result component from the pre-allocated buffers. If we had more than one component, we would loop on the components and decode each. This method will throw an exception if the requested component is missing from the data packs passed by Test Harness into `decode()` (note that this should not happen in a default workload pipeline).
 

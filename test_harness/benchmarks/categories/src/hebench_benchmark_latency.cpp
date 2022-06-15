@@ -104,12 +104,12 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
 
     // pack the parameters based on encrypted/plain
 
-    // PackedData packed_parameters;
+    // DataPackCollection packed_parameters;
     // packed_parameters.p_data_packs = param_packs;
     // packed_parameters.pack_count = op_params_count;
 
     // separate param packs in encrypted/plain
-    std::vector<hebench::APIBridge::PackedData> packed_parameters(2);
+    std::vector<hebench::APIBridge::DataPackCollection> packed_parameters(2);
     std::vector<std::vector<hebench::APIBridge::DataPack>> packed_parameters_data_packs(packed_parameters.size());
     std::bitset<sizeof(std::uint32_t)> cipher_param_mask(this->getBackendDescription().descriptor.cipher_param_mask);
     for (std::size_t i = 0; i < param_packs.size(); ++i)
@@ -122,7 +122,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     } // end for
 
     // pack the data in API bridge format
-    std::memset(packed_parameters.data(), 0, sizeof(hebench::APIBridge::PackedData) * packed_parameters.size());
+    std::memset(packed_parameters.data(), 0, sizeof(hebench::APIBridge::DataPackCollection) * packed_parameters.size());
     for (std::size_t i = 0; i < packed_parameters.size(); ++i)
     {
         if (!packed_parameters_data_packs[i].empty())
@@ -194,7 +194,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
 
     // Handle h_remote_inputs;
     // load(h_benchmark,
-    //      &h_cipher_inputs, 1, // only 1 PackedData
+    //      &h_cipher_inputs, 1, // only 1 DataPackCollection
     //      &h_remote_inputs);
 
     // prepare handles for loading
@@ -289,12 +289,12 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     } // end else
 
     std::uint64_t min_test_time_ms =
-        this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms > 0 ?
-            this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms :
+        this->getBackendDescription().descriptor.cat_params.min_test_time_ms > 0 ?
+            this->getBackendDescription().descriptor.cat_params.min_test_time_ms :
             this->getBenchmarkConfiguration().default_min_test_time_ms;
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Starting latency test.") << std::endl
-              << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Requested time: " + std::to_string(this->getBackendDescription().descriptor.cat_params.latency.min_test_time_ms) + " ms") << std::endl
+              << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Requested time: " + std::to_string(this->getBackendDescription().descriptor.cat_params.min_test_time_ms) + " ms") << std::endl
               << std::string(sizeof(IOS_MSG_INFO) + 1, ' ') << hebench::Logging::GlobalLogger::log("Actual time: " + std::to_string(min_test_time_ms) + " ms") << std::endl;
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Testing...") << std::endl;
@@ -361,7 +361,7 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
     for (std::size_t i = 0; i < h_remote_results.size(); ++i)
     {
         // store(h_benchmark, h_remote_result,
-        //       &h_cipher_output, 1 // Only 1 local PackedData for result expected for this operation.
+        //       &h_cipher_output, 1 // Only 1 local DataPackCollection for result expected for this operation.
         //      );
 
         timer.start();
@@ -465,11 +465,11 @@ bool BenchmarkLatency::run(hebench::Utilities::TimingReportEx &out_report,
         results_pack[result_pos].param_position = result_pos;
     } // end for
 
-    // PackedData packed_results;
+    // DataPackCollection packed_results;
     // packed_results.p_data_packs = &results_pack;
     // packed_results.pack_count = 1; // result shape is [1, 10]
 
-    hebench::APIBridge::PackedData packed_results;
+    hebench::APIBridge::DataPackCollection packed_results;
     packed_results.p_data_packs = results_pack.data();
     packed_results.pack_count   = results_pack.size();
 

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include "modules/logging/include/logging.h"
 #include "modules/timer/include/timer.h"
@@ -71,7 +72,7 @@ std::string PartialBenchmarkDescriptor::getCategoryName(hebench::APIBridge::Cate
         break;
 
     default:
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown category."));
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown category: " + std::to_string(static_cast<int>(category)) + "."));
         break;
     } // end switch
 
@@ -101,7 +102,7 @@ std::string PartialBenchmarkDescriptor::getDataTypeName(hebench::APIBridge::Data
         break;
 
     default:
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type: " + std::to_string(static_cast<int>(data_type)) + "."));
         break;
     } // end switch
 
@@ -134,9 +135,9 @@ std::uint64_t PartialBenchmarkDescriptor::computeSampleSizes(std::uint64_t *samp
     return result_batch_size;
 }
 
-IBenchmarkDescriptor::DescriptionToken::Ptr PartialBenchmarkDescriptor::matchBenchmarkDescriptor(const Engine &engine,
-                                                                                                 const BenchmarkDescription::Backend &backend_desc,
-                                                                                                 const BenchmarkDescription::Configuration &config) const
+IBenchmarkDescriptor::DescriptionToken::Ptr PartialBenchmarkDescriptor::matchDescriptor(const Engine &engine,
+                                                                                        const BenchmarkDescription::Backend &backend_desc,
+                                                                                        const BenchmarkDescription::Configuration &config) const
 {
     IBenchmarkDescriptor::DescriptionToken::Ptr retval;
 
@@ -169,13 +170,15 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
                                           BenchmarkDescription::Description &description) const
 {
     hebench::APIBridge::Handle h_bench_desc                        = backend_desc.handle;
-    const hebench::APIBridge::BenchmarkDescriptor &bench_desc      = backend_desc.descriptor;
     const std::vector<hebench::APIBridge::WorkloadParam> &w_params = config.w_params;
 
     // obtain the values for the description that are specific to the workload
     WorkloadDescriptionOutput completed_description;
+    std::memset(&completed_description.concrete_descriptor, 0, sizeof(completed_description.concrete_descriptor));
     completeWorkloadDescription(completed_description,
                                 engine, backend_desc, config);
+
+    const hebench::APIBridge::BenchmarkDescriptor &bench_desc = completed_description.concrete_descriptor;
 
     std::stringstream ss;
     std::filesystem::path ss_path;
@@ -221,17 +224,20 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     ss_path /= hebench::Utilities::convertToDirectoryName(ss.str()); // workload params
     ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescriptor::getCategoryName(bench_desc.category));
     ss_path /= hebench::Utilities::convertToDirectoryName(PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type));
+
+    ss = std::stringstream();
+    ss << bench_desc.cat_params.min_test_time_ms << "ms";
     std::size_t max_non_zero = HEBENCH_MAX_CATEGORY_PARAMS;
     while (max_non_zero > 0 && bench_desc.cat_params.reserved[max_non_zero - 1] == 0)
         --max_non_zero;
-    ss = std::stringstream();
     if (max_non_zero > 0)
     {
         for (std::size_t i = 0; i < max_non_zero; ++i)
-            ss << bench_desc.cat_params.reserved[i];
+            ss << "_" << bench_desc.cat_params.reserved[i];
     } // end if
     else
-        ss << "default";
+        ss << "_default";
+
     ss_path /= ss.str();
     // cipher/plain parameters
     ss = std::stringstream();
@@ -263,12 +269,12 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
         ss << s_tmp;
     ss << std::endl
        << std::endl
-       << ", Category, " << PartialBenchmarkDescriptor::getCategoryName(bench_desc.category) << std::endl;
+       << ", Category, " << PartialBenchmarkDescriptor::getCategoryName(bench_desc.category) << std::endl
+       << ", , Minimum test time requested (ms), " << bench_desc.cat_params.min_test_time_ms << std::endl;
     switch (bench_desc.category)
     {
     case hebench::APIBridge::Category::Latency:
-        ss << ", , Warmup iterations, " << bench_desc.cat_params.latency.warmup_iterations_count << std::endl
-           << ", , Minimum test time requested (ms), " << bench_desc.cat_params.latency.min_test_time_ms << std::endl;
+        ss << ", , Warmup iterations, " << bench_desc.cat_params.latency.warmup_iterations_count << std::endl;
         break;
 
     case hebench::APIBridge::Category::Offline:
@@ -318,23 +324,17 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     // return the generated description
 
     // make sure we have default sample sizes for every operation parameter
+    Engine::completeBenchmarkDescriptor(backend_desc, completed_description.concrete_descriptor);
     backend_desc.operation_params_count = completed_description.operation_params_count;
     config.default_sample_sizes.resize(backend_desc.operation_params_count, 0);
 
     description.workload_name = completed_description.workload_name;
     description.header        = ss.str();
-
-    if (!config.b_single_path_report)
-    {
-        description.path = ss_path;
-    }
-    else
-    {
-        std::string modified_ss_path = std::string(ss_path);
-        std::replace(modified_ss_path.begin(), modified_ss_path.end(),
+    description.path          = ss_path;
+    if (config.b_single_path_report)
+        // replace path separator by hyphens when requested
+        std::replace(description.path.begin(), description.path.end(),
                      hebench::TestHarness::separator, hebench::TestHarness::hyphen);
-        description.path = modified_ss_path;
-    }
 }
 
 //------------------------
@@ -376,35 +376,37 @@ void PartialBenchmark::internalInit(const IBenchmarkDescriptor::DescriptionToken
 
 void PartialBenchmark::postInit()
 {
-    m_current_event_id = getEventIDStart();
-    m_b_initialized    = true;
+    m_b_initialized = true;
 }
 
 void PartialBenchmark::initBackend(hebench::Utilities::TimingReportEx &out_report, const FriendPrivateKey &)
 {
     hebench::Common::EventTimer timer;
     hebench::Common::TimingReportEvent::Ptr p_timing_event;
+    std::stringstream ss;
 
     hebench::APIBridge::WorkloadParams params;
     params.count  = m_config.w_params.size();
     params.params = m_config.w_params.data();
 
+    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Creating backend benchmark...") << std::endl;
+    timer.start();
+    validateRetCode(hebench::APIBridge::createBenchmark(m_p_engine->handle(),
+                                                        this->getBackendDescription().handle,
+                                                        m_config.w_params.empty() ? nullptr : &params,
+                                                        &m_handle));
+    p_timing_event = timer.stop<DefaultTimeInterval>(getEventIDNext(), 1, nullptr);
+    out_report.addEvent<DefaultTimeInterval>(p_timing_event, std::string("Creation"));
+    hebench::Logging::GlobalLogger::log("OK");
+    std::cout << IOS_MSG_OK << std::endl;
+
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing backend benchmark...") << std::endl;
     timer.start();
-    validateRetCode(hebench::APIBridge::initBenchmark(m_p_engine->handle(),
-                                                      this->getBackendDescription().handle,
-                                                      m_config.w_params.empty() ? nullptr : &params,
-                                                      &m_handle));
+    validateRetCode(hebench::APIBridge::initBenchmark(m_handle, &this->getBackendDescription().descriptor));
     p_timing_event = timer.stop<DefaultTimeInterval>(getEventIDNext(), 1, nullptr);
     out_report.addEvent<DefaultTimeInterval>(p_timing_event, std::string("Initialization"));
     hebench::Logging::GlobalLogger::log("OK");
     std::cout << IOS_MSG_OK << std::endl;
-    std::stringstream ss = std::stringstream();
-    ss << "Elapsed wall time: " << p_timing_event->elapsedWallTime<std::milli>() << " ms";
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-    ss = std::stringstream();
-    ss << "Elapsed CPU time: " << p_timing_event->elapsedCPUTime<std::milli>() << " ms";
-    std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 }
 
 void PartialBenchmark::checkInitializationState(const FriendPrivateKey &) const

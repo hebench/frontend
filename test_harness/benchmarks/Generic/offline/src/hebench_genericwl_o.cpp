@@ -64,13 +64,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     // finish benchmark header description
 
     std::stringstream ss;
-    std::vector<uint64_t> batch_sizes(output.operation_params_count);
+    std::uint64_t *batch_sizes = output.concrete_descriptor.cat_params.offline.data_count;
     std::uint64_t sample_size_fallback =
         config.fallback_default_sample_size > 0 ?
             config.fallback_default_sample_size :
             DefaultBatchSize;
-    std::uint64_t result_batch_size = computeSampleSizes(batch_sizes.data(),
-                                                         batch_sizes.size(),
+    std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
+                                                         output.operation_params_count,
                                                          config.default_sample_sizes,
                                                          backend_desc.descriptor,
                                                          sample_size_fallback);
