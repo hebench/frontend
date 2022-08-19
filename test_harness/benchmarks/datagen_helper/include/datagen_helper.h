@@ -6,6 +6,9 @@
 #define _HEBench_Harness_DataGenHelper_H_0596d40a3cce4b108a81595c50eb286d
 
 #include <mutex>
+#include <string>
+#include <set>
+#include <type_traits>
 
 #include "modules/logging/include/logging.h"
 
@@ -85,6 +88,18 @@ public:
                                       void *result, std::uint64_t elem_count,
                                       double mean, double stddev);
 
+    /**
+     * @brief Generates normally distributed random data of the specified type.
+     * @param[in] data_type Data type of data to generate.
+     * @param[in] result Pointer to buffer containing elements of the specified type.
+     * @param[in] elem_count Number of elements in pointed buffer.
+     * @param[in] min_val Minimum value for generated elements.
+     * @param[in] max_val Maximum value for generated elements.
+     */
+    static void generateRandomSetN(hebench::APIBridge::DataType data_type,
+                                      void *result, std::uint64_t elem_count,
+                                      double mean, double stddev);
+
 protected:
     DataGeneratorHelper() = default;
 
@@ -95,6 +110,11 @@ private:
     template <class T>
     static void generateRandomVectorN(T *result, std::uint64_t elem_count,
                                       T mean, T stddev);
+    template <class T>
+    static void generateRandomSetN(T *result, std::uint64_t elem_count,
+                                   T mean, T stddev);
+    static void generateRandomStringSetN(std::string *result, std::uint64_t elem_count,
+                                         double mean, double stddev);
 
 private:
     static std::mutex m_mtx_rand;

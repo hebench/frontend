@@ -87,6 +87,47 @@ inline void DataGeneratorHelper::generateRandomVectorN(T *result, std::uint64_t 
     } // end for
 }
 
+template <class T>
+inline void DataGeneratorHelper::generateRandomSetN(T *result, std::uint64_t elem_count,
+                                                    T mean, T stddev)
+{
+    std::normal_distribution<double> rnd(mean, stddev);
+    std::set<T> resultant_set;
+    bool inserted = false;
+    for (std::uint64_t i = 0; i < elem_count; ++i)
+    {
+        T value;
+        std::lock_guard<std::mutex> lock(m_mtx_rand);
+        do
+        {
+            value = static_cast<T>(rnd(hebench::Utilities::RandomGenerator::get()));
+            auto insertion = resultant_set.insert(value);
+            inserted = insertion.second;
+        } while (!inserted);
+        result[i] = value;
+    } // end for
+}
+
+inline void DataGeneratorHelper::generateRandomStringSetN(std::string *result, std::uint64_t elem_count,
+                                                          double mean, double stddev)
+{
+    std::normal_distribution<double> rnd(mean, stddev);
+    std::set<std::string> resultant_set;
+    bool inserted = false;
+    for (std::uint64_t i = 0; i < elem_count; ++i)
+    {
+        std::string value;
+        std::lock_guard<std::mutex> lock(m_mtx_rand);
+        do
+        {
+            value = std::to_string(rnd(hebench::Utilities::RandomGenerator::get()));
+            auto insertion = resultant_set.insert(value);
+            inserted = insertion.second;
+        } while (!inserted);
+        result[i] = value;
+    } // end for
+}
+
 void DataGeneratorHelper::generateRandomVectorU(hebench::APIBridge::DataType data_type,
                                                 void *result, std::uint64_t elem_count,
                                                 double min_val, double max_val)
@@ -143,6 +184,43 @@ void DataGeneratorHelper::generateRandomVectorN(hebench::APIBridge::DataType dat
     case hebench::APIBridge::DataType::Float64:
         generateRandomVectorN<double>(reinterpret_cast<double *>(result), elem_count,
                                       static_cast<double>(mean), static_cast<double>(stddev));
+        break;
+
+    default:
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
+        break;
+    } // end switch
+}
+
+void DataGeneratorHelper::generateRandomSetN(hebench::APIBridge::DataType data_type,
+                                                void *result, std::uint64_t elem_count,
+                                                double mean, double stddev)
+{
+    switch (data_type)
+    {
+    case hebench::APIBridge::DataType::Int32:
+        generateRandomSetN<std::int32_t>(reinterpret_cast<std::int32_t *>(result), elem_count,
+                                            static_cast<std::int32_t>(mean), static_cast<std::int32_t>(stddev));
+        break;
+
+    case hebench::APIBridge::DataType::Int64:
+        generateRandomSetN<std::int64_t>(reinterpret_cast<std::int64_t *>(result), elem_count,
+                                            static_cast<std::int64_t>(mean), static_cast<std::int64_t>(stddev));
+        break;
+
+    case hebench::APIBridge::DataType::Float32:
+        generateRandomSetN<float>(reinterpret_cast<float *>(result), elem_count,
+                                     static_cast<float>(mean), static_cast<float>(stddev));
+        break;
+
+    case hebench::APIBridge::DataType::Float64:
+        generateRandomSetN<double>(reinterpret_cast<double *>(result), elem_count,
+                                      static_cast<double>(mean), static_cast<double>(stddev));
+        break;
+
+    case hebench::APIBridge::DataType::String:
+        generateRandomStringSetN(reinterpret_cast<std::string *>(result), elem_count,
+                                 mean, stddev);
         break;
 
     default:
