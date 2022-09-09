@@ -16,7 +16,7 @@ Z = op(X, Y)
 where
 
 ```cpp
-op(X, Y) = X \bigcap Y
+$op(X, Y) = X \bigcap Y$
 ```
 
 and operation `\bigcap` is the simple set intersection.
