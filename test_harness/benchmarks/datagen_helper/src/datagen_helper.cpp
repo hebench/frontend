@@ -6,6 +6,7 @@
 #include <cassert>
 #include <chrono>
 #include <stdexcept>
+#include <iostream>
 
 #include "../include/datagen_helper.h"
 #include "include/hebench_utilities_harness.h"
@@ -93,18 +94,17 @@ inline void DataGeneratorHelper::generateRandomSetN(T *result, std::uint64_t ele
 {
     std::normal_distribution<double> rnd(mean, stddev);
     std::set<T> resultant_set;
-    bool inserted = false;
-    for (std::uint64_t i = 0; i < elem_count; ++i)
+    for (int i = 0; i < (int)elem_count; ++i)
     {
-        T value;
         std::lock_guard<std::mutex> lock(m_mtx_rand);
-        do
-        {
-            value = static_cast<T>(rnd(hebench::Utilities::RandomGenerator::get()));
-            auto insertion = resultant_set.insert(value);
-            inserted = insertion.second;
-        } while (!inserted);
-        result[i] = value;
+        T value = static_cast<T>(rnd(hebench::Utilities::RandomGenerator::get()));
+        auto insertion = resultant_set.insert(value);
+        if (insertion.second) {
+            result[i] = value;
+        } else if (i > 0) {
+            // if the value is repeated and couldn't be inserted, a new value must be generated
+            --i;
+        }
     } // end for
 }
 
@@ -113,18 +113,17 @@ inline void DataGeneratorHelper::generateRandomStringSetN(std::string *result, s
 {
     std::normal_distribution<double> rnd(mean, stddev);
     std::set<std::string> resultant_set;
-    bool inserted = false;
-    for (std::uint64_t i = 0; i < elem_count; ++i)
+    for (int i = 0; i < (int)elem_count; ++i)
     {
-        std::string value;
         std::lock_guard<std::mutex> lock(m_mtx_rand);
-        do
-        {
-            value = std::to_string(rnd(hebench::Utilities::RandomGenerator::get()));
-            auto insertion = resultant_set.insert(value);
-            inserted = insertion.second;
-        } while (!inserted);
-        result[i] = value;
+        std::string value = std::to_string((int)rnd(hebench::Utilities::RandomGenerator::get()));
+        auto insertion = resultant_set.insert(value);
+        if (insertion.second) {
+            result[i] = value;
+        } else if (i > 0) {
+            // if the value is repeated and couldn't be inserted, a new value must be generated
+            --i;
+        }
     } // end for
 }
 

@@ -41,7 +41,6 @@ bool BenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::Ben
     bool retval =
         BenchmarkDescriptorCategory::matchBenchmarkDescriptor(bench_desc, w_params)
         && (bench_desc.category == hebench::APIBridge::Category::Latency);
-    std::cout << "match latency " << retval << std::endl;
     return retval;
 }
 
@@ -74,12 +73,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
         result_batch_size *= batch_sizes[param_i];
     } // end for
     // complete header with workload specifics
-    ss << ", , c = Intersect(S_0,  S_1)" << std::endl
+    ss << ", , Z = Intersect(X, Y)" << std::endl
        << ", , , Elements, Batch size" << std::endl;
-    for (std::size_t i = 0; i < OpParameterCount; ++i)
-    {
-        ss << ", , S_" << i << ", " << set_size.at(i) << ", " << batch_sizes[i] << std::endl;
-    } // end for
+
+    ss << ", , X" << ", " << set_size.at(0) << ", " << batch_sizes[0] << std::endl;
+
+    ss << ", , Y" << ", " << set_size.at(1) << ", " << batch_sizes[1] << std::endl;
+
     ss << ", , Z, 1, " << result_batch_size << std::endl;
 
     output.workload_header = ss.str();
@@ -94,11 +94,9 @@ hebench::TestHarness::PartialBenchmark *BenchmarkDescriptor::createBenchmark(std
     try
     {
         retval = new Benchmark(p_engine, description_token);
-        std::cout << "create latency \n";
     }
     catch (...)
     {
-        std::cout << "create latency failed\n";
         if (retval)
             delete retval;
         throw;
