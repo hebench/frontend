@@ -101,6 +101,10 @@ std::string PartialBenchmarkDescriptor::getDataTypeName(hebench::APIBridge::Data
         retval = "Float64";
         break;
 
+    case hebench::APIBridge::DataType::String:
+        retval = "String";
+        break;
+
     default:
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type: " + std::to_string(static_cast<int>(data_type)) + "."));
         break;

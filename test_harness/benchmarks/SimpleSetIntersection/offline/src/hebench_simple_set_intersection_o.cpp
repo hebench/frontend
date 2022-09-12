@@ -42,7 +42,6 @@ bool BenchmarkDescriptor::matchBenchmarkDescriptor(const hebench::APIBridge::Ben
         BenchmarkDescriptorCategory::matchBenchmarkDescriptor(bench_desc, w_params)
         && (bench_desc.category == hebench::APIBridge::Category::Offline);
 
-    std::cout << "match offline " << retval << std::endl;
     return retval;
 }
 
@@ -73,14 +72,15 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
                                                          backend_desc.descriptor,
                                                          sample_size_fallback);
     // complete header with workload specifics
-    ss << ", , c = Intersect(S0, S1)" << std::endl
+    ss << ", , Z = Intersect(X, Y)" << std::endl
        << ", , , Elements, Batch size" << std::endl;
-    for (std::size_t i = 0; i < OpParameterCount; ++i)
-    {
-        ss << ", , S_" << i << ", " << set_size.at(i) << ", " << batch_sizes[i] << std::endl;
-    } // end for
-    ss << ", , z, 1, " << result_batch_size << std::endl;
 
+    ss << ", , X" << ", " << set_size.at(0) << ", " << batch_sizes[0] << std::endl;
+
+    ss << ", , Y" << ", " << set_size.at(1) << ", " << batch_sizes[1] << std::endl;
+
+    // TODO: ask for Z size first display
+    ss << ", , Z, 1, " << result_batch_size << std::endl;
     output.workload_header = ss.str();
 }
 
@@ -93,11 +93,9 @@ hebench::TestHarness::PartialBenchmark *BenchmarkDescriptor::createBenchmark(std
     try
     {
         retval = new Benchmark(p_engine, description_token);
-        std::cout << "create offline \n";
     }
     catch (...)
     {
-        std::cout << "create offline failed\n";
         if (retval)
             delete retval;
         throw;

@@ -173,6 +173,20 @@ bool PartialBenchmarkCategory::validateResult(IDataLoader::Ptr dataset,
                                                                  0.01);
                 break;
 
+            case hebench::APIBridge::DataType::String:
+            {
+                // TODO: Migrate to actual function, ask for precision
+                std::string *p_str_output = static_cast<std::string*>(p_output);
+                std::string *p_str_truth = static_cast<std::string*>(p_truth);
+                for (uint64_t i = 0; i < count; ++i)
+                {
+                    if (p_str_output[i].compare(p_str_truth[i]) != 0)
+                    {
+                        is_valid.push_back(i);
+                    }
+                }
+                break;
+            }
             default:
                 retval = false;
                 break;

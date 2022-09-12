@@ -19,6 +19,7 @@ namespace SimpleSetIntersection {
 
 hebench::APIBridge::WorkloadParamType::WorkloadParamType
     BenchmarkDescriptorCategory::WorkloadParameterType[BenchmarkDescriptorCategory::WorkloadParameterCount] = {
+        hebench::APIBridge::WorkloadParamType::UInt64,
         hebench::APIBridge::WorkloadParamType::UInt64
     };
 
@@ -94,13 +95,11 @@ bool BenchmarkDescriptorCategory::matchBenchmarkDescriptor(const hebench::APIBri
     {
         try
         {
-            std::cout << "match plain\n";
             fetchSetSize(w_params);
             retval = true;
         }
         catch (...)
         {
-            std::cout << "match plain failed\n";
             // workload not supported
             retval = false;
         }
@@ -138,9 +137,11 @@ private:
         if (!y)
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `y`"));
 
-        std::sort(x, x + n);
-        std::sort(y, y + m);
-        std::set_intersection(x, x + n, y, y + m, result);
+        T *sorted_x = const_cast<T*>(x);
+        T *sorted_y = const_cast<T*>(y);
+        std::sort(sorted_x, sorted_x + n);
+        std::sort(sorted_y, sorted_y + m);
+        std::set_intersection(sorted_x, sorted_x + n, sorted_y, sorted_y + m, result);
     }
 };
 
@@ -235,7 +236,7 @@ void DataLoader::init(std::uint64_t set_size_x,
     std::size_t batch_sizes[InputDim0 + OutputDim0] = {
         batch_size_x,
         batch_size_y,
-        std::min(batch_size_x, batch_size_y) // Assuming there is a set that contains the other
+        batch_size_x*batch_size_y
     };
 
     m_set_size_x = set_size_x;
@@ -256,17 +257,20 @@ void DataLoader::init(std::uint64_t set_size_x,
 
     // at this point all NativeDataBuffers have been allocated and pointed to the correct locations
 
-    // fill up each vector data
+    // fill up each set (vector) data
 
     // input
+    std::uint64_t set_size = 0;
     for (std::size_t set_i = 0; set_i < InputDim0; ++set_i)
     {
         for (std::uint64_t i = 0; i < batch_sizes[set_i]; ++i)
         {
+            // in case the batch size differs from 1
+            set_size = (set_i % 2 == 0)? set_size_x: set_size_y;
             // generate the data
             DataGeneratorHelper::generateRandomSetN(data_type,
                                                     getParameterData(set_i).p_buffers[i].p,
-                                                    set_size_x, 0.0, 10.0);
+                                                    set_size, 0.0, 10.0);
         } // end for
     } // end for
 
@@ -296,14 +300,14 @@ void DataLoader::init(std::uint64_t set_size_x,
                       hebench::APIBridge::DataType data_type,
                       const std::string &dataset_filename)
 {
-    // Load/generate and initialize the data for vector element-wise addition:
-    // C = A . B
+    // Load/generate and initialize the data for simple set intersection:
+    // Z = X ∩ Y
 
     // number of samples in each input parameter and output
     std::size_t batch_sizes[InputDim0 + OutputDim0] = {
         batch_size_x,
         batch_size_y,
-        std::min(batch_size_x, batch_size_y) // Assuming there is a set that contains the other
+        batch_size_x*batch_size_y
     };
 
     m_set_size_x = set_size_x;
@@ -316,7 +320,7 @@ void DataLoader::init(std::uint64_t set_size_x,
         std::min(set_size_x, set_size_y) // Assuming there is a set that contains the other
     };
 
-    // allocate memory for each vector buffer
+    // allocate memory for each set (vector) buffer
     PartialDataLoader::init(dataset_filename, data_type,
                             InputDim0, batch_sizes, sample_set_sizes,
                             OutputDim0, sample_set_sizes + InputDim0);
