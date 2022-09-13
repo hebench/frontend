@@ -13,6 +13,7 @@
       <tab type="user" visible="yes" url="@ref elementwise_mult" title="Elementwise Multiplication" intro=""/>
       <tab type="user" visible="yes" url="@ref logistic_regression" title="Logistic Regression Inference" intro=""/>
       <tab type="user" visible="yes" url="@ref matrix_multiplication" title="Matrix Multiplication" intro=""/>
+      <tab type="user" visible="yes" url="@ref simple_set_intersection" title="Simple Set Intersection" intro=""/>
     </tab>
     <tab type="usergroup" visible="yes" url="@ref backend_overview" title="Backend Overview" intro="">
       <tab type="user" visible="yes" url="@ref APIBridge_overview" title="APIBridge Overview" intro=""/>
