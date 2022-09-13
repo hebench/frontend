@@ -5,12 +5,12 @@
 #ifndef _HEBench_Harness_DataGenerator_DotProduct_H_0596d40a3cce4b108a81595c50eb286d
 #define _HEBench_Harness_DataGenerator_DotProduct_H_0596d40a3cce4b108a81595c50eb286d
 
+#include <algorithm>
 #include <array>
 #include <memory>
 #include <random>
 #include <utility>
 #include <vector>
-#include <algorithm>
 
 #include "modules/general/include/nocopy.h"
 #include "modules/logging/include/logging.h"
@@ -32,7 +32,8 @@ public:
 private:
     IL_DECLARE_CLASS_NAME(DotProduct::BenchmarkDescriptorCategory)
 public:
-    static constexpr const char *BaseWorkloadName         = "Simple Set Intersection";
+    static constexpr const char *BaseWorkloadName = "Simple Set Intersection";
+    // EZR: this should be, at least, 3 mandatory w_params: |X|, |Y|, and k - number of elements in each set item.
     static constexpr std::uint64_t WorkloadParameterCount = 2; // number of parameters for this workload
     static constexpr std::uint64_t OpParameterCount       = 2; // number of parameters for this operation
     static constexpr std::uint64_t OpResultCount          = 1; // number of outputs for this operation
@@ -64,6 +65,7 @@ private:
 public:
     typedef std::shared_ptr<DataLoader> Ptr;
 
+    // EXR: needs `k` value
     static DataLoader::Ptr create(std::uint64_t set_size_x,
                                   std::uint64_t set_size_y,
                                   std::uint64_t batch_size_x,

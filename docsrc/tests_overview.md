@@ -11,3 +11,4 @@ This page lists all of the tests currently implemented as part of Test Harness.
  - @ref elementwise_mult
  - @ref logistic_regression
  - @ref matrix_multiplication
+ - @ref simple_set_intersection

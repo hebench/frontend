@@ -23,8 +23,11 @@ hebench::APIBridge::WorkloadParamType::WorkloadParamType
         hebench::APIBridge::WorkloadParamType::UInt64
     };
 
+// EZR: this needs to return how many items in dataset X, in dataset Y, and k (number of elements in each dataset item)
+//      std::array<std::uint64_t, 3>
 std::array<std::uint64_t, BenchmarkDescriptorCategory::OpParameterCount> BenchmarkDescriptorCategory::fetchSetSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
 {
+    // EZR: WorkloadParameterCount should be 3 (see header)
     assert(WorkloadParameterCount == 2);
     assert(OpParameterCount == 2);
     assert(OpResultCount == 1);
@@ -77,7 +80,7 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     // workload name
 
     auto sets_size = fetchSetSize(config.w_params);
-    ss << BaseWorkloadName 
+    ss << BaseWorkloadName
        << " |X| -> " << sets_size[0] << ", "
        << " |Y| -> " << sets_size[1];
 
@@ -122,8 +125,8 @@ private:
 
 public:
     static void vectorSimpleSetIntersection(hebench::APIBridge::DataType data_type,
-                                void *result, const void *x, const void *y, 
-                                std::uint64_t n, std::uint64_t m);
+                                            void *result, const void *x, const void *y,
+                                            std::uint64_t n, std::uint64_t m);
 
 protected:
     DataGeneratorHelper() {}
@@ -137,8 +140,8 @@ private:
         if (!y)
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `y`"));
 
-        T *sorted_x = const_cast<T*>(x);
-        T *sorted_y = const_cast<T*>(y);
+        T *sorted_x = const_cast<T *>(x);
+        T *sorted_y = const_cast<T *>(y);
         std::sort(sorted_x, sorted_x + n);
         std::sort(sorted_y, sorted_y + m);
         std::set_intersection(sorted_x, sorted_x + n, sorted_y, sorted_y + m, result);
@@ -146,8 +149,8 @@ private:
 };
 
 void DataGeneratorHelper::vectorSimpleSetIntersection(hebench::APIBridge::DataType data_type,
-                                           void *result, const void *x, const void *y,
-                                           std::uint64_t n, std::uint64_t m)
+                                                      void *result, const void *x, const void *y,
+                                                      std::uint64_t n, std::uint64_t m)
 {
     if (!result)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null 'p_result'."));
@@ -156,33 +159,33 @@ void DataGeneratorHelper::vectorSimpleSetIntersection(hebench::APIBridge::DataTy
     {
     case hebench::APIBridge::DataType::Int32:
         vectorSimpleSetIntersection<std::int32_t>(reinterpret_cast<std::int32_t *>(result),
-                                       reinterpret_cast<const std::int32_t *>(x), reinterpret_cast<const std::int32_t *>(y),
-                                       n, m);
+                                                  reinterpret_cast<const std::int32_t *>(x), reinterpret_cast<const std::int32_t *>(y),
+                                                  n, m);
         break;
 
     case hebench::APIBridge::DataType::Int64:
         vectorSimpleSetIntersection<std::int64_t>(reinterpret_cast<std::int64_t *>(result),
-                                       reinterpret_cast<const std::int64_t *>(x), reinterpret_cast<const std::int64_t *>(y),
-                                       n, m);
+                                                  reinterpret_cast<const std::int64_t *>(x), reinterpret_cast<const std::int64_t *>(y),
+                                                  n, m);
         break;
 
     case hebench::APIBridge::DataType::Float32:
         vectorSimpleSetIntersection<float>(reinterpret_cast<float *>(result),
-                                reinterpret_cast<const float *>(x), reinterpret_cast<const float *>(y),
-                                n, m);
+                                           reinterpret_cast<const float *>(x), reinterpret_cast<const float *>(y),
+                                           n, m);
         break;
 
     case hebench::APIBridge::DataType::Float64:
         vectorSimpleSetIntersection<double>(reinterpret_cast<double *>(result),
-                                 reinterpret_cast<const double *>(x), reinterpret_cast<const double *>(y),
-                                 n, m);
+                                            reinterpret_cast<const double *>(x), reinterpret_cast<const double *>(y),
+                                            n, m);
         break;
 
     // TODO: ask if this is required
     case hebench::APIBridge::DataType::String:
         vectorSimpleSetIntersection<std::string>(reinterpret_cast<std::string *>(result),
-                                 reinterpret_cast<const std::string *>(x), reinterpret_cast<const std::string *>(y),
-                                 n, m);
+                                                 reinterpret_cast<const std::string *>(x), reinterpret_cast<const std::string *>(y),
+                                                 n, m);
         break;
 
     default:
@@ -236,7 +239,7 @@ void DataLoader::init(std::uint64_t set_size_x,
     std::size_t batch_sizes[InputDim0 + OutputDim0] = {
         batch_size_x,
         batch_size_y,
-        batch_size_x*batch_size_y
+        batch_size_x * batch_size_y
     };
 
     m_set_size_x = set_size_x;
@@ -266,7 +269,7 @@ void DataLoader::init(std::uint64_t set_size_x,
         for (std::uint64_t i = 0; i < batch_sizes[set_i]; ++i)
         {
             // in case the batch size differs from 1
-            set_size = (set_i % 2 == 0)? set_size_x: set_size_y;
+            set_size = (set_i % 2 == 0) ? set_size_x : set_size_y;
             // generate the data
             DataGeneratorHelper::generateRandomSetN(data_type,
                                                     getParameterData(set_i).p_buffers[i].p,
@@ -276,7 +279,7 @@ void DataLoader::init(std::uint64_t set_size_x,
 
     // output
     //#pragma omp parallel for collapse(2)
-   for (std::uint64_t input_i = 0; input_i < batch_sizes[2]; ++input_i)
+    for (std::uint64_t input_i = 0; input_i < batch_sizes[2]; ++input_i)
     {
         // find the index for the result buffer based on the input indices
         std::uint64_t ppi[] = { 0, 0, input_i };
@@ -284,10 +287,10 @@ void DataLoader::init(std::uint64_t set_size_x,
 
         // generate the data
         DataGeneratorHelper::vectorSimpleSetIntersection(data_type,
-                                                        getResultData(0).p_buffers[z_i].p, // Z
-                                                        getParameterData(0).p_buffers[input_i].p, // X
-                                                        getParameterData(1).p_buffers[input_i].p, // Y
-                                                        set_size_x, set_size_y);
+                                                         getResultData(0).p_buffers[z_i].p, // Z
+                                                         getParameterData(0).p_buffers[input_i].p, // X
+                                                         getParameterData(1).p_buffers[input_i].p, // Y
+                                                         set_size_x, set_size_y);
     } // end for
 
     // all data has been generated at this point
@@ -307,7 +310,7 @@ void DataLoader::init(std::uint64_t set_size_x,
     std::size_t batch_sizes[InputDim0 + OutputDim0] = {
         batch_size_x,
         batch_size_y,
-        batch_size_x*batch_size_y
+        batch_size_x * batch_size_y
     };
 
     m_set_size_x = set_size_x;
@@ -337,10 +340,10 @@ void DataLoader::computeResult(std::vector<hebench::APIBridge::NativeDataBuffer 
 
     // generate the output
     DataGeneratorHelper::vectorSimpleSetIntersection(data_type,
-                                                  result.front()->p, // Z
-                                                  getParameterData(0).p_buffers[param_data_pack_indices[0]].p, // X
-                                                  getParameterData(1).p_buffers[param_data_pack_indices[1]].p, // Y
-                                                  m_set_size_x, m_set_size_y);
+                                                     result.front()->p, // Z
+                                                     getParameterData(0).p_buffers[param_data_pack_indices[0]].p, // X
+                                                     getParameterData(1).p_buffers[param_data_pack_indices[1]].p, // Y
+                                                     m_set_size_x, m_set_size_y);
 }
 
 } // namespace SimpleSetIntersection
