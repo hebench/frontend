@@ -1,14 +1,13 @@
 // Copyright (C) 2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-//#include <cxxabi.h>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <sstream>
 #include <string>
-//#include <typeinfo>
+#include <string_view>
 #include <vector>
 
 #include "hebench_dataset_loader.h"
@@ -25,16 +24,20 @@ public:
         Index_ControlIdentifier = 0,
         Index_ControlComponentIndex,
         Index_ControlNumSamples,
-        Index_ControlLineKind,
-        ControlTokenSize // number of tokens in the control line
+        Index_ControlKind,
+        ControlTokenSize, // number of mandatory tokens in the control line
+        Index_ControlPadToLength = ControlTokenSize,
+        Index_ControlPadValue,
+        ControlMaxTokenSize, // maximum number of tokens in the control line
     };
 
     enum CSVLine : std::uint64_t
     {
         Index_CSVFilename = 0,
-        Index_CSVFromLine,
+        CSVTokenSize, // number of mandatory tokens in the CSV line
+        Index_CSVFromLine = CSVTokenSize,
         Index_CSVNumSamples,
-        CSVTokenSize // number of tokens in the CSV line
+        CSVMaxTokenSize // maximum number of tokens in the CSV line
     };
 
     constexpr static const char *ControlLineInput     = "input";
@@ -63,6 +66,11 @@ bool EDLHelper::isEmpty(std::string_view s_view)
 template <typename T>
 class EDLTypedHelper
 {
+private:
+    std::uint64_t m_pad_to_length;
+    T m_pad_value;
+    std::filesystem::path m_working_path;
+
 public:
     /**
      * @brief Reads the next data block as described by the control line
@@ -70,13 +78,10 @@ public:
      * @param[out] out_data Structure where to store the read data.
      * @param is Input data stream.
      * @param[in] control_line_tokens Control line defining the data block.
-     * @param[in] pad_to_length Enables padding, up to this number of items. Same as
-     * ExternalDatasetLoader::loadFromCSV().
-     * @param[in] pad_value Value to use for padding.
-     * @param[in] filename For informational purposes only, this is the
-     * name of the file corresponding to the input stream.
-     * @param[in] start_line_num For informational purposes only, this is the
-     * line number where the control line was found inside the input stream.
+     * @param[in] working_path The current working directory. Any relative
+     * paths will be resolved relative to this.
+     * @param[in,out] line_num Increases every time a line is extracted from
+     * the input stream \p is.
      * @throws Standard C++ exception derived from std::exception on error describing the
      * failure.
      * @return The number of lines extracted from the input stream.
@@ -87,14 +92,25 @@ public:
      * The stream reading pointer will be advanced to the next line after the
      * data block.
      */
-    static std::uint64_t readDataBlock(std::vector<std::vector<std::vector<T>>> &out_data,
-                                       std::istream &is,
-                                       const std::vector<std::string_view> &control_line_tokens,
-                                       std::uint64_t pad_to_length,
-                                       const T &pad_value,
-                                       const std::string &filename, std::uint64_t start_line_num);
+    static void readDataBlock(std::vector<std::vector<std::vector<T>>> &out_data,
+                              std::istream &is,
+                              const std::vector<std::string_view> &control_line_tokens,
+                              const std::filesystem::path &working_path,
+                              std::uint64_t &line_num);
 
 private:
+    /**
+     * @brief Constructs a new EDLTypedHelper object.
+     * @param[in] pad_to_length Enables padding, up to this number of items.
+     * For more information see @ref dataset_csv_reference .
+     * @param[in] pad_value Value to use for padding.
+     * @param[in] working_path The current working directory. Any relative
+     * paths will be resolved relative to this.
+     */
+    EDLTypedHelper(std::uint64_t pad_to_length,
+                   const T &pad_value,
+                   const std::filesystem::path &working_path);
+
     /**
      * @brief Reads data block as defined by `local` kind.
      * @param[out] out_data Collection where to store the read samples.
@@ -102,13 +118,8 @@ private:
      * @param[in] line_offset Line offset inside the input stream from where to start reading.
      * Line offset is relative to the current reading position in the stream.
      * @param[in] num_samples Number of samples to read.
-     * @param[in] pad_to_length Enables padding, up to this number of items. Same as
-     * ExternalDatasetLoader::loadFromCSV().
-     * @param[in] pad_value Value to use for padding.
-     * @param[in] filename For informational purposes only, this is the
-     * name of the file corresponding to the input stream.
-     * @param[in] start_line_num For informational purposes only, this is the
-     * line number where the control line was found inside the input stream.
+     * @param[in,out] line_num Increases every time a line is extracted from
+     * the input stream \p is.
      * @throws Standard C++ exception derived from std::exception on error describing the
      * failure.
      * @return The number of lines extracted from the input stream.
@@ -124,13 +135,11 @@ private:
      * read all the samples left in the stream, pass `std::numeric_limits<std::uint64_t>::max()`
      * into \p num_samples .
      */
-    static std::uint64_t readLocalDataBlock(std::vector<std::vector<T>> &out_data,
-                                            std::istream &is,
-                                            std::uint64_t line_offset,
-                                            std::uint64_t num_samples,
-                                            std::uint64_t pad_to_length,
-                                            const T &pad_value,
-                                            const std::string &filename, std::uint64_t start_line_num);
+    void readLocalDataBlock(std::vector<std::vector<T>> &out_data,
+                            std::istream &is,
+                            std::uint64_t line_offset,
+                            std::uint64_t num_samples,
+                            std::uint64_t &line_num);
     /**
      * @brief Reads data block as defined by `csv` kind.
      * @param[out] out_data Collection where to store the read samples.
@@ -138,13 +147,8 @@ private:
      * @param[in] line_offset Line offset inside the input stream from where to start reading.
      * Line offset is relative to the current reading position in the stream.
      * @param[in] num_samples Number CSV of samples to read from input stream.
-     * @param[in] pad_to_length Enables padding, up to this number of items. Same as
-     * ExternalDatasetLoader::loadFromCSV().
-     * @param[in] pad_value Value to use for padding.
-     * @param[in] filename For informational purposes only, this is the
-     * name of the file corresponding to the input stream.
-     * @param[in] start_line_num For informational purposes only, this is the
-     * line number where the control line was found inside the input stream.
+     * @param[in,out] line_num Increases every time a line is extracted from
+     * the input stream \p is.
      * @throws Standard C++ exception derived from std::exception on error describing the
      * failure.
      * @return The number of lines extracted from the input stream.
@@ -162,20 +166,15 @@ private:
      *
      * Note that a CSV sample points to a CSV file that may contain one or more data samples.
      */
-    static std::uint64_t readCSVDataBlock(std::vector<std::vector<T>> &out_data,
-                                          std::istream &is,
-                                          std::uint64_t line_offset,
-                                          std::uint64_t num_samples,
-                                          std::uint64_t pad_to_length,
-                                          const T &pad_value,
-                                          const std::string &filename, std::uint64_t start_line_num);
+    void readCSVDataBlock(std::vector<std::vector<T>> &out_data,
+                          std::istream &is,
+                          std::uint64_t line_offset,
+                          std::uint64_t num_samples,
+                          std::uint64_t &line_num);
 
     /**
      * @brief Parses a local data sample from a CSV line.
      * @param[in] s_csv_line_sample Line from which to extract the data sample.
-     * @param[in] pad_to_length Enables padding, up to this number of items. Same as
-     * ExternalDatasetLoader::loadFromCSV().
-     * @param[in] pad_value Value to use for padding.
      * @throws Standard C++ exception derived from std::exception on error describing the
      * failure.
      * @return Vector containing the data sample, where each element is a scalar of
@@ -185,9 +184,7 @@ private:
      * byte. Multibyte strings should work normally as each byte in a multibyte character
      * will be saved.
      */
-    static std::vector<T> parseDataSample(std::string_view s_csv_line_sample,
-                                          std::uint64_t pad_to_length,
-                                          const T &pad_value);
+    std::vector<T> parseDataSample(std::string_view s_csv_line_sample);
     /**
      * @brief Parses a token value as a string, turning it into
      * equivalent ASCII values.
@@ -204,22 +201,22 @@ private:
 };
 
 template <typename T>
-std::uint64_t EDLTypedHelper<T>::readDataBlock(std::vector<std::vector<std::vector<T>>> &out_data,
-                                               std::istream &is,
-                                               const std::vector<std::string_view> &control_line_tokens,
-                                               std::uint64_t pad_to_length,
-                                               const T &pad_value,
-                                               const std::string &filename, std::uint64_t start_line_num)
+void EDLTypedHelper<T>::readDataBlock(std::vector<std::vector<std::vector<T>>> &out_data,
+                                      std::istream &is,
+                                      const std::vector<std::string_view> &control_line_tokens,
+                                      const std::filesystem::path &working_path,
+                                      std::uint64_t &line_num)
 {
     assert(control_line_tokens.size() >= EDLHelper::ControlLine::ControlTokenSize);
     assert(is.good());
-
-    std::uint64_t line_num = 0;
+    assert(std::filesystem::exists(working_path) && std::filesystem::is_directory(working_path));
 
     // parse the control line
 
     std::uint64_t component_index;
     std::uint64_t num_samples;
+    std::uint64_t pad_to_length = 0;
+    T pad_value                 = static_cast<T>(0);
     std::stringstream ss;
     std::string err_msg;
 
@@ -244,9 +241,7 @@ std::uint64_t EDLTypedHelper<T>::readDataBlock(std::vector<std::vector<std::vect
     if (!err_msg.empty())
     {
         ss = std::stringstream();
-        ss << "ExternalDatasetLoader: in file " << filename << ":"
-           << line_num + start_line_num << ": Error reading <component_index> from control line"
-           << err_msg;
+        ss << "Error reading <component_index> from control line" << err_msg;
         throw std::runtime_error(ss.str());
     } // end if
 
@@ -271,53 +266,111 @@ std::uint64_t EDLTypedHelper<T>::readDataBlock(std::vector<std::vector<std::vect
     if (!err_msg.empty())
     {
         ss = std::stringstream();
-        ss << "ExternalDatasetLoader: in file " << filename << ":"
-           << line_num + start_line_num << ": Error reading <num_samples> from control line"
-           << err_msg;
+        ss << "Error reading <num_samples> from control line" << err_msg;
+        throw std::runtime_error(ss.str());
+    } // end if
+
+    err_msg.clear();
+    try
+    {
+        if (control_line_tokens.size() > EDLHelper::ControlLine::Index_ControlPadToLength)
+        {
+            std::string s_pad_to_len(control_line_tokens[EDLHelper::ControlLine::Index_ControlPadToLength]);
+            ss = std::stringstream(s_pad_to_len);
+            if (!(ss >> pad_to_length))
+                throw std::runtime_error("Invalid value \"" + s_pad_to_len + "\".");
+        } // end if
+    }
+    catch (std::exception &ex)
+    {
+        ss = std::stringstream();
+        ss << ": " << ex.what();
+        err_msg = ss.str();
+    }
+    catch (...)
+    {
+        err_msg = ".";
+    }
+    if (!err_msg.empty())
+    {
+        ss = std::stringstream();
+        ss << "Error reading <pad_to_length> from control line" << err_msg;
+        throw std::runtime_error(ss.str());
+    } // end if
+
+    err_msg.clear();
+    try
+    {
+        if (control_line_tokens.size() > EDLHelper::ControlLine::Index_ControlPadValue)
+        {
+            std::string s_pad_value(control_line_tokens[EDLHelper::ControlLine::Index_ControlPadValue]);
+            ss = std::stringstream(s_pad_value);
+            if (!(ss >> pad_value))
+                throw std::runtime_error("Invalid value \"" + s_pad_value + "\".");
+        } // end if
+    }
+    catch (std::exception &ex)
+    {
+        ss = std::stringstream();
+        ss << ": " << ex.what();
+        err_msg = ss.str();
+    }
+    catch (...)
+    {
+        err_msg = ".";
+    }
+    if (!err_msg.empty())
+    {
+        ss = std::stringstream();
+        ss << "Error reading <pad_value> from control line" << err_msg;
         throw std::runtime_error(ss.str());
     } // end if
 
     while (out_data.size() <= component_index)
         out_data.emplace_back(std::vector<std::vector<T>>());
 
+    EDLTypedHelper<T> helper(pad_to_length, pad_value, working_path);
+
     // identify `kind` of data: `local` or `csv`
-    if (control_line_tokens[EDLHelper::ControlLine::Index_ControlLineKind] == EDLHelper::ControlLineKindLocal)
+    if (control_line_tokens[EDLHelper::ControlLine::Index_ControlKind] == EDLHelper::ControlLineKindLocal)
     {
-        line_num += readLocalDataBlock(out_data[component_index],
-                                       is, 0, num_samples,
-                                       pad_to_length, pad_value,
-                                       filename, start_line_num + line_num);
+        helper.readLocalDataBlock(out_data[component_index],
+                                  is, 0, num_samples,
+                                  line_num);
     } // end if
-    else if (control_line_tokens[EDLHelper::ControlLine::Index_ControlLineKind] == EDLHelper::ControlLineKindCSV)
+    else if (control_line_tokens[EDLHelper::ControlLine::Index_ControlKind] == EDLHelper::ControlLineKindCSV)
     {
-        line_num += readCSVDataBlock(out_data[component_index],
-                                     is, 0, num_samples,
-                                     pad_to_length, pad_value,
-                                     filename, start_line_num + line_num);
+        helper.readCSVDataBlock(out_data[component_index],
+                                is, 0, num_samples,
+                                line_num);
     } // end else if
     else
     {
         ss = std::stringstream();
-        ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num << ": Invalid control line kind: \""
-           << control_line_tokens[EDLHelper::ControlLine::Index_ControlLineKind] << "\".";
+        ss << "Invalid control line kind: \"" << control_line_tokens[EDLHelper::ControlLine::Index_ControlKind] << "\".";
         throw std::runtime_error(ss.str());
     } // end else
-
-    return line_num;
 }
 
 template <typename T>
-std::uint64_t EDLTypedHelper<T>::readLocalDataBlock(std::vector<std::vector<T>> &out_data,
-                                                    std::istream &is,
-                                                    std::uint64_t line_offset,
-                                                    std::uint64_t num_samples,
-                                                    std::uint64_t pad_to_length,
-                                                    const T &pad_value,
-                                                    const std::string &filename, std::uint64_t start_line_num)
+EDLTypedHelper<T>::EDLTypedHelper(std::uint64_t pad_to_length,
+                                  const T &pad_value,
+                                  const std::filesystem::path &working_path) :
+    m_pad_to_length(pad_to_length),
+    m_pad_value(pad_value)
+{
+    m_working_path = std::filesystem::canonical(working_path);
+}
+
+template <typename T>
+void EDLTypedHelper<T>::readLocalDataBlock(std::vector<std::vector<T>> &out_data,
+                                           std::istream &is,
+                                           std::uint64_t line_offset,
+                                           std::uint64_t num_samples,
+                                           std::uint64_t &line_num)
 {
     assert(is.good());
 
-    std::uint64_t line_num     = 0;
     std::uint64_t samples_read = 0;
 
     // skip the line offset
@@ -337,38 +390,25 @@ std::uint64_t EDLTypedHelper<T>::readLocalDataBlock(std::vector<std::vector<T>> 
             ++line_num;
             if (!EDLHelper::isCommentOrEmpty(s_line))
             {
-                auto sample = parseDataSample(s_line, pad_to_length, pad_value);
-                //                if (!out_data.empty() && out_data.front().size() != sample.size())
-                //                {
-                //                    std::stringstream ss;
-                //                    ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num
-                //                       << ": Sample size differs from previous samples for this component. Expected sample size of \""
-                //                       << out_data.front().size() << ", but " << sample.size() << " received.";
-                //                    throw std::runtime_error(ss.str());
-                //                } // end if
+                auto sample = parseDataSample(s_line);
                 out_data.emplace_back(std::move(sample));
 
                 ++samples_read;
             } // end if
         } // end if
     } // end while
-
-    return line_num;
 }
 
 template <typename T>
-std::uint64_t EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &out_data,
-                                                  std::istream &is,
-                                                  std::uint64_t line_offset,
-                                                  std::uint64_t num_samples,
-                                                  std::uint64_t pad_to_length,
-                                                  const T &pad_value,
-                                                  const std::string &filename, std::uint64_t start_line_num)
+void EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &out_data,
+                                         std::istream &is,
+                                         std::uint64_t line_offset,
+                                         std::uint64_t num_samples,
+                                         std::uint64_t &line_num)
 {
     assert(is.good());
 
     std::string err_msg;
-    std::uint64_t line_num     = 0;
     std::uint64_t samples_read = 0;
 
     // skip the line offset
@@ -389,25 +429,27 @@ std::uint64_t EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &o
             if (!EDLHelper::isCommentOrEmpty(s_line))
             {
                 auto csv_sample_tokens = hebench::Utilities::CSVTokenizer::tokenizeLine(s_line);
-                if (csv_sample_tokens.size() != 1 && csv_sample_tokens.size() != EDLHelper::CSVLine::CSVTokenSize)
+                if (csv_sample_tokens.size() < EDLHelper::CSVLine::CSVTokenSize)
                 {
                     std::stringstream ss;
-                    ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num
-                       << ": Invalid CSV sample detected. A CSV sample must follow the following format: <filename>[, <from_line>, <num_samples>]";
+                    ss << "Invalid CSV sample detected. A CSV sample must follow the following format: <filename>[, <from_line>[, <num_samples>]]";
                     throw std::runtime_error(ss.str());
                 } // end if
 
-                std::uint64_t csv_line_offset   = 0;
-                std::uint64_t csv_num_samples   = 0;
-                const std::string &csv_filename = csv_sample_tokens[EDLHelper::CSVLine::Index_CSVFilename];
+                std::uint64_t csv_line_offset  = 0;
+                std::uint64_t csv_num_samples  = std::numeric_limits<std::uint64_t>::max();
+                std::filesystem::path csv_path = csv_sample_tokens[EDLHelper::CSVLine::Index_CSVFilename];
+                if (csv_path.is_relative())
+                    csv_path = this->m_working_path / csv_path;
+                csv_path = std::filesystem::canonical(csv_path);
 
                 std::ifstream fnum_csv;
                 err_msg.clear();
                 try
                 {
-                    fnum_csv.open(csv_filename, std::ifstream::in);
+                    fnum_csv.open(csv_path, std::ifstream::in);
                     if (!fnum_csv.is_open())
-                        throw std::ios_base::failure("Unable to open file for reading: \"" + csv_filename + "\"");
+                        throw std::ios_base::failure("Unable to open file for reading: " + std::string(csv_path));
                 }
                 catch (std::exception &ex)
                 {
@@ -420,12 +462,11 @@ std::uint64_t EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &o
                 if (!err_msg.empty())
                 {
                     std::stringstream ss;
-                    ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num
-                       << ": Error occurred attempting to parse CSV sample" << err_msg;
+                    ss << "Error occurred attempting to parse CSV sample" << err_msg;
                     throw std::runtime_error(ss.str());
                 } // end if
 
-                if (csv_sample_tokens.size() >= EDLHelper::CSVLine::CSVTokenSize)
+                if (csv_sample_tokens.size() > EDLHelper::CSVLine::Index_CSVFromLine)
                 {
                     // read custom batch sizes
                     err_msg.clear();
@@ -447,12 +488,13 @@ std::uint64_t EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &o
                     if (!err_msg.empty())
                     {
                         std::stringstream ss;
-                        ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num
-                           << ": Error reading <from_line> from CSV sample"
-                           << err_msg;
+                        ss << "Error reading <from_line> from CSV sample" << err_msg;
                         throw std::runtime_error(ss.str());
                     } // end if
+                } // end if
 
+                if (csv_sample_tokens.size() > EDLHelper::CSVLine::Index_CSVNumSamples)
+                {
                     err_msg.clear();
                     try
                     {
@@ -472,35 +514,29 @@ std::uint64_t EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &o
                     if (!err_msg.empty())
                     {
                         std::stringstream ss;
-                        ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num + start_line_num
-                           << ": Error reading <num_samples> from CSV sample"
-                           << err_msg;
+                        ss << "Error reading <num_samples> from CSV sample" << err_msg;
                         throw std::runtime_error(ss.str());
                     } // end if
                 } // end if
 
                 // CSV file specified in line successfully opened.
                 // Treat contents of CSV file as local data block (with header already parsed).
+                EDLTypedHelper<T> helper(m_pad_to_length, m_pad_value, csv_path.parent_path());
 
-                EDLTypedHelper<T>::readLocalDataBlock(out_data,
-                                                      fnum_csv,
-                                                      csv_line_offset, csv_num_samples,
-                                                      pad_to_length, pad_value,
-                                                      csv_filename, 0);
+                helper.readLocalDataBlock(out_data,
+                                          fnum_csv,
+                                          csv_line_offset, csv_num_samples,
+                                          line_num);
 
                 // CSV sample line read
                 ++samples_read;
             } // end if
         } // end if
     } // end while
-
-    return line_num;
 }
 
 template <typename T>
-std::vector<T> EDLTypedHelper<T>::parseDataSample(std::string_view s_csv_line_sample,
-                                                  std::uint64_t pad_to_length,
-                                                  const T &pad_value)
+std::vector<T> EDLTypedHelper<T>::parseDataSample(std::string_view s_csv_line_sample)
 {
     std::vector<T> retval;
     auto csv_tokens = hebench::Utilities::CSVTokenizer::tokenizeLine(s_csv_line_sample);
@@ -511,16 +547,16 @@ std::vector<T> EDLTypedHelper<T>::parseDataSample(std::string_view s_csv_line_sa
         if (csv_tokens[i].empty())
         {
             // add padding as requested
-            if (pad_to_length > 0)
+            if (m_pad_to_length > 0)
                 // if pad requested and size has been satisfied, no padding is added
-                while (size_since_last_pad < pad_to_length)
+                while (size_since_last_pad < m_pad_to_length)
                 {
-                    retval.emplace_back(pad_value);
+                    retval.emplace_back(m_pad_value);
                     ++size_since_last_pad;
                 } // end while
             else
                 // if no pad requested, empty values are set to the pad value
-                retval.emplace_back(pad_value);
+                retval.emplace_back(m_pad_value);
             // reset pad to start a new section
             size_since_last_pad = 0;
         } // end if
@@ -537,7 +573,7 @@ std::vector<T> EDLTypedHelper<T>::parseDataSample(std::string_view s_csv_line_sa
             catch (...)
             {
                 // error reading value, attempt to read it as a string
-                value = parseTokenAsString(csv_tokens[i]);
+                value = EDLTypedHelper<T>::parseTokenAsString(csv_tokens[i]);
             }
 
             retval.insert(retval.end(), value.begin(), value.end());
@@ -546,10 +582,10 @@ std::vector<T> EDLTypedHelper<T>::parseDataSample(std::string_view s_csv_line_sa
     } // end for
 
     // pad if we still have leftover space
-    if (pad_to_length > 0)
-        while (size_since_last_pad < pad_to_length)
+    if (m_pad_to_length > 0)
+        while (size_since_last_pad < m_pad_to_length)
         {
-            retval.emplace_back(pad_value);
+            retval.emplace_back(m_pad_value);
             ++size_since_last_pad;
         } // end while
 
@@ -560,6 +596,8 @@ template <typename T>
 std::vector<T> EDLTypedHelper<T>::parseTokenAsString(std::string_view sv_token)
 {
     std::vector<T> retval;
+
+    hebench::Utilities::trim(sv_token);
 
     if (!sv_token.empty())
     {
@@ -583,56 +621,78 @@ std::vector<T> EDLTypedHelper<T>::parseTokenAsString(std::string_view sv_token)
 
 template <typename T, typename E>
 ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &filename,
-                                                            std::uint64_t max_loaded_size,
-                                                            std::uint64_t pad_to_length,
-                                                            const T &pad_value)
+                                                            std::uint64_t max_loaded_size)
 {
     std::uint64_t line_num = 0;
     ExternalDataset<T> retval;
 
     std::ifstream fnum;
 
-    fnum.open(filename, std::ifstream::in);
-    if (!fnum.is_open())
-        throw std::ios_base::failure("Unable to open file for reading: \"" + filename + "\"");
+    std::filesystem::path filepath = std::filesystem::canonical(filename);
 
-    while (fnum)
+    fnum.open(filepath, std::ifstream::in);
+    if (!fnum.is_open())
+        throw std::ios_base::failure("Unable to open file for reading: " + std::string(filepath));
+
+    //EDLTypedHelper<T> helper(pad_to_length, pad_value, filename);
+
+    std::string err_msg;
+    try
     {
-        std::string s_line;
-        if (std::getline(fnum, s_line))
+
+        while (fnum)
         {
-            ++line_num; // new line
-            if (!EDLHelper::isCommentOrEmpty(s_line))
+            std::string s_line;
+            if (std::getline(fnum, s_line))
             {
-                // read control line
-                auto csv_tokens = hebench::Utilities::CSVTokenizer::tokenizeLineInPlace(s_line);
-                if (csv_tokens.size() < EDLHelper::ControlLine::ControlTokenSize)
+                ++line_num; // new line
+                if (!EDLHelper::isCommentOrEmpty(s_line))
                 {
-                    std::stringstream ss;
-                    ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num << ": Invalid number of items in control line. Expected "
-                       << EDLHelper::ControlLine::ControlTokenSize << ", but " << csv_tokens.size() << " found.";
-                    throw std::runtime_error(ss.str());
+                    // read control line
+                    auto csv_tokens = hebench::Utilities::CSVTokenizer::tokenizeLineInPlace(s_line);
+                    if (csv_tokens.size() < EDLHelper::ControlLine::ControlTokenSize)
+                    {
+                        std::stringstream ss;
+                        ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num << ": Invalid number of items in control line. Expected "
+                           << EDLHelper::ControlLine::ControlTokenSize << ", but " << csv_tokens.size() << " found.";
+                        throw std::runtime_error(ss.str());
+                    } // end if
+                    std::vector<std::vector<std::vector<T>>> *data = nullptr;
+                    if (csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] == EDLHelper::ControlLineInput)
+                        data = &retval.inputs;
+                    else if (csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] == EDLHelper::ControlLineOutput)
+                        data = &retval.outputs;
+                    else
+                    {
+                        std::stringstream ss;
+                        ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num << ": Invalid control line identifier: \""
+                           << csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] << "\".";
+                        throw std::runtime_error(ss.str());
+                    } // end else
+                    EDLTypedHelper<T>::readDataBlock(*data,
+                                                     fnum,
+                                                     csv_tokens,
+                                                     filepath.parent_path(),
+                                                     line_num);
                 } // end if
-                std::vector<std::vector<std::vector<T>>> *data = nullptr;
-                if (csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] == EDLHelper::ControlLineInput)
-                    data = &retval.inputs;
-                else if (csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] == EDLHelper::ControlLineOutput)
-                    data = &retval.outputs;
-                else
-                {
-                    std::stringstream ss;
-                    ss << "ExternalDatasetLoader: in file " << filename << ":" << line_num << ": Invalid control line identifier: \""
-                       << csv_tokens[EDLHelper::ControlLine::Index_ControlIdentifier] << "\".";
-                    throw std::runtime_error(ss.str());
-                } // end else
-                line_num += EDLTypedHelper<T>::readDataBlock(*data,
-                                                             fnum,
-                                                             csv_tokens,
-                                                             pad_to_length, pad_value,
-                                                             filename, line_num);
             } // end if
-        } // end if
-    } // end while
+        } // end while
+    }
+    catch (std::exception &ex)
+    {
+        err_msg = std::string(": ") + ex.what();
+    }
+    catch (...)
+    {
+        err_msg = std::string(" line.");
+    }
+    if (!err_msg.empty())
+    {
+        std::stringstream ss;
+        ss << "ExternalDatasetLoader: in file " << filepath << ":" << line_num
+           << ": Error occurred while parsing" << err_msg;
+        throw std::runtime_error(ss.str());
+    } // end if
 
     fnum.close();
 
@@ -651,7 +711,7 @@ ExternalDataset<T> ExternalDatasetLoader<T, E>::loadFromCSV(const std::string &f
     if (loaded_size > max_loaded_size)
     {
         std::stringstream ss;
-        ss << "ExternalDatasetLoader: in file " << filename << ": Loaded data exceeds maximum available size. "
+        ss << "ExternalDatasetLoader: in file " << filepath << ": Loaded data exceeds maximum available size. "
            << "Maximum size expected was " << max_loaded_size << " bytes, but " << loaded_size << " bytes read.";
         throw std::runtime_error(ss.str());
     } // end if

@@ -45,8 +45,6 @@ public:
      * @param[in] filename Name of the file to load.
      * @param[in] max_loaded_size Maximum size, in bytes, allowed for the data to occupy after
      * loading. If 0, there is no limit to how much memory the data can occupy.
-     * @param[in] pad_to_length Enables padding, up to this number of items. See details.
-     * @param[in] pad_value Value to use for padding.
      * @throws Standard C++ exception derived from std::exception on error describing the
      * failure.
      * @return An `ExternalDataset` structure containing the data loaded where the loaded scalars
@@ -60,32 +58,9 @@ public:
      * \p max_loaded_size . Otherwise, an exception is thrown because the size of the dataset in
      * the file specified after loading and converting to `ExternalDataset` is larger than
      * non-zero \p max_loaded_size .
-     *
-     * If \p pad_to_length is greater than `0`, and a sample read from file has an empty item,
-     * or sample reaches the end without having enough items, the loader will pad the sample
-     * using the \p pad_value until the number of items since last pad reaches \p pad_to_length .
-     *
-     * For example, given the following line with a data sample:
-     *
-     * @code
-     * 1, 2, , 11, 12, 13, 14, 15, , 101, 102, 103, 104
-     * @endcode
-     *
-     * There is an empty item after value `2`. If `pad_to_length == 5` and `pad_value == 0`,
-     * then, the loader will read that line as:
-     *
-     * @code
-     * 1, 2, 0, 0, 0, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 101, 102, 103, 104, 0
-     *              ^                   ^              ^                      ^
-     * @endcode
-     *
-     * If \p pad_to_length is `0`, any empty items will be turned into a single item of value
-     * \p pad_value .
      */
     static ExternalDataset<T> loadFromCSV(const std::string &filename,
-                                          std::uint64_t max_loaded_size = 0,
-                                          std::uint64_t pad_to_length   = 0,
-                                          const T &pad_value            = (T)0);
+                                          std::uint64_t max_loaded_size = 0);
 };
 
 // template implementations
