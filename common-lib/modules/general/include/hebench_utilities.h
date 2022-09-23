@@ -86,11 +86,89 @@ std::string convertDoubleToStr(double x, int up_to_digits_after_dot = MaxDecimal
  */
 std::string convertDoubleToStrScientific(double x, std::size_t max_width);
 
+/**
+ * @brief Opens a file for writing and calls the specified function passing the corresponding stream.
+ * @param[in] filename Name of file to open.
+ * @param[in] fn Function to be called to write to the stream for the open file.
+ * @param[in] b_binary If true, file will be open as binary, otherwise, it will be open
+ * for text output.
+ * @param[in] b_append If true, the file will be open in append mode, otherwise, the file
+ * will be overwritten and open as new.
+ */
 void writeToFile(const std::string &filename, std::function<void(std::ostream &)> fn,
                  bool b_binary, bool b_append = false);
+/**
+ * @brief Writes the specified data into a file.
+ * @param[in] filename Name of file to open.
+ * @param[in] p_data Pointer to data to write into the file. Cannot be `null`.
+ * @param[in] size Size, in bytes for the data pointed by \p p_data .
+ * @param[in] b_binary If true, data will be stored as in in binary mode, otherwise, it will be
+ * stored as text.
+ * @param[in] b_append If true, the data will be appended to the current contents of the file,
+ * otherwise, the file contents will be replaced by the data.
+ */
 void writeToFile(const std::string &filename,
                  const char *p_data, std::size_t size,
                  bool b_binary, bool b_append = false);
+
+class CSVTokenizer
+{
+public:
+    /**
+     * @brief Splits a CSV line in next CSV value and the rest of the line.
+     * @param[in] s_line Input CSV line.
+     * @param[in] delim Delimiter used to separate values. Defaults to comma "`,`" .
+     * @return Pair of `(car, cdr)` for \p s_line .
+     * @details Returns `(car, cdr)` for \p s_line , where `car` is next CSV value,
+     * and `cdr` is the rest of the csv line starting after the last comma, or
+     * empty if no more values.
+     */
+    static std::pair<std::string_view, std::string_view> findNextValue(const std::string_view &s_line, char delim);
+
+    /**
+     * @brief Extracts the values from a CSV in place.
+     * @param[in] s_line String view of the line to tokenize.
+     * @param[in] delim Delimiter used to separate values. Defaults to comma "`,`" .
+     * @return A vector of views inside \p s_line where each view corresponds to a token.
+     * @details Tokens preserve surrounding quotations if they exist. Tokens are trimmed
+     * left and right from blank spaces.
+     *
+     * Right-most blank token is ignored. This is, if a CSV line ends with several commas,
+     * the last value is ignored. e.g. (1, 2,,,) generates the tokens 1, 2, <empty_string>,
+     * and <empty_string>.
+     *
+     * Quotations cannot be escaped. Form for tokens that have quotations in mid token, or
+     * multiple quotations is undefined. Quotations must be surrounding a single token.
+     * Two adjacent quotations are read normally into the same token. Clients can use
+     * this behavior if they want to process two quotations as a single, escaped quotation.
+     *
+     * The input \p s_line must be valid for the result to be valid since the result is
+     * composed of views inside the input.
+     */
+    static std::vector<std::string_view> tokenizeLineInPlace(const std::string_view &s_line, char delim = ',');
+
+    /**
+     * @brief Extracts the values from a CSV.
+     * @param[in] s_line String view of the line to tokenize.
+     * @param[in] delim Delimiter used to separate values. Defaults to comma "`,`" .
+     * @return A vector of strings where each string corresponds to a token.
+     * @details Tokens preserve surrounding quotations if they exist. Tokens are trimmed
+     * left and right from blank spaces.
+     *
+     * Right-most blank token is ignored. This is, if a CSV line ends with several commas,
+     * the last value is ignored. e.g. (1, 2,,,) generates the tokens 1, 2, <empty_string>,
+     * and <empty_string>.
+     *
+     * Quotations cannot be escaped. Form for tokens that have quotations in mid token, or
+     * multiple quotations is undefined. Quotations must be surrounding a single token.
+     * Two adjacent quotations are read normally into the same token. Clients can use
+     * this behavior if they want to process two quotations as a single, escaped quotation.
+     *
+     * Resulting tokens are stand alone. Input \p s_line can be disposed of once this
+     * function completes.
+     */
+    static std::vector<std::string> tokenizeLine(const std::string_view &s_line, char delim = ',');
+};
 
 } // namespace Utilities
 } // namespace hebench
