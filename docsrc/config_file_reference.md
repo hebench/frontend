@@ -19,6 +19,12 @@ random_seed: <seed>
 
 benchmark:
   - ID: <benchmark_id>
+    description:
+      workload_id: <workload_id>
+      workload_name: <name>
+      data_type: <type_name>
+      category: <category_name>
+      notes: <benchmark_notes>
     dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
@@ -42,6 +48,12 @@ benchmark:
           step: <value_step>
       ...
   - ID: <benchmark_id>
+    description:
+      workload_id: <workload_id>
+      workload_name: <name>
+      data_type: <type_name>
+      category: <category_name>
+      notes: <benchmark_notes>
     dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
     default_sample_sizes:
@@ -149,9 +161,11 @@ When this setting is missing or set to `0` in the configuration file, this indic
 
 ### Benchmark Description Section
 
-Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and its description.
+Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and the corresponding configuration.
 
-A benchmark description is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
+A benchmark configuration is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
+
+The `description` section is is automatically generated when exporting a configuration file for informational purposes only. Its contents are ignored by Test Harness, and thus, providing it is optional and may be omitted.
 
 A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Frontend during initialization.
 
@@ -235,6 +249,12 @@ benchmark:
 # Descriptor:
 #   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
   - ID: 3
+    description:
+      workload_id: 6
+      workload_name: Logistic Regression PolyD3 16 features
+      data_type: Float64
+      category: Offline
+      notes: ~
     dataset: ~
     default_min_test_time: 0
     default_sample_size:
@@ -251,7 +271,7 @@ benchmark:
           step: 0
 ```
 
-we know that for this backend, `ID` value of `3` will always represent a "Logistic Regression PolyD3" workload and descriptor "offline | float64 | 1120 | all_cipher | ckks | 128 | 1" ("wp_xx" indicates the default values exported for the benchmark workload parameters). The number of features `n` is the workload parameter `0` as specified in @ref logistic_regression .
+we know that for this backend, `ID` value of `3` will always represent a "Logistic Regression PolyD3" workload, in the "Offline" category, with input and output data type "Float64". The full descriptor is "offline | float64 | 1120 | all_cipher | ckks | 128 | 1" ("wp_xx" indicates the default values exported for the benchmark workload parameters). The number of features `n` is the workload parameter `0` as specified in @ref logistic_regression .
 
 We can modify the parameters at will, as long as our new values are supported by the backend used to export this file.
 
