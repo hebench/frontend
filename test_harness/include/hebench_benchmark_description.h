@@ -159,6 +159,10 @@ class Description
 {
 public:
     /**
+     * @brief Workload ID as given by hebench::APIBridge::Workload
+     */
+    std::int64_t workload;
+    /**
      * @brief Human-readable friendly name of the benchmark workload.
      */
     std::string workload_name;

@@ -328,6 +328,7 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     backend_desc.operation_params_count = completed_description.operation_params_count;
     config.default_sample_sizes.resize(backend_desc.operation_params_count, 0);
 
+    description.workload      = static_cast<std::int64_t>(bench_desc.workload);
     description.workload_name = completed_description.workload_name;
     description.data_type     = PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type);
     description.category      = PartialBenchmarkDescriptor::getCategoryName(bench_desc.category);
