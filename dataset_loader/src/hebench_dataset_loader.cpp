@@ -522,11 +522,11 @@ void EDLTypedHelper<T>::readCSVDataBlock(std::vector<std::vector<T>> &out_data,
                 // CSV file specified in line successfully opened.
                 // Treat contents of CSV file as local data block (with header already parsed).
                 EDLTypedHelper<T> helper(m_pad_to_length, m_pad_value, csv_path.parent_path());
-
+                std::uint64_t csv_line_num = 0;
                 helper.readLocalDataBlock(out_data,
                                           fnum_csv,
                                           csv_line_offset, csv_num_samples,
-                                          line_num);
+                                          csv_line_num);
 
                 // CSV sample line read
                 ++samples_read;
