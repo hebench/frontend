@@ -329,6 +329,8 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     config.default_sample_sizes.resize(backend_desc.operation_params_count, 0);
 
     description.workload_name = completed_description.workload_name;
+    description.data_type     = PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type);
+    description.category      = PartialBenchmarkDescriptor::getCategoryName(bench_desc.category);
     description.header        = ss.str();
     description.path          = ss_path;
     if (config.b_single_path_report)

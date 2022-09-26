@@ -163,6 +163,14 @@ public:
      */
     std::string workload_name;
     /**
+     * @brief Human-readable friendly name of the benchmark input/output data type.
+     */
+    std::string data_type;
+    /**
+     * @brief Human-readable friendly name of the benchmark category.
+     */
+    std::string category;
+    /**
      * @brief CSV formatted header for this benchmark. This will be the header
      * pre-pended to the report containing the benchmark results.
      */
