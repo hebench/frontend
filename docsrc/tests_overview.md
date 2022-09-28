@@ -2,7 +2,7 @@ HEBench Supported Workloads                {#tests_overview}
 ========================
 
 ##Description
-This page lists all of the tests currently implemented as part of the test harness.
+This page lists all of the tests currently implemented as part of Test Harness.
 
 ##Full Test List
  - @ref generic_workload

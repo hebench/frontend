@@ -27,15 +27,15 @@ trap 'error_exit $?' EXIT
 
 pushd .
 
-if [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
+if [ $# -eq 0 ] || [ "${1}" == "-h" ] || [ "${1}" == "--help" ]; then
     echo "HEBench documentation generator."
     echo "  Usage:"
-    echo "    script [<output_dir> [<api_bridge_tag> [<path_to_doxygen>]]]"
+    echo "    script <output_dir> [<api_bridge_tag> [<path_to_doxygen>]]"
     echo
     echo "  Positional arguments:"
     echo "    - output_dir: directory where the generated documentation will be stored."
     echo "        Documentation will come already inside a 'docs' directory."
-    echo "        Defaults to '..'"
+    echo "        Default should be '..'"
     echo "    - api_bridge_tag: Tag to pull from API Bridge repo, or local directory"
     echo "        where API Bridge has been cloned already. Defaults to 'main'."
     echo "    - path_to_doxygen: Directory where doxygen 1.9.1 is installed."
@@ -107,7 +107,8 @@ if [ ! -d $output_dir ]; then
     echo "            ${output_dir}"
     exit 1
 fi
-echo "[    Info ] Output location: ${output_dir}"
+echo "[    Info ] Output location:"
+echo "            ${output_dir}"
 
 tag_version="main"
 if [ ! -z $2 ]; then
@@ -115,13 +116,15 @@ if [ ! -z $2 ]; then
 fi
 if [ -d "${tag_version}" ]; then
     tag_version=$(realpath "${tag_version}")
-    echo "[    Info ] API Bridge location (local): ${tag_version}"
+    echo "[    Info ] API Bridge location (local):"
 else
-    echo "[    Info ] API Bridge tag: ${tag_version}"
+    echo "[    Info ] API Bridge tag:"
 fi
+echo "            ${tag_version}"
 echo
 
 echo "[    Info ] Creating temporary working location..."
+echo -n "            "
 tmp_dir=$(mktemp -d)
 cd $tmp_dir
 echo $tmp_dir
@@ -133,13 +136,15 @@ if [ -d "${tag_version}" ]; then
     cp -R "${tag_version}" $tmp_dir
     if [ -d "${tmp_dir}/api-bridge" ]; then
         mv "${tmp_dir}/api-bridge" "${tmp_dir}/api_bridge"
+    elif [ ! -d "${tmp_dir}/apibridge" ]; then
+        mv "${tmp_dir}/apibridge" "${tmp_dir}/api_bridge"
     elif [ ! -d "${tmp_dir}/api_bridge" ]; then
         echo "[   Error ] Failed to retrieve API Bridge."
         exit 1
     fi
 else
     echo "[    Info ] Cloning API Bridge project..."
-    pushd .
+    pushd . > /dev/null 2>&1
     git clone https://github.com/hebench/api-bridge.git api_bridge
     if [ ! -d "${tmp_dir}/api_bridge" ]; then
         echo "[   Error ] Failed cloning API Bridge project."
@@ -147,20 +152,59 @@ else
     fi
     cd ${tmp_dir}/api_bridge
     git checkout ${tag_version}
-    popd
+    popd > /dev/null 2>&1
 fi
-echo "[    Info ] Copying documentation source files..."
-cp -R "$script_path/../test_harness" $tmp_dir
-cp -R "$script_path/../docsrc" $tmp_dir
 
 echo "[    Info ] Configuring doxygen..."
+cp -R "${script_path}/../docsrc" $tmp_dir
 mv $tmp_dir/docsrc/DoxygenLayout.xml.in $tmp_dir/DoxygenLayout.xml
 mv $tmp_dir/docsrc/doxyfile.in $tmp_dir/doxyfile
 
-tmp_sed_text="s;@API_BRIDGE_LOCATION;./api_bridge;g"
-sed -i "${tmp_sed_text}" $tmp_dir/doxyfile
+#tmp_sed_text="s;@API_BRIDGE_LOCATION;./api_bridge;g"
+#sed -i "${tmp_sed_text}" $tmp_dir/doxyfile
 tmp_sed_text="s;@OUTPUT_DIR;${output_dir};g"
 sed -i "${tmp_sed_text}" $tmp_dir/doxyfile
+
+echo "[    Info ] Copying documentation source files..."
+
+pushd . > /dev/null 2>&1
+
+if [ ! -f "${script_path}/../docsrc/doxyinputs.in" ]; then
+    echo "[   ERROR ] File with input sources not found. Expected at:"
+    echo "            \"${script_path}/../docsrc/doxyinputs.in\""
+    exit 1
+fi
+# read inputs: 1 input source (dir or file) per line
+mapfile -t EXTERNAL_INPUTS < "${script_path}/../docsrc/doxyinputs.in"
+
+# input sources are relative to the `doxyinputs.in` file
+cd "${script_path}/../docsrc/"
+
+echo "" >> $tmp_dir/doxyfile
+echo -n "INPUT = " >> $tmp_dir/doxyfile
+
+# copy each input source to temp and add the source to the doxyfile
+for (( i=0; i<${#EXTERNAL_INPUTS[@]}; i++ ));
+do
+    EXTERNAL_INPUTS[$i]=$(realpath ${EXTERNAL_INPUTS[$i]})
+    if [ -d ${EXTERNAL_INPUTS[$i]} ]; then
+        cp -R "${EXTERNAL_INPUTS[$i]}" $tmp_dir
+        # add the source directory to the doxyfile
+        echo "        ./$(basename ${EXTERNAL_INPUTS[$i]})/ \\" >> $tmp_dir/doxyfile
+    elif [ -f ${EXTERNAL_INPUTS[$i]} ]; then
+        cp "${EXTERNAL_INPUTS[$i]}" $tmp_dir
+        # add the source file to the doxyfile
+        echo "        ./$(basename ${EXTERNAL_INPUTS[$i]}) \\" >> $tmp_dir/doxyfile
+    else
+        echo "Input source not found:"
+        echo "\"${EXTERNAL_INPUTS[$i]}\""
+        exit 1
+    fi
+    echo "            \"${EXTERNAL_INPUTS[$i]}\""
+done
+echo "        ./api_bridge/hebench/" >> $tmp_dir/doxyfile
+
+popd > /dev/null 2>&1
 
 echo "[    Info ] Generating documentation..."
 ${doxygen_cmd}
