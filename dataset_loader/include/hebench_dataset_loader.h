@@ -36,7 +36,7 @@ struct ExternalDataset
 
 template <typename T,
           // Only `int32_t`, `int64_t`, `float`, and `double` are supported as types.
-          typename = std::enable_if_t<std::is_same_v<T, std::int32_t> || std::is_same_v<T, std::int64_t> || std::is_same_v<T, float> || std::is_same_v<T, double> || std::is_same_v<T, std::string>>>
+          typename = std::enable_if_t<std::is_same_v<T, std::int32_t> || std::is_same_v<T, std::int64_t> || std::is_same_v<T, float> || std::is_same_v<T, double>>>
 class ExternalDatasetLoader
 {
 public:
@@ -68,7 +68,6 @@ template class ExternalDatasetLoader<int32_t>;
 template class ExternalDatasetLoader<int64_t>;
 template class ExternalDatasetLoader<float>;
 template class ExternalDatasetLoader<double>;
-template class ExternalDatasetLoader<std::string>;
 
 } // namespace DataLoader
 } // namespace hebench
