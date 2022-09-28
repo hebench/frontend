@@ -49,7 +49,6 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
                                                       const BenchmarkDescription::Backend &backend_desc,
                                                       const BenchmarkDescription::Configuration &config) const
 {
-    // finish describing workload
     assert(OpParameterCount == 2);
     assert(DefaultBatchSize == 1);
 
@@ -140,8 +139,9 @@ void Benchmark::init()
     {
         // generates random vectors for input and generates (computes) ground truth
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating data...") << std::endl;
-        m_data = DataLoader::create(set_size.at(0), set_size.at(1), 
+        m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
+                                    set_size.at(2), // k
                                     this->getBackendDescription().descriptor.data_type);
     } // end if
     else
@@ -151,8 +151,9 @@ void Benchmark::init()
            << "\"" << this->getBenchmarkConfiguration().dataset_filename << "\"";
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
         // load vectors for input and ground truth from file
-        m_data = DataLoader::create(set_size.at(0), set_size.at(1), 
+        m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
+                                    set_size.at(2), // k
                                     this->getBackendDescription().descriptor.data_type,
                                     this->getBenchmarkConfiguration().dataset_filename);
     } // end else
