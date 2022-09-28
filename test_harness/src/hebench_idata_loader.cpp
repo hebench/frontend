@@ -42,10 +42,6 @@ std::size_t IDataLoader::sizeOf(hebench::APIBridge::DataType data_type)
         retval = sizeof(double);
         break;
 
-    case hebench::APIBridge::DataType::String:
-        retval = sizeof(std::string);
-        break;
-
     default:
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
         break;
@@ -423,12 +419,6 @@ void PartialDataLoader::init(hebench::APIBridge::DataType data_type,
                                               allocate_output);
         break;
 
-    case hebench::APIBridge::DataType::String:
-        PartialDataLoaderHelper<std::string>::init(*this, input_dim, input_sample_count_per_dim, input_count_per_dim,
-                                              output_dim, output_count_per_dim,
-                                              allocate_output);
-        break;
-
     default:
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown 'data_type'."));
         break;
@@ -468,12 +458,6 @@ void PartialDataLoader::init(const std::string &filename,
 
     case hebench::APIBridge::DataType::Float64:
         PartialDataLoaderHelper<double>::loadFromFile(*this, filename,
-                                                      expected_input_dim, max_input_sample_count_per_dim, expected_input_count_per_dim,
-                                                      expected_output_dim, expected_output_count_per_dim);
-        break;
-
-    case hebench::APIBridge::DataType::String:
-        PartialDataLoaderHelper<std::string>::loadFromFile(*this, filename,
                                                       expected_input_dim, max_input_sample_count_per_dim, expected_input_count_per_dim,
                                                       expected_output_dim, expected_output_count_per_dim);
         break;

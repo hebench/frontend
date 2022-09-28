@@ -29,7 +29,7 @@ private:
 public:
     // TODO: Ask for ID selection
     static constexpr std::uint32_t BenchmarkID      = 1301;
-    static constexpr std::uint64_t DefaultBatchSize = 100; // default number of elements for a parameter
+    static constexpr std::uint64_t DefaultBatchSize = 1; // default number of elements for a parameter
 
 public:
     BenchmarkDescriptor()           = default;
