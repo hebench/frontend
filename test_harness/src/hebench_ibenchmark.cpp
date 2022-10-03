@@ -332,6 +332,7 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     description.workload_name = completed_description.workload_name;
     description.data_type     = PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type);
     description.category      = PartialBenchmarkDescriptor::getCategoryName(bench_desc.category);
+    description.scheme        = engine.getSchemeName(bench_desc.scheme);
     description.header        = ss.str();
     description.path          = ss_path;
     if (config.b_single_path_report)

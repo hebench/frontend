@@ -175,6 +175,10 @@ public:
      */
     std::string category;
     /**
+     * @brief Human-readable friendly name of the benchmark HE scheme.
+     */
+    std::string scheme;
+    /**
      * @brief CSV formatted header for this benchmark. This will be the header
      * pre-pended to the report containing the benchmark results.
      */
