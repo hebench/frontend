@@ -108,6 +108,12 @@ void OverviewHeader::parseHeader(const std::string &filename, const std::string 
             if (values.size() > 0)
                 this->workload_name.assign(values.front().begin(), values.front().end());
         } // end if
+        if (this->algorithm_name.empty())
+        {
+            values = extractInfoFromCSVLine(s_line, "Algorithm,", 1);
+            if (values.size() > 0)
+                this->algorithm_name.assign(values.front().begin(), values.front().end());
+        } // end if
         if (this->category.empty())
         {
             values = extractInfoFromCSVLine(s_line, "Category,", 1);
@@ -175,6 +181,10 @@ void OverviewHeader::outputHeader(std::ostream &os, bool new_line)
     os << ",";
     os << "\"" << this->report_file << "\""
        << ",";
+    (this->algorithm_name.find_first_of(',') == std::string::npos ?
+         os << this->algorithm_name :
+         os << "\"" << this->algorithm_name << "\"");
+    os << ",";
     (this->category.find_first_of(',') == std::string::npos ?
          os << this->category :
          os << "\"" << this->category << "\"");
