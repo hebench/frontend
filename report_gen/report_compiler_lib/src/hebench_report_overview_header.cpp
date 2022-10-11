@@ -179,12 +179,15 @@ void OverviewHeader::outputHeader(std::ostream &os, bool new_line)
          os << this->workload_name :
          os << "\"" << this->workload_name << "\"");
     os << ",";
+    os << "\"" << this->algorithm_name << "\""
+       << ",";
+    os << ",";
     os << "\"" << this->report_file << "\""
        << ",";
-    (this->algorithm_name.find_first_of(',') == std::string::npos ?
-         os << this->algorithm_name :
-         os << "\"" << this->algorithm_name << "\"");
-    os << ",";
+    //    (this->algorithm_name.find_first_of(',') == std::string::npos ?
+    //         os << this->algorithm_name :
+    //         os << "\"" << this->algorithm_name << "\"");
+    //    os << ",";
     (this->category.find_first_of(',') == std::string::npos ?
          os << this->category :
          os << "\"" << this->category << "\"");
