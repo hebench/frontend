@@ -161,13 +161,18 @@ private:
         size_t idx_result = 0;
         for (size_t idx_x = 0; idx_x < n; ++idx_x)
         {
-            if (isMemberOf(dataset_Y, dataset_X + idx_x, m, k))
+            if (isMemberOf(dataset_Y, dataset_X + (idx_x * k), m, k))
             {
                 std::copy(dataset_X + (idx_x * k),
                           dataset_X + (idx_x * k) + k,
                           result + (idx_result * k));
                 ++idx_result;
             }
+        }
+        if (idx_result != m)
+        {
+            // Filling what's left of Z with zeros
+            std::fill(result + (idx_result * k), result + (m * k), 0);
         }
     }
 
@@ -187,6 +192,11 @@ private:
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `k`"));
         }
 
+        // for(size_t i = 0; i < std::min(n, m)*k; ++i)
+        // {
+        //     std::cout << "_z_" << i << " - >" << result[i] << std::endl;
+        // }
+
         if (n > m)
         {
             mySetIntersection(result, x, y, n, m, k);
@@ -195,29 +205,18 @@ private:
         {
             mySetIntersection(result, y, x, m, n, k);
         }
-        /*
-        for(size_t i = 0; i < n; ++i)
+/*         for(size_t i = 0; i < n*k; ++i)
         {
-            for (size_t j = 0; j < k; ++j)
-            {
-                std::cout << "x" << i << "_" << j << " - >" << x[(i * k) + j] << std::endl;
-            }
+            std::cout << "x__" << i << " - >" << x[i] << std::endl;
         }  
-        for(size_t i = 0; i < m; ++i)
+        for(size_t i = 0; i < m*k; ++i)
         {
-            for (size_t j = 0; j < k; ++j)
-            {
-                std::cout << "y" << i << "_" << j << " - >" << y[(i * k) + j] << std::endl;
-            }
+            std::cout << "y__" << i << " - >" << y[i] << std::endl;
         }  
-        for(size_t i = 0; i < std::min(n, m); ++i)
+        for(size_t i = 0; i < std::min(n, m)*k; ++i)
         {
-            for (size_t j = 0; j < k; ++j)
-            {
-                std::cout << "z" << i << "_" << j << " - >" << result[(i * k) + j] << std::endl;
-            }
-        }
-        */
+            std::cout << "z__" << i << " - >" << result[i] << std::endl;
+        } */
     }
 };
 
@@ -413,9 +412,9 @@ void DataLoader::init(std::uint64_t set_size_x,
 
     // number of samples in each input parameter and output
     std::size_t batch_sizes[InputDim0 + OutputDim0] = {
-        batch_size_x * element_size_k,
-        batch_size_y * element_size_k,
-        (batch_size_x * batch_size_y) * element_size_k
+        batch_size_x,
+        batch_size_y,
+        (batch_size_x * batch_size_y)
     };
 
     m_set_size_x = set_size_x;
