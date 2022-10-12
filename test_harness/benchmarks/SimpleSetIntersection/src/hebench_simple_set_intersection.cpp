@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <cassert>
+#include <iostream>
 #include <numeric>
 #include <sstream>
-#include <iostream>
 
 #include "../include/hebench_simple_set_intersection.h"
 #include "modules/general/include/hebench_math_utils.h"
@@ -133,7 +133,6 @@ protected:
     DataGeneratorHelper() {}
 
 private:
-
     template <class T>
     static bool isMemberOf(const T *dataset, const T *value, std::uint64_t n, std::uint64_t k)
     {
@@ -141,7 +140,7 @@ private:
         for (size_t i = 0; !retval && i < n; ++i)
         {
             std::uint64_t members = 0;
-            bool flag = true;
+            bool flag             = true;
             for (size_t j = 0; flag && j < k; ++j)
             {
                 flag = dataset[(i * k) + j] == value[j];
@@ -159,20 +158,23 @@ private:
     static void mySetIntersection(T *result, const T *dataset_X, const T *dataset_Y, std::uint64_t n, std::uint64_t m, std::uint64_t k)
     {
         size_t idx_result = 0;
+
+        // initialize result with all zeros
+        std::fill(result, result + m * k, static_cast<T>(0));
+
         for (size_t idx_x = 0; idx_x < n; ++idx_x)
         {
             if (isMemberOf(dataset_Y, dataset_X + (idx_x * k), m, k))
             {
-                std::copy(dataset_X + (idx_x * k),
-                          dataset_X + (idx_x * k) + k,
-                          result + (idx_result * k));
-                ++idx_result;
+                // check for duplicates
+                if (!isMemberOf(result, dataset_X + (idx_x * k), m, k))
+                {
+                    std::copy(dataset_X + (idx_x * k),
+                              dataset_X + (idx_x * k) + k,
+                              result + (idx_result * k));
+                    ++idx_result;
+                } // end if
             }
-        }
-        if (idx_result != m)
-        {
-            // Filling what's left of Z with zeros
-            std::fill(result + (idx_result * k), result + (m * k), 0);
         }
     }
 
@@ -180,22 +182,11 @@ private:
     static void vectorSimpleSetIntersection(T *result, const T *x, const T *y, std::uint64_t n, std::uint64_t m, std::uint64_t k)
     {
         if (!x)
-        {
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `x`"));
-        }
         if (!y)
-        {
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `y`"));
-        }
         if (k == 0)
-        {
             throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid null `k`"));
-        }
-
-        // for(size_t i = 0; i < std::min(n, m)*k; ++i)
-        // {
-        //     std::cout << "_z_" << i << " - >" << result[i] << std::endl;
-        // }
 
         if (n > m)
         {
@@ -205,18 +196,6 @@ private:
         {
             mySetIntersection(result, y, x, m, n, k);
         }
-/*         for(size_t i = 0; i < n*k; ++i)
-        {
-            std::cout << "x__" << i << " - >" << x[i] << std::endl;
-        }  
-        for(size_t i = 0; i < m*k; ++i)
-        {
-            std::cout << "y__" << i << " - >" << y[i] << std::endl;
-        }  
-        for(size_t i = 0; i < std::min(n, m)*k; ++i)
-        {
-            std::cout << "z__" << i << " - >" << result[i] << std::endl;
-        } */
     }
 };
 
@@ -312,8 +291,8 @@ void DataLoader::init(std::uint64_t set_size_x,
         (batch_size_x * batch_size_y)
     };
 
-    m_set_size_x = set_size_x;
-    m_set_size_y = set_size_y;
+    m_set_size_x     = set_size_x;
+    m_set_size_y     = set_size_y;
     m_element_size_k = element_size_k;
 
     // compute buffer size in bytes for each set (vector)
@@ -333,68 +312,66 @@ void DataLoader::init(std::uint64_t set_size_x,
 
     // fill up each set (vector) data
 
-    // input
-    for (std::size_t set_i = 0; set_i < InputDim0; ++set_i)
+    constexpr std::size_t Param_SetX = 0;
+    constexpr std::size_t Param_SetY = 1;
+
+    // generate setX data
+    for (std::uint64_t sample_i = 0; sample_i < batch_sizes[Param_SetX]; ++sample_i)
+    {
+        DataGeneratorHelper::generateRandomVectorU(data_type,
+                                                   getParameterData(Param_SetX).p_buffers[sample_i].p,
+                                                   sample_set_sizes[Param_SetX],
+                                                   -16384.0, 16384.0);
+    } // end for
+
+    // generate setY data
+
+    for (std::uint64_t sample_i = 0; sample_i < batch_sizes[Param_SetY]; ++sample_i)
     {
         std::vector<std::uint64_t> indices_y = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_y);
         // This will randomly select indices in X, same amount than the ones in indices_y.
-        std::vector<std::uint64_t> indices_x = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_x, 
+        std::vector<std::uint64_t> indices_x = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_x,
                                                                                                        indices_y.size());
-        //for (size_t i = 0; i < indices_y.size(); ++i)
-        //{
-        //    std::cout << "X_IDX_" << i << " -> " << indices_x[i] << std::endl;
-        //    std::cout << "Y_IDX_" << i << " -> " << indices_y[i] << std::endl;
-        //}
-        for (std::uint64_t i = 0; i < batch_sizes[set_i]; ++i)
+        // find which sample from X to copy
+        std::uint64_t sample_from_X = DataGeneratorHelper::generateRandomIntU(0, getParameterData(Param_SetX).buffer_count - 1);
+        std::uint8_t *p_setX        = reinterpret_cast<std::uint8_t *>(getParameterData(Param_SetX).p_buffers[sample_from_X].p);
+        std::uint8_t *p_setY        = reinterpret_cast<std::uint8_t *>(getParameterData(Param_SetY).p_buffers[sample_i].p);
+        for (std::uint64_t item_y = 0; item_y < set_size_y; ++item_y)
         {
-            // in case the batch size differs from 1
-            if (set_i % 2 == 0)
+            std::uint8_t *p_setY_item = p_setY + item_y * element_size_k * sizeOf(data_type);
+            if (!indices_x.empty() && std::find(indices_y.begin(), indices_y.end(), item_y) != indices_y.end())
             {
-                DataGeneratorHelper::generateRandomSetU(data_type,
-                                                        getParameterData(set_i).p_buffers[i * element_size_k].p,
-                                                        set_size_x, element_size_k, -16384.0, 16384.0);
-            }
+                // we found a common item to set
+                std::uint8_t *p_setX_item = p_setX + indices_x.back() * element_size_k * sizeOf(data_type);
+                std::copy(p_setX_item, p_setX_item + element_size_k * sizeOf(data_type),
+                          p_setY_item);
+                indices_x.pop_back();
+            } // end if
             else
             {
-                for (std::uint64_t idx_y = 0; idx_y < set_size_y; ++idx_y)
-                {
-                    if (!indices_x.empty() && std::find(indices_y.begin(), indices_y.end(), idx_y) != indices_y.end())
-                    {
-                        std::uint64_t idx_x = indices_x.back();
-                        DataGeneratorHelper::copyVector(data_type,
-                                                        getParameterData(set_i-1).p_buffers[i * element_size_k].p, // src
-                                                        getParameterData(set_i).p_buffers[i * element_size_k].p, // dest
-                                                        idx_x, idx_y,
-                                                        element_size_k);
-                        indices_x.pop_back();
-                    }
-                    else
-                    {
-                        DataGeneratorHelper::generateRandomVectorUat(data_type,
-                                                                     getParameterData(set_i).p_buffers[i * element_size_k].p,
-                                                                     element_size_k, idx_y,
-                                                                     -16384.0, 16384.0);
-                    }
-                }
-            }
+                // generate (possibly unique item)
+                DataGeneratorHelper::generateRandomVectorU(data_type,
+                                                           p_setY_item,
+                                                           element_size_k,
+                                                           -16384.0, 16384.0);
+            } // end else
         } // end for
     } // end for
 
-    // output
-    //#pragma omp parallel for collapse(2)
-    for (std::uint64_t input_i = 0; input_i < batch_sizes[2]; ++input_i)
-    {
-        // find the index for the result buffer based on the input indices
-        std::uint64_t ppi[] = { 0, 0, input_i };
-        std::uint64_t z_i   = getResultIndex(ppi);
+    for (std::uint64_t sampleX_i = 0; sampleX_i < batch_sizes[Param_SetX]; ++sampleX_i)
+        for (std::uint64_t sampleY_i = 0; sampleY_i < batch_sizes[Param_SetY]; ++sampleY_i)
+        {
+            // find the index for the result buffer based on the input indices
+            std::uint64_t ppi[] = { sampleX_i, sampleY_i };
+            std::uint64_t z_i   = getResultIndex(ppi);
 
-        // generate the data
-        DataGeneratorHelper::vectorSimpleSetIntersection(data_type,
-                                                         getResultData(0).p_buffers[z_i].p, // Z
-                                                         getParameterData(0).p_buffers[input_i].p, // X
-                                                         getParameterData(1).p_buffers[input_i].p, // Y
-                                                         set_size_x, set_size_y, element_size_k);
-    } // end for
+            // generate the data
+            DataGeneratorHelper::vectorSimpleSetIntersection(data_type,
+                                                             getResultData(0).p_buffers[z_i].p, // Z
+                                                             getParameterData(0).p_buffers[sampleX_i].p, // X
+                                                             getParameterData(1).p_buffers[sampleY_i].p, // Y
+                                                             set_size_x, set_size_y, element_size_k);
+        } // end for
 
     // all data has been generated at this point
 }
@@ -417,8 +394,8 @@ void DataLoader::init(std::uint64_t set_size_x,
         (batch_size_x * batch_size_y)
     };
 
-    m_set_size_x = set_size_x;
-    m_set_size_y = set_size_y;
+    m_set_size_x     = set_size_x;
+    m_set_size_y     = set_size_y;
     m_element_size_k = element_size_k;
 
     // compute buffer size in bytes for each set (vector)

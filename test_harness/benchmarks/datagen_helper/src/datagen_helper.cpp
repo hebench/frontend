@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include "../include/datagen_helper.h"
 #include "include/hebench_utilities_harness.h"
@@ -76,7 +76,6 @@ inline void DataGeneratorHelper::generateRandomVectorU(T *result, std::uint64_t 
     } // end for
 }
 
-
 template <class T>
 inline void DataGeneratorHelper::generateRandomVectorN(T *result, std::uint64_t elem_count,
                                                        T mean, T stddev)
@@ -89,25 +88,25 @@ inline void DataGeneratorHelper::generateRandomVectorN(T *result, std::uint64_t 
     } // end for
 }
 
-template <class T>
-inline void DataGeneratorHelper::generateRandomSetU(T *result, std::uint64_t elem_count, std::uint64_t item_count,
-                                                    T min_val, T max_val)
-{
-    for (size_t i = 0; i < elem_count; ++i)
-    {
-        DataGeneratorHelper::generateRandomVectorU(result + (i * item_count), item_count, min_val, max_val);
-    }
-}
+//template <class T>
+//inline void DataGeneratorHelper::generateRandomSetU(T *result, std::uint64_t elem_count, std::uint64_t item_count,
+//                                                    T min_val, T max_val)
+//{
+//    for (size_t i = 0; i < elem_count; ++i)
+//    {
+//        DataGeneratorHelper::generateRandomVectorU(result + (i * item_count), item_count, min_val, max_val);
+//    }
+//}
 
-template <class T>
-inline void DataGeneratorHelper::copyVector(T *source, T *dest,
-                                            std::uint64_t index_src, std::uint64_t index_dst,
-                                            std::uint64_t elem_count)
-{
-    std::copy(source + (index_src * elem_count),
-              source + (index_src * elem_count) + elem_count,
-              dest + (index_dst * elem_count));
-}
+//template <class T>
+//inline void DataGeneratorHelper::copyVector(T *source, T *dest,
+//                                            std::uint64_t index_src, std::uint64_t index_dst,
+//                                            std::uint64_t elem_count)
+//{
+//    std::copy(source + (index_src * elem_count),
+//              source + (index_src * elem_count) + elem_count,
+//              dest + (index_dst * elem_count));
+//}
 
 void DataGeneratorHelper::generateRandomVectorU(hebench::APIBridge::DataType data_type,
                                                 void *result, std::uint64_t elem_count,
@@ -141,37 +140,37 @@ void DataGeneratorHelper::generateRandomVectorU(hebench::APIBridge::DataType dat
     } // end switch
 }
 
-void DataGeneratorHelper::generateRandomVectorUat(hebench::APIBridge::DataType data_type,
-                                        void *result, std::uint64_t elem_count,
-                                        std::uint64_t idx, double min_val, double max_val)
-{
-    switch (data_type)
-    {
-    case hebench::APIBridge::DataType::Int32:
-        generateRandomVectorU<std::int32_t>(reinterpret_cast<std::int32_t *>(result) + (idx*elem_count), elem_count,
-                                            static_cast<std::int32_t>(min_val), static_cast<std::int32_t>(max_val));
-        break;
+//void DataGeneratorHelper::generateRandomVectorUat(hebench::APIBridge::DataType data_type,
+//                                        void *result, std::uint64_t elem_count,
+//                                        std::uint64_t idx, double min_val, double max_val)
+//{
+//    switch (data_type)
+//    {
+//    case hebench::APIBridge::DataType::Int32:
+//        generateRandomVectorU<std::int32_t>(reinterpret_cast<std::int32_t *>(result) + (idx*elem_count), elem_count,
+//                                            static_cast<std::int32_t>(min_val), static_cast<std::int32_t>(max_val));
+//        break;
 
-    case hebench::APIBridge::DataType::Int64:
-        generateRandomVectorU<std::int64_t>(reinterpret_cast<std::int64_t *>(result) + (idx*elem_count), elem_count,
-                                            static_cast<std::int64_t>(min_val), static_cast<std::int64_t>(max_val));
-        break;
+//    case hebench::APIBridge::DataType::Int64:
+//        generateRandomVectorU<std::int64_t>(reinterpret_cast<std::int64_t *>(result) + (idx*elem_count), elem_count,
+//                                            static_cast<std::int64_t>(min_val), static_cast<std::int64_t>(max_val));
+//        break;
 
-    case hebench::APIBridge::DataType::Float32:
-        generateRandomVectorU<float>(reinterpret_cast<float *>(result) + (idx*elem_count), elem_count,
-                                     static_cast<float>(min_val), static_cast<float>(max_val));
-        break;
+//    case hebench::APIBridge::DataType::Float32:
+//        generateRandomVectorU<float>(reinterpret_cast<float *>(result) + (idx*elem_count), elem_count,
+//                                     static_cast<float>(min_val), static_cast<float>(max_val));
+//        break;
 
-    case hebench::APIBridge::DataType::Float64:
-        generateRandomVectorU<double>(reinterpret_cast<double *>(result) + (idx*elem_count), elem_count,
-                                      static_cast<double>(min_val), static_cast<double>(max_val));
-        break;
+//    case hebench::APIBridge::DataType::Float64:
+//        generateRandomVectorU<double>(reinterpret_cast<double *>(result) + (idx*elem_count), elem_count,
+//                                      static_cast<double>(min_val), static_cast<double>(max_val));
+//        break;
 
-    default:
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
-        break;
-    } // end switch
-}
+//    default:
+//        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
+//        break;
+//    } // end switch
+//}
 
 void DataGeneratorHelper::generateRandomVectorN(hebench::APIBridge::DataType data_type,
                                                 void *result, std::uint64_t elem_count,
@@ -205,113 +204,95 @@ void DataGeneratorHelper::generateRandomVectorN(hebench::APIBridge::DataType dat
     } // end switch
 }
 
-void DataGeneratorHelper::generateRandomSetU(hebench::APIBridge::DataType data_type,
-                                            void *result, std::uint64_t elem_count, std::uint64_t item_count,
-                                            double min_val, double max_val)
+//void DataGeneratorHelper::generateRandomSetU(hebench::APIBridge::DataType data_type,
+//                                            void *result, std::uint64_t elem_count, std::uint64_t item_count,
+//                                            double min_val, double max_val)
+//{
+//    switch (data_type)
+//    {
+//    case hebench::APIBridge::DataType::Int32:
+//        generateRandomSetU<std::int32_t>(reinterpret_cast<std::int32_t *>(result), elem_count, item_count,
+//                                            static_cast<std::int32_t>(min_val), static_cast<std::int32_t>(max_val));
+//        break;
+
+//    case hebench::APIBridge::DataType::Int64:
+//        generateRandomSetU<std::int64_t>(reinterpret_cast<std::int64_t *>(result), elem_count, item_count,
+//                                            static_cast<std::int64_t>(min_val), static_cast<std::int64_t>(max_val));
+//        break;
+
+//    case hebench::APIBridge::DataType::Float32:
+//        generateRandomSetU<float>(reinterpret_cast<float *>(result), elem_count, item_count,
+//                                     static_cast<float>(min_val), static_cast<float>(max_val));
+//        break;
+
+//    case hebench::APIBridge::DataType::Float64:
+//        generateRandomSetU<double>(reinterpret_cast<double *>(result), elem_count, item_count,
+//                                      static_cast<double>(min_val), static_cast<double>(max_val));
+//        break;
+
+//    default:
+//        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
+//        break;
+//    } // end switch
+//}
+
+//void DataGeneratorHelper::copyVector(hebench::APIBridge::DataType data_type,
+//                                    void *src, void *dest,
+//                                    std::uint64_t index_src, std::uint64_t index_dst,
+//                                    std::uint64_t elem_count)
+//{
+//        switch (data_type)
+//    {
+//    case hebench::APIBridge::DataType::Int32:
+//        copyVector<std::int32_t>(reinterpret_cast<std::int32_t *>(src),
+//                                 reinterpret_cast<std::int32_t *>(dest),
+//                                 index_src, index_dst, elem_count);
+
+//        break;
+
+//    case hebench::APIBridge::DataType::Int64:
+//        copyVector<std::int64_t>(reinterpret_cast<std::int64_t *>(src),
+//                                 reinterpret_cast<std::int64_t *>(dest),
+//                                 index_src, index_dst, elem_count);
+//        break;
+
+//    case hebench::APIBridge::DataType::Float32:
+//        copyVector<float>(reinterpret_cast<float *>(src),
+//                          reinterpret_cast<float *>(dest),
+//                          index_src, index_dst, elem_count);
+//        break;
+
+//    case hebench::APIBridge::DataType::Float64:
+//        copyVector<double>(reinterpret_cast<double *>(src),
+//                           reinterpret_cast<double *>(dest),
+//                           index_src, index_dst, elem_count);
+//        break;
+
+//    default:
+//        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
+//        break;
+//    } // end switch
+//}
+
+std::uint64_t DataGeneratorHelper::generateRandomIntU(std::uint64_t min_val, std::uint64_t max_val)
 {
-    switch (data_type)
-    {
-    case hebench::APIBridge::DataType::Int32:
-        generateRandomSetU<std::int32_t>(reinterpret_cast<std::int32_t *>(result), elem_count, item_count,
-                                            static_cast<std::int32_t>(min_val), static_cast<std::int32_t>(max_val));
-        break;
-
-    case hebench::APIBridge::DataType::Int64:
-        generateRandomSetU<std::int64_t>(reinterpret_cast<std::int64_t *>(result), elem_count, item_count,
-                                            static_cast<std::int64_t>(min_val), static_cast<std::int64_t>(max_val));
-        break;
-
-    case hebench::APIBridge::DataType::Float32:
-        generateRandomSetU<float>(reinterpret_cast<float *>(result), elem_count, item_count,
-                                     static_cast<float>(min_val), static_cast<float>(max_val));
-        break;
-
-    case hebench::APIBridge::DataType::Float64:
-        generateRandomSetU<double>(reinterpret_cast<double *>(result), elem_count, item_count,
-                                      static_cast<double>(min_val), static_cast<double>(max_val));
-        break;
-
-    default:
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
-        break;
-    } // end switch
-}
-
-void DataGeneratorHelper::copyVector(hebench::APIBridge::DataType data_type,
-                                    void *src, void *dest,
-                                    std::uint64_t index_src, std::uint64_t index_dst,
-                                    std::uint64_t elem_count)
-{
-        switch (data_type)
-    {
-    case hebench::APIBridge::DataType::Int32:
-        copyVector<std::int32_t>(reinterpret_cast<std::int32_t *>(src),
-                                 reinterpret_cast<std::int32_t *>(dest), 
-                                 index_src, index_dst, elem_count);
-                                            
-        break;
-
-    case hebench::APIBridge::DataType::Int64:
-        copyVector<std::int64_t>(reinterpret_cast<std::int64_t *>(src),
-                                 reinterpret_cast<std::int64_t *>(dest), 
-                                 index_src, index_dst, elem_count);
-        break;
-
-    case hebench::APIBridge::DataType::Float32:
-        copyVector<float>(reinterpret_cast<float *>(src),
-                          reinterpret_cast<float *>(dest), 
-                          index_src, index_dst, elem_count);
-        break;
-
-    case hebench::APIBridge::DataType::Float64:
-        copyVector<double>(reinterpret_cast<double *>(src),
-                           reinterpret_cast<double *>(dest), 
-                           index_src, index_dst, elem_count);
-        break;
-
-    default:
-        throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
-        break;
-    } // end switch
-}
-
-void DataGeneratorHelper::generateRandomIntersectionsCountU(std::uint64_t &result, std::uint64_t elem_count)
-{
-   /*Generates a value in a range from 3% to 65% of the total amount of elements.*/
-   double min_val = std::ceil((3*elem_count)/100);
-   min_val = min_val == 0? 1: min_val;
-   double max_val = std::floor((65*elem_count)/100);
-   std::uniform_real_distribution<double> rnd(min_val, max_val);
-   result = static_cast<std::uint64_t>(rnd(hebench::Utilities::RandomGenerator::get()));
+    std::uniform_int_distribution<std::uint64_t> rnd(min_val, max_val);
+    return rnd(hebench::Utilities::RandomGenerator::get());
 }
 
 std::vector<std::uint64_t> DataGeneratorHelper::generateRandomIntersectionIndicesU(std::uint64_t elem_count, std::uint64_t indices_count)
 {
-    std::uint64_t m_indices_count;
     std::vector<std::uint64_t> retval;
 
-    if (indices_count == 0) 
-    {
-        generateRandomIntersectionsCountU(m_indices_count, elem_count);
-    }
-    else
-    {
-        m_indices_count = indices_count;
-    }
+    if (indices_count <= 0)
+        indices_count = generateRandomIntU(0, elem_count - 1);
 
-    retval.reserve(m_indices_count);
+    retval.resize(elem_count);
+    std::iota(retval.begin(), retval.end(), 0);
+    std::shuffle(retval.begin(), retval.end(), hebench::Utilities::RandomGenerator::get());
 
-    std::uniform_real_distribution<double> rnd(0, elem_count);
-
-    for (size_t i = 0; i < m_indices_count; ++i)
-    {
-        retval.emplace_back(static_cast<std::uint64_t>(rnd(hebench::Utilities::RandomGenerator::get())));
-    }
-
-    return retval;
+    return std::vector<std::uint64_t>(retval.begin(), retval.begin() + indices_count);
 }
-
-
 
 } // namespace TestHarness
 } // namespace hebench
