@@ -180,7 +180,7 @@ extern "C"
             } // end if
 
             ss_overview_header << ",,,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
-                               << "Workload,Algorithm,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
+                               << "Workload,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
                                << "ID,Event,Total Wall Time,Samples per sec,Samples per sec trimmed,"
                                // wall
                                << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,"

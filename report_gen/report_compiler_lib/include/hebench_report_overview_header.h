@@ -21,7 +21,6 @@ public:
         other(0) {}
 
     std::string workload_name;
-    std::string algorithm_name;
     std::string report_file;
     std::string category;
     std::string data_type;
