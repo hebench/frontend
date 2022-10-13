@@ -175,9 +175,21 @@ public:
      */
     std::string category;
     /**
-     * @brief Human-readable friendly name of the benchmark HE scheme.
+     * @brief Human-readable friendly name of the benchmark cipher parameters.
+     */
+    std::string cipher_flags;
+    /**
+     * @brief Human-readable friendly name of the benchmark security.
+     */
+    std::string security;
+    /**
+     * @brief Human-readable friendly name of the benchmark scheme.
      */
     std::string scheme;
+    /**
+     * @brief Other value used to uniquely identify benchmark implementations.
+     */
+    std::string other;
     /**
      * @brief CSV formatted header for this benchmark. This will be the header
      * pre-pended to the report containing the benchmark results.

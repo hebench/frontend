@@ -450,11 +450,11 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
     } // end for
 
     YAML::Node node_benchmark;
-    out << YAML::Newline
+    out /*<< YAML::Newline
         << YAML::Comment("Benchmark with workload parameters:") << YAML::Newline
         << YAML::Comment("  " + description.workload_name) << YAML::Newline
         << YAML::Comment("Descriptor:") << YAML::Newline
-        << YAML::Comment("  " + ss.str()) << YAML::Newline
+        << YAML::Comment("  " + ss.str()) << YAML::Newline*/
         << YAML::Comment("Section \"description\" is for informational purposes only. Do not change.");
     YAML::Node node_bench_description;
     node_bench_description["workload"]      = description.workload;
@@ -462,6 +462,9 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
     node_bench_description["data_type"]     = description.data_type;
     node_bench_description["category"]      = description.category;
     node_bench_description["scheme"]        = description.scheme;
+    node_bench_description["security"]      = description.security;
+    node_bench_description["cipher_flags"]  = description.cipher_flags;
+    node_bench_description["other"]         = description.other;
     node_bench_description["notes"]         = YAML::Node(YAML::NodeType::Null);
     node_benchmark["ID"]                    = bench_req.index;
     node_benchmark["description"]           = node_bench_description;
