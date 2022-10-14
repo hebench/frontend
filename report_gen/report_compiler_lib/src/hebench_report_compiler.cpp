@@ -179,8 +179,8 @@ extern "C"
                           << std::endl;
             } // end if
 
-            ss_overview_header << ",,,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
-                               << "Workload,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
+            ss_overview_header << ",,,,,,,,,,,,,,Wall Time,,,,,,,,,,,,,CPU Time" << std::endl
+                               << "Workload,End State,Filename,Category,Data type,Cipher text,Scheme,Security,Extra,"
                                << "ID,Event,Total Wall Time,Samples per sec,Samples per sec trimmed,"
                                // wall
                                << "Average,Standard Deviation,Time Unit,Time Factor,Min,Max,Median,Trimmed Average,Trimmed Standard Deviation,1-th percentile,10-th percentile,90-th percentile,99-th percentile,"
@@ -221,20 +221,21 @@ extern "C"
                 {
                     TimingReport &report = *p_report;
 
+                    if (!config.b_silent)
+                    {
+                        std::cout << "Parsing report header..." << std::endl;
+                    } // end if
+
+                    hebench::ReportGen::OverviewHeader overview_header;
                     if (report.getEventCount() <= 0)
                     {
                         std::cerr << "WARNING: The loaded report belongs to a failed benchmark." << std::endl;
-                        ss_overview << "Failed," << csv_filenames[csv_file_i] << ",Validation";
+                        overview_header.parseHeader(csv_filenames[csv_file_i], report.getHeader(), hebench::ReportGen::OverviewHeader::EndStateGeneralFailure);
+                        overview_header.outputHeader(ss_overview, false);
                     } // end if
                     else
                     {
-                        if (!config.b_silent)
-                        {
-                            std::cout << "Parsing report header..." << std::endl;
-                        } // end if
-
-                        hebench::ReportGen::OverviewHeader overview_header;
-                        overview_header.parseHeader(csv_filenames[csv_file_i], report.getHeader());
+                        overview_header.parseHeader(csv_filenames[csv_file_i], report.getHeader(), hebench::ReportGen::OverviewHeader::EndStateOK);
                         // make sure we keep track of the workload parameters
                         if (overview_header.w_params.size() > max_w_params)
                         {
