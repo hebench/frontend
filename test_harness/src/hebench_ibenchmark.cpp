@@ -183,20 +183,21 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     std::stringstream ss;
     std::filesystem::path ss_path;
 
-    std::string &s_workload_name = completed_description.workload_name;
+    std::string &s_workload_base_name = completed_description.workload_base_name;
+    std::string &s_workload_name      = completed_description.workload_name;
     std::string s_path_workload_name;
     std::string s_scheme_name   = engine.getSchemeName(bench_desc.scheme);
     std::string s_security_name = engine.getSecurityName(bench_desc.scheme, bench_desc.security);
 
     // generate path
     ss = std::stringstream();
-    if (!s_workload_name.empty())
+    if (!s_workload_base_name.empty())
     {
-        ss << s_workload_name << "_";
+        ss << s_workload_base_name << "_";
     }
     else
     {
-        s_workload_name = std::to_string(static_cast<int>(bench_desc.workload));
+        s_workload_base_name = std::to_string(static_cast<int>(bench_desc.workload));
     }
     ss << std::to_string(static_cast<int>(bench_desc.workload));
     s_path_workload_name = hebench::Utilities::convertToDirectoryName(ss.str());

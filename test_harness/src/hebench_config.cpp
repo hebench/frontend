@@ -431,26 +431,15 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
                                                      const hebench::TestHarness::BenchmarkDescription::Description &description)
 {
     const hebench::TestHarness::BenchmarkDescription::Configuration &config = bench_req.configuration;
-    std::filesystem::path path_bench_desc                                   = description.path;
     std::stringstream ss;
-    auto path_it = path_bench_desc.begin();
-    if (path_it == path_bench_desc.end())
-        throw std::logic_error("Invalid benchmark description text.");
-    bool b_first_it = true;
-    for (++path_it; path_it != path_bench_desc.end(); ++path_it)
-    {
-        if (b_first_it)
-            b_first_it = false;
-        else
-            ss << " | ";
-        std::string s_tmp = *path_it;
-        s_tmp.erase(0, s_tmp.find_first_not_of('\"'));
-        s_tmp.erase(s_tmp.find_last_not_of('\"') + 1);
-        ss << s_tmp;
-    } // end for
+
+    ss << "Section \"description\" is for informational purposes only. It shows the" << std::endl
+       << "benchmark descriptor matching the benchmark ID. Changing contents of" << std::endl
+       << "\"description\" has no effect.";
+    out << YAML::Newline;
+    out << YAML::Comment(ss.str());
 
     YAML::Node node_benchmark;
-    out << YAML::Comment("Section \"description\" is for informational purposes only. Do not change.");
     YAML::Node node_bench_description;
     node_bench_description["workload"]      = description.workload;
     node_bench_description["workload_name"] = description.workload_name;
