@@ -24,6 +24,10 @@ benchmark:
       workload_name: <name>
       data_type: <type_name>
       category: <category_name>
+      scheme: <scheme_name>
+      security: <security_name>
+      cipher_flags: <ciphertext/plaintext_op_params>
+      other: <descriptor_extra_flags>
       notes: <benchmark_notes>
     dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
@@ -53,6 +57,10 @@ benchmark:
       workload_name: <name>
       data_type: <type_name>
       category: <category_name>
+      scheme: <scheme_name>
+      security: <security_name>
+      cipher_flags: <ciphertext/plaintext_op_params>
+      other: <descriptor_extra_flags>
       notes: <benchmark_notes>
     dataset: <file_name>
     default_min_test_time: <min_test_time_ms>
@@ -159,13 +167,13 @@ When this setting is missing or set to `0` in the configuration file, this indic
 
 `random_seed` - type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
 
-### Benchmark Description Section
+### Benchmark Configuration Section
 
 Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and the corresponding configuration.
 
 A benchmark configuration is composed by `ID`, `dataset`, `default_min_test_time`, `default_sample_sizes` and `params`.
 
-The `description` section is is automatically generated when exporting a configuration file for informational purposes only. Its contents are ignored by Test Harness, and thus, providing it is optional and may be omitted.
+The `description` section for each benchmark is automatically generated when exporting a configuration file for informational purposes only. It is intended to inform which is the benchmark descriptor matching the `benchmark ID`. Its contents are ignored by Test Harness, and thus, providing it is optional and may be omitted.
 
 A benchmark executes a specific workload from the set of workloads specified in hebench::APIBridge::Workload enumeration. A backend implements a collection of benchmarks and registers them with the Frontend during initialization.
 
@@ -244,17 +252,20 @@ random_seed: 0
 
 benchmark:
 
-# Benchmark with workload parameters:
-#   Logistic Regression PolyD3 16 features
-# Descriptor:
-#   wp_16 | offline | float64 | 1120 | all_cipher | ckks | 128 | 1
+# Section "description" is for informational purposes only. It shows the
+# benchmark descriptor matching the benchmark ID. Changing contents of
+# "description" has no effect.
   - ID: 3
     description:
       workload_id: 6
-      workload_name: Logistic Regression PolyD3 16 features
+      workload_name: Logistic Regression PolyD3
       data_type: Float64
       category: Offline
-      notes: ~
+      scheme: CKKS
+      security: 128 bits
+      cipher_flags: all_cipher
+      other: 0
+      notes: ~      
     dataset: ~
     default_min_test_time: 0
     default_sample_size:
@@ -271,7 +282,7 @@ benchmark:
           step: 0
 ```
 
-we know that for this backend, `ID` value of `3` will always represent a "Logistic Regression PolyD3" workload, in the "Offline" category, with input and output data type "Float64". The full descriptor is "offline | float64 | 1120 | all_cipher | ckks | 128 | 1" ("wp_xx" indicates the default values exported for the benchmark workload parameters). The number of features `n` is the workload parameter `0` as specified in @ref logistic_regression .
+we know that for this backend, `ID` value of `3` will always represent what is contained in the description section: a "Logistic Regression PolyD3" workload, in the "Offline" category, with input and output data type "Float64", scheme "CKKS" with "128 bits" security, all operation parameters are encrypted, and the extra flags ("other") has a value of `0`. See @ref logistic_regression for full details on workload specification.
 
 We can modify the parameters at will, as long as our new values are supported by the backend used to export this file.
 
