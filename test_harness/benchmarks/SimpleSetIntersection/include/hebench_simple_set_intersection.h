@@ -12,8 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "modules/general/include/nocopy.h"
 #include "modules/general/include/hebench_math_utils.h"
+#include "modules/general/include/nocopy.h"
 #include "modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
@@ -33,7 +33,7 @@ public:
 private:
     IL_DECLARE_CLASS_NAME(DotProduct::BenchmarkDescriptorCategory)
 public:
-    static constexpr const char *BaseWorkloadName = "Simple Set Intersection";
+    static constexpr const char *BaseWorkloadName         = "Simple Set Intersection";
     static constexpr std::uint64_t WorkloadParameterCount = 3; // number of parameters for this workload
     static constexpr std::uint64_t OpParameterCount       = 2; // number of parameters for this operation
     static constexpr std::uint64_t OpResultCount          = 1; // number of outputs for this operation
@@ -123,10 +123,10 @@ template <typename T>
 */
 typename std::enable_if<std::is_integral<T>::value
                             || std::is_floating_point<T>::value,
-                        std::vector<std::uint64_t>>::type
-almostEqualSetIntersection(const T *X, const T *Y,
-                           std::uint64_t n, std::uint64_t m, std::uint64_t k,
-                           double pct = 0.05);
+                        std::vector<std::pair<bool, std::uint64_t>>>::type
+almostEqualSet(const T *X, const T *Y,
+               std::uint64_t n, std::uint64_t m, std::uint64_t k,
+               double pct = 0.05);
 
 template <typename T>
 /**
@@ -144,7 +144,6 @@ typename std::enable_if<std::is_integral<T>::value
                         bool>::type
 isMemberOf(const T *dataset, const T *value, std::size_t n, std::size_t k,
            double pct = 0.05);
-
 
 bool validateResult(IDataLoader::Ptr dataset,
                     const std::uint64_t *param_data_pack_indices,
@@ -182,35 +181,46 @@ isMemberOf(const T *dataset, const T *value, std::size_t n, std::size_t k,
 template <typename T>
 typename std::enable_if<std::is_integral<T>::value
                             || std::is_floating_point<T>::value,
-                        std::vector<std::uint64_t>>::type
-almostEqualSetIntersection(const T *X, const T *Y,
-                           std::uint64_t n, std::uint64_t m, std::uint64_t k,
-                           double pct)
+                        std::vector<std::pair<bool, std::uint64_t>>>::type
+almostEqualSet(const T *X, const T *Y,
+               std::uint64_t n, std::uint64_t m, std::uint64_t k,
+               double pct)
 {
-    std::vector<std::uint64_t> retval;
-    retval.reserve(std::min(n, m));
+    std::vector<std::pair<bool, std::uint64_t>> retval;
+    retval.reserve(n + m);
     if (X != Y)
     {
-        if (X && Y)
+        if (!X)
         {
+            // X has no elements
+            for (std::uint64_t i = 0; i < m; ++i)
+                retval.push_back(std::pair(false, i));
+        } // end if
+        else if (!Y)
+        {
+            // Y has no elements
+            for (std::uint64_t i = 0; i < n; ++i)
+                retval.push_back(std::pair(true, i));
+        } // end else if
+        else
+        {
+            // check if X c Y
             for (std::uint64_t i = 0; i < n; ++i)
             {
                 if (!isMemberOf(Y, X + (i * k), m, k, pct))
-                    retval.push_back(i);
+                    retval.push_back(std::pair(true, i));
             } // end for
-        } // end if
-        else
-        {
-            // all elements differ if one is null
-            retval.reserve(std::min(n, m));
-            std::iota(retval.begin(), retval.end(), 0UL);
+            // check if Y c X
+            for (std::uint64_t i = 0; i < m; ++i)
+            {
+                if (!isMemberOf(X, Y + (i * k), n, k, pct))
+                    retval.push_back(std::pair(false, i));
+            } // end for
+            // if retval.empty(), then X == Y
         } // end else
     } // end if
     return retval;
 }
-
-
-
 
 } // namespace SimpleSetIntersection
 } // namespace TestHarness

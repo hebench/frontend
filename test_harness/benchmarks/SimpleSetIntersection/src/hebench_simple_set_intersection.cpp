@@ -6,6 +6,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <utility>
 
 #include "../include/hebench_simple_set_intersection.h"
 #include "modules/general/include/hebench_math_utils.h"
@@ -82,8 +83,8 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     auto sets_size = fetchSetSize(config.w_params);
     ss << BaseWorkloadName
        << " |X| -> " << sets_size[0] << ", "
-       << " |Y| -> " << sets_size[1] << ", "
-       << "  k  -> " << sets_size[2];
+       << "|Y| -> " << sets_size[1] << ", "
+       << "k  -> " << sets_size[2];
 
     output.workload_name          = ss.str();
     output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
@@ -336,7 +337,7 @@ void DataLoader::init(std::uint64_t set_size_x,
             // if indices_y is empty, there's no point to execute the following statements
             std::sort(indices_y.begin(), indices_y.end());
             // This will randomly select indices in X, same amount than the ones in indices_y.
-            indices_x = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_x, indices_y.size());
+            indices_x    = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_x, indices_y.size());
             it_indices_y = indices_y.begin();
         }
         // find which sample from X to copy
@@ -444,7 +445,10 @@ bool validateResult(IDataLoader::Ptr dataset,
 {
     static constexpr const std::size_t MaxErrorPrint = 10;
     bool retval                                      = true;
-    std::vector<std::uint64_t> is_valid;
+    //std::vector<std::uint64_t> is_valid;
+    // true => truth has extra element (not in output)
+    // false => output has extra element (not in truth)
+    std::vector<std::pair<bool, std::uint64_t>> is_valid;
 
     // extract the pointers to the actual results
 
@@ -481,8 +485,8 @@ bool validateResult(IDataLoader::Ptr dataset,
                 throw std::invalid_argument(IL_LOG_MSG("Buffer in outputs is not large enough to contain the expected output: 'outputs[" + std::to_string(index) + "]'."));
             }
 
-            void *p_truth       = truths.at(index)->p;
-            void *p_output      = outputs.at(index)->p; // single output
+            void *p_truth  = truths.at(index)->p;
+            void *p_output = outputs.at(index)->p; // single output
 
             // m is not required since both collections have the same size
             std::uint64_t n = truths.at(index)->size / IDataLoader::sizeOf(data_type) / k_count;
@@ -491,31 +495,31 @@ bool validateResult(IDataLoader::Ptr dataset,
             switch (data_type)
             {
             case hebench::APIBridge::DataType::Int32:
-                is_valid = almostEqualSetIntersection(reinterpret_cast<const std::int32_t *>(p_truth),
-                                                      reinterpret_cast<const std::int32_t *>(p_output),
-                                                      n, n, k_count,
-                                                      0.01);
+                is_valid = almostEqualSet(reinterpret_cast<const std::int32_t *>(p_truth),
+                                          reinterpret_cast<const std::int32_t *>(p_output),
+                                          n, n, k_count,
+                                          0.01);
                 break;
 
             case hebench::APIBridge::DataType::Int64:
-                is_valid = almostEqualSetIntersection(reinterpret_cast<const std::int64_t *>(p_truth),
-                                                      reinterpret_cast<const std::int64_t *>(p_output),
-                                                      n , n, k_count,
-                                                      0.01);
+                is_valid = almostEqualSet(reinterpret_cast<const std::int64_t *>(p_truth),
+                                          reinterpret_cast<const std::int64_t *>(p_output),
+                                          n, n, k_count,
+                                          0.01);
                 break;
 
             case hebench::APIBridge::DataType::Float32:
-                is_valid = almostEqualSetIntersection(reinterpret_cast<const float *>(p_truth),
-                                                      reinterpret_cast<const float *>(p_output),
-                                                      n, n, k_count,
-                                                      0.01);
+                is_valid = almostEqualSet(reinterpret_cast<const float *>(p_truth),
+                                          reinterpret_cast<const float *>(p_output),
+                                          n, n, k_count,
+                                          0.01);
                 break;
 
             case hebench::APIBridge::DataType::Float64:
-                is_valid = almostEqualSetIntersection(reinterpret_cast<const double *>(p_truth),
-                                                      reinterpret_cast<const double *>(p_output),
-                                                      n, n, k_count,
-                                                      0.01);
+                is_valid = almostEqualSet(reinterpret_cast<const double *>(p_truth),
+                                          reinterpret_cast<const double *>(p_output),
+                                          n, n, k_count,
+                                          0.01);
                 break;
 
             default:
@@ -531,11 +535,11 @@ bool validateResult(IDataLoader::Ptr dataset,
         {
             std::stringstream ss;
             ss << "Result component, " << (index - 1) << std::endl
-               << "Elements not within 1% of each other, " << is_valid.size() << std::endl
+               << "Elements mismatched, " << is_valid.size() << std::endl
                << "Failed indices, ";
             for (std::size_t i = 0; i < is_valid.size() && i < MaxErrorPrint; ++i)
             {
-                ss << is_valid[i];
+                ss << "(" << (is_valid[i].first ? "ground truth" : "output") << "; " << is_valid[i].second * k_count << ".." << is_valid[i].second * k_count + k_count - 1 << ")";
                 if (i + 1 < is_valid.size() && i + 1 < MaxErrorPrint)
                 {
                     ss << ", ";

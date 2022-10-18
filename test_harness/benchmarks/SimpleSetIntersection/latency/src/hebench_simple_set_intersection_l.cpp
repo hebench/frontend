@@ -65,7 +65,7 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     ss = std::stringstream();
 
     // Assuming that there could be a set containing the other
-    std::uint64_t result_set_size = std::min(set_size.at(0), set_size.at(1));
+    std::uint64_t result_set_size   = std::min(set_size.at(0), set_size.at(1));
     std::uint64_t result_batch_size = 1;
     for (std::size_t param_i = 0; param_i < OpParameterCount; ++param_i)
     {
@@ -74,11 +74,11 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     } // end for
     // complete header with workload specifics
     ss << ", , Z = Intersect(X, Y)" << std::endl
-       << ", , , Elements, Batch size, Items" << std::endl;
+       << ", , , Items in set, Batch size, Elements per item" << std::endl;
 
-    ss << ", , X, " << set_size.at(0)  << ", " << batch_sizes[0]    << ", " << set_size.at(2) << std::endl;
+    ss << ", , X, " << set_size.at(0) << ", " << batch_sizes[0] << ", " << set_size.at(2) << std::endl;
 
-    ss << ", , Y, " << set_size.at(1)  << ", " << batch_sizes[1]    << ", " << set_size.at(2) << std::endl;
+    ss << ", , Y, " << set_size.at(1) << ", " << batch_sizes[1] << ", " << set_size.at(2) << std::endl;
 
     ss << ", , Z, " << result_set_size << ", " << result_batch_size << ", " << set_size.at(2) << std::endl;
 

@@ -60,13 +60,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
 
     std::stringstream ss;
     std::uint64_t *batch_sizes = output.concrete_descriptor.cat_params.offline.data_count;
-    auto set_size  = fetchSetSize(config.w_params);
+    auto set_size              = fetchSetSize(config.w_params);
 
     std::uint64_t sample_size_fallback =
         config.fallback_default_sample_size > 0 ?
             config.fallback_default_sample_size :
             DefaultBatchSize;
-    std::uint64_t result_set_size = std::min(set_size.at(0), set_size.at(1));
+    std::uint64_t result_set_size   = std::min(set_size.at(0), set_size.at(1));
     std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
                                                          OpParameterCount,
                                                          config.default_sample_sizes,
@@ -74,11 +74,11 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
                                                          sample_size_fallback);
     // complete header with workload specifics
     ss << ", , Z = Intersect(X, Y)" << std::endl
-       << ", , , Elements, Batch size, Items" << std::endl;
+       << ", , , Items in set, Batch size, Elements per item" << std::endl;
 
-    ss << ", , X, " << set_size.at(0)  << ", " << batch_sizes[0]    << ", " << set_size.at(2) << std::endl;
+    ss << ", , X, " << set_size.at(0) << ", " << batch_sizes[0] << ", " << set_size.at(2) << std::endl;
 
-    ss << ", , Y, " << set_size.at(1)  << ", " << batch_sizes[1]    << ", " << set_size.at(2) << std::endl;
+    ss << ", , Y, " << set_size.at(1) << ", " << batch_sizes[1] << ", " << set_size.at(2) << std::endl;
 
     ss << ", , Z, " << result_set_size << ", " << result_batch_size << ", " << set_size.at(2) << std::endl;
 
