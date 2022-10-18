@@ -100,7 +100,6 @@ hebench::APIBridge::DataType::Int32
 hebench::APIBridge::DataType::Int64
 hebench::APIBridge::DataType::Float32
 hebench::APIBridge::DataType::Float64
-hebench::APIBridge::DataType::String
 ```
 
 ## Data Layout
