@@ -29,6 +29,8 @@ Input: `2` parameters
 | `0` | `X` is a dataset containing `n` items. |
 | `1` | `Y` is a dataset containing `m` items. |
 
+An item is a vector of `k >= 1` elements.
+
 ### Result:
 
 Output: `1` output
@@ -37,9 +39,11 @@ Output: `1` output
 |-|-|
 | `0` | `Z` is a set with, at most `min(n, m)` items, where every item in `Z` is present in both `X` and `Y`. |
 
+If the number of items in `Z` is less than `min(n, m)`, backend must pad the remaining items with `0`. Items in `Z` have no defined ordering: ordering is up to the backend implementation.
+
 ### Details
 
-If `A` is a set, and `a_i` is an element in `A`, then, the standard simple set intersection operation is defined as:
+If `A` is a set, and `a_i` is an item in `A`, then, the standard simple set intersection operation is defined as:
 
 ```
 Z = { z_i; where z_i ∈ X and z_i ∈ Y }
@@ -57,13 +61,13 @@ hebench:APIBridge::Workload::SimpleSetIntersection
 
 ### Workload Parameters
 
-Required workload parameters: `2`
+Required workload parameters: `3`
 
 | Index | Name | Type | Description |
 |-|-|-|-|
-| `0` | `n` | `uint64_t` | Size of dataset `X`. |
-| `1` | `m` | `uint64_t` | Size of dataset `Y`. |
-| `2` | `k` | `uint64_t` | Number of elements in an item of a dataset. |
+| `0` | `n` | `uint64_t` | Size of dataset `X` (number of items in set). |
+| `1` | `m` | `uint64_t` | Size of dataset `Y` (number of items in set). |
+| `2` | `k` | `uint64_t` | Number of elements in an item of a dataset. Must be greater than `0`. |
 
 A backend must specify, at least, a set of default arguments for these parameters.
 
@@ -106,8 +110,6 @@ hebench::APIBridge::DataType::Float64
 
 ### 1. Sets
 
-If data type is `hebench::APIBridge::DataType::String`, each character of the string will be encoded as a 32-bits integer.
- 
 All the items in a set are vectors with elements of type `T` (where `T` is any of the supported numeric types). Every element of an item lies contiguous in memory, and every item also lies contiguous in memory.
 
 For example, given the following set `X` with `n = 3`, `k = 2` and a set being represented by a vector components:
