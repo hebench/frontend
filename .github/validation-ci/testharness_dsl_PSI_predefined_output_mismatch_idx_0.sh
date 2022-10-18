@@ -1,3 +1,6 @@
+# Copyright (C) 2021 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 <<com
 PSI sample
 
@@ -73,7 +76,8 @@ benchmark:
       echo "$data" > "$(pwd)/$file"
 
       "$TESTHARNESS" --backend_lib_path "$CLEARTEXTLIB" --config_file "$(pwd)/$file" | tee test_harness_output.log
-      if ! grep -Fxq "Failed indices, 0" test_harness_output.log
+      tmp="Failed indices, (ground truth; 0..$((k-1))), (output; $((14*k))..$((15*k-1)))"
+      if ! grep -Fxq "$tmp" test_harness_output.log
       then
           echo "Failed to test the PSI's worload with: $0"
           echo "Workload ID: $id"
