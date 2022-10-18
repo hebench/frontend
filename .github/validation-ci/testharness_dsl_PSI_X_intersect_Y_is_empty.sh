@@ -11,10 +11,6 @@ com
 CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
-# local paths
-# CLEARTEXTLIB=$(realpath /home/jmbuzano/HE_DEV/PSI/local_lib/backend/lib/libhebench_cleartext_backend.so)
-# TESTHARNESS=test_harness
-
 # IDs relevant for offline and latency, covering all the types.
 for id in 48 49 50 51 52 53 54 55; do
     # testing even and odd k
@@ -30,7 +26,7 @@ United States, , Ivory Coast"
 
 data="default_min_test_time: 0
 default_sample_size: 0
-random_seed: 1665423608401601900
+random_seed: 1234
 benchmark:
   - ID: $id
     dataset: $(pwd)/$dataset_file

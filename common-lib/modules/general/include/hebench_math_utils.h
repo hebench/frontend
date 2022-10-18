@@ -164,43 +164,6 @@ almostEqual(const T *a, const T *b,
  */
 double computePercentile(const double *data, std::size_t count, double percentile);
 
-template <typename T>
-/**
-* @brief Finds whether values in two arrays are within a certain percentage of each other.
-* @param[in] a Pointer to start of first array to compare.
-* @param[in] b Pointer to start of second array to compare.
-* @param[in] element_count Number of elements in array \p a.
-* @param[in] pct Per-one for comparison: this is percent divided by 100.
-* @return A vector of `uint64` where each element in this vector is the index of the
-* values in \p a and \p b that were not within \p pct * 100 of each other. The return
-* vector is empty if all values were within range of each other.
-* @details Parameter \p a must hold, at least, \p count elements.
-*/
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        std::vector<std::uint64_t>>::type
-almostEqualSetIntersection(const T *a, const T *b,
-                           std::uint64_t element_count,
-                           double pct = 0.05);
-
-template <typename T>
-/**
-* @brief Finds whether values in two arrays are within a certain percentage of each other.
-* @param[in] a Pointer to start of the array.
-* @param[in] element value to be found in a.
-* @param[in] element_count Number of elements in array \p a.
-* @param[in] item_count Number of items per element in array \p a.
-* @param[in] pct Per-one for comparison: this is percent divided by 100.
-* @return Returns a `boolean` `true` if \p element is a member of \p a, `false` otherwise.
-* @details Parameter \p a must hold, at least, \p count elements.
-*/
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        bool>::type
-isMemberOf(const T *a, const T element,
-           std::uint64_t element_count, std::uint64_t item_count,
-           double pct = 0.05);
-
 // inline template implementations
 
 template <typename T>
@@ -259,53 +222,6 @@ almostEqual(const T *a, const T *b, std::uint64_t count, double pct)
         {
             // all elements differ if one is null
             retval.resize(count);
-            std::iota(retval.begin(), retval.end(), 0UL);
-        } // end else
-    } // end if
-    return retval;
-}
-
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        bool>::type
-isMemberOf(const T *a, const T element,
-           std::uint64_t element_count, std::uint64_t item_count,
-           double pct)
-{
-    bool retval = false;
-    for (size_t i = 0; i < element_count && !retval; ++i)
-    {
-        retval = almostEqual(&a[i], &element, item_count, pct).empty();
-    }
-    return retval;
-}
-
-template <typename T>
-typename std::enable_if<std::is_integral<T>::value
-                            || std::is_floating_point<T>::value,
-                        std::vector<std::uint64_t>>::type
-almostEqualSetIntersection(const T *a, const T *b,
-                           std::uint64_t element_count,
-                           double pct)
-{
-    std::vector<std::uint64_t> retval;
-    size_t item_count = (a)? sizeof(a)/sizeof(a[0]): (b)? sizeof(b)/sizeof(b[0]): 0;
-    retval.reserve(element_count);
-    if (a != b)
-    {
-        if (a && b)
-        {
-            for (std::uint64_t i = 0; i < element_count; ++i)
-            {
-                if (!isMemberOf(b, a[i], item_count, pct))
-                    retval.push_back(i);
-            } // end for
-        } // end if
-        else
-        {
-            // all elements differ if one is null
-            retval.resize(element_count);
             std::iota(retval.begin(), retval.end(), 0UL);
         } // end else
     } // end if

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "modules/general/include/nocopy.h"
+#include "modules/general/include/hebench_math_utils.h"
 #include "modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
@@ -64,7 +65,6 @@ private:
 public:
     typedef std::shared_ptr<DataLoader> Ptr;
 
-    // EXR: needs `k` value
     static DataLoader::Ptr create(std::uint64_t set_size_x,
                                   std::uint64_t set_size_y,
                                   std::uint64_t batch_size_x,
@@ -108,6 +108,109 @@ private:
               hebench::APIBridge::DataType data_type,
               const std::string &dataset_filename);
 };
+
+template <typename T>
+/**
+* @brief Finds whether values in two arrays are within a certain percentage of each other.
+* @param[in] a Pointer to start of first array to compare.
+* @param[in] b Pointer to start of second array to compare.
+* @param[in] element_count Number of elements in array \p a.
+* @param[in] pct Per-one for comparison: this is percent divided by 100.
+* @return A vector of `uint64` where each element in this vector is the index of the
+* values in \p a and \p b that were not within \p pct * 100 of each other. The return
+* vector is empty if all values were within range of each other.
+* @details Parameter \p a must hold, at least, \p count elements.
+*/
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        std::vector<std::uint64_t>>::type
+almostEqualSetIntersection(const T *X, const T *Y,
+                           std::uint64_t n, std::uint64_t m, std::uint64_t k,
+                           double pct = 0.05);
+
+template <typename T>
+/**
+* @brief Finds whether values in two arrays are within a certain percentage of each other.
+* @param[in] a Pointer to start of the array.
+* @param[in] element value to be found in a.
+* @param[in] element_count Number of elements in array \p a.
+* @param[in] item_count Number of items per element in array \p a.
+* @param[in] pct Per-one for comparison: this is percent divided by 100.
+* @return Returns a `boolean` `true` if \p element is a member of \p a, `false` otherwise.
+* @details Parameter \p a must hold, at least, \p count elements.
+*/
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        bool>::type
+isMemberOf(const T *dataset, const T *value, std::size_t n, std::size_t k,
+           double pct = 0.05);
+
+
+bool validateResult(IDataLoader::Ptr dataset,
+                    const std::uint64_t *param_data_pack_indices,
+                    const std::vector<hebench::APIBridge::NativeDataBuffer *> &p_outputs,
+                    std::uint64_t k_count,
+                    hebench::APIBridge::DataType data_type);
+
+// Simple Set Intersection inline impl.
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        bool>::type
+isMemberOf(const T *dataset, const T *value, std::size_t n, std::size_t k,
+           double pct)
+{
+    bool retval = false;
+    for (size_t i = 0; !retval && i < n; ++i)
+    {
+        std::uint64_t members = 0;
+        bool flag             = true;
+        for (size_t j = 0; flag && j < k; ++j)
+        {
+            flag = hebench::Utilities::Math::almostEqual(dataset[(i * k) + j], value[j], pct);
+            if (flag)
+            {
+                ++members;
+            }
+        }
+        retval = members == k;
+    }
+    return retval;
+}
+
+template <typename T>
+typename std::enable_if<std::is_integral<T>::value
+                            || std::is_floating_point<T>::value,
+                        std::vector<std::uint64_t>>::type
+almostEqualSetIntersection(const T *X, const T *Y,
+                           std::uint64_t n, std::uint64_t m, std::uint64_t k,
+                           double pct)
+{
+    std::vector<std::uint64_t> retval;
+    retval.reserve(std::min(n, m));
+    if (X != Y)
+    {
+        if (X && Y)
+        {
+            for (std::uint64_t i = 0; i < n; ++i)
+            {
+                if (!isMemberOf(Y, X + (i * k), m, k, pct))
+                    retval.push_back(i);
+            } // end for
+        } // end if
+        else
+        {
+            // all elements differ if one is null
+            retval.reserve(std::min(n, m));
+            std::iota(retval.begin(), retval.end(), 0UL);
+        } // end else
+    } // end if
+    return retval;
+}
+
+
+
 
 } // namespace SimpleSetIntersection
 } // namespace TestHarness

@@ -65,7 +65,8 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     ss = std::stringstream();
 
     // Assuming that there could be a set containing the other
-    std::uint64_t result_batch_size = std::min(set_size.at(0), set_size.at(1));
+    std::uint64_t result_set_size = std::min(set_size.at(0), set_size.at(1));
+    std::uint64_t result_batch_size = 1;
     for (std::size_t param_i = 0; param_i < OpParameterCount; ++param_i)
     {
         batch_sizes[param_i] = DefaultBatchSize;
@@ -73,13 +74,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     } // end for
     // complete header with workload specifics
     ss << ", , Z = Intersect(X, Y)" << std::endl
-       << ", , , Elements, Batch size" << std::endl;
+       << ", , , Elements, Batch size, Items" << std::endl;
 
-    ss << ", , X" << ", " << set_size.at(0) << ", " << batch_sizes[0] << std::endl;
+    ss << ", , X, " << set_size.at(0)  << ", " << batch_sizes[0]    << ", " << set_size.at(2) << std::endl;
 
-    ss << ", , Y" << ", " << set_size.at(1) << ", " << batch_sizes[1] << std::endl;
+    ss << ", , Y, " << set_size.at(1)  << ", " << batch_sizes[1]    << ", " << set_size.at(2) << std::endl;
 
-    ss << ", , Z, 1, " << result_batch_size << std::endl;
+    ss << ", , Z, " << result_set_size << ", " << result_batch_size << ", " << set_size.at(2) << std::endl;
 
     output.workload_header = ss.str();
 }
@@ -134,14 +135,18 @@ void Benchmark::init()
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 
+    // setting k count for it to be used to validate the results
+    m_k_count = set_size.at(2);
+
     timer.start();
+
     if (this->getBenchmarkConfiguration().dataset_filename.empty())
     {
         // generates random vectors for input and generates (computes) ground truth
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Generating data...") << std::endl;
         m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
-                                    set_size.at(2), // k
+                                    m_k_count,
                                     this->getBackendDescription().descriptor.data_type);
     } // end if
     else
@@ -153,7 +158,7 @@ void Benchmark::init()
         // load vectors for input and ground truth from file
         m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
-                                    set_size.at(2), // k
+                                    m_k_count,
                                     this->getBackendDescription().descriptor.data_type,
                                     this->getBenchmarkConfiguration().dataset_filename);
     } // end else
@@ -175,10 +180,15 @@ bool Benchmark::validateResult(IDataLoader::Ptr dataset,
                                const std::vector<hebench::APIBridge::NativeDataBuffer *> &outputs,
                                hebench::APIBridge::DataType data_type) const
 {
+
     assert(dataset->getParameterCount() == BenchmarkDescriptorCategory::OpParameterCount
            && dataset->getResultCount() == BenchmarkDescriptorCategory::OpResultCount);
 
-    return BenchmarkLatency::validateResult(dataset, param_data_pack_indices, outputs, data_type);
+    return hebench::TestHarness::SimpleSetIntersection::validateResult(dataset,
+                                                                       param_data_pack_indices,
+                                                                       outputs,
+                                                                       m_k_count,
+                                                                       data_type);
 }
 
 } // namespace Latency

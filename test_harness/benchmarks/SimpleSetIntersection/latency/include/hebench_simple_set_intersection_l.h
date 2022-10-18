@@ -75,6 +75,7 @@ protected:
 
 private:
     DataLoader::Ptr m_data;
+    std::uint64_t m_k_count;
 
     Benchmark(std::shared_ptr<Engine> p_engine,
               const IBenchmarkDescriptor::DescriptionToken &description_token);
