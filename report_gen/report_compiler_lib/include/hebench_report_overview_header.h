@@ -17,10 +17,14 @@ namespace ReportGen {
 struct OverviewHeader
 {
 public:
+    static constexpr const char *EndStateOK             = "OK";
+    static constexpr const char *EndStateGeneralFailure = "Failed";
+
     OverviewHeader() :
         other(0) {}
 
     std::string workload_name;
+    std::string end_state;
     std::string report_file;
     std::string category;
     std::string data_type;
@@ -30,7 +34,7 @@ public:
     std::int64_t other;
     std::vector<std::string> w_params;
 
-    void parseHeader(const std::string &filename, const std::string &s_header);
+    void parseHeader(const std::string &filename, const std::string &s_header, const std::string &s_end_state);
 
     // outputs header without workload parameters
     void outputHeader(std::ostream &os, bool new_line = true);

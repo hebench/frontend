@@ -91,7 +91,7 @@ std::string OverviewHeader::extractCiphertextBitset(std::vector<std::string_view
     return retval;
 }
 
-void OverviewHeader::parseHeader(const std::string &filename, const std::string &s_header)
+void OverviewHeader::parseHeader(const std::string &filename, const std::string &s_header, const std::string &s_end_state)
 {
     static const std::string s_trim = std::string(",") + hebench::Utilities::BlankTrim;
 
@@ -108,6 +108,7 @@ void OverviewHeader::parseHeader(const std::string &filename, const std::string 
             if (values.size() > 0)
                 this->workload_name.assign(values.front().begin(), values.front().end());
         } // end if
+        this->end_state = s_end_state;
         if (this->category.empty())
         {
             values = extractInfoFromCSVLine(s_line, "Category,", 1);
@@ -173,6 +174,8 @@ void OverviewHeader::outputHeader(std::ostream &os, bool new_line)
          os << this->workload_name :
          os << "\"" << this->workload_name << "\"");
     os << ",";
+    os << "\"" << this->end_state << "\""
+       << ",";
     os << "\"" << this->report_file << "\""
        << ",";
     (this->category.find_first_of(',') == std::string::npos ?

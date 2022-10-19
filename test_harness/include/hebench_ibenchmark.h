@@ -263,6 +263,11 @@ protected:
          * @brief Human-readable friendly name for the represented workload to be used for
          * its description on the report.
          */
+        std::string workload_base_name;
+        /**
+         * @brief Human-readable friendly name for the represented workload to be used for
+         * its description on the report.
+         */
         std::string workload_name;
         /**
          * @brief Workload specific information to be added to the report header.
