@@ -195,5 +195,92 @@ void writeToFile(const std::string &filename,
         b_binary, b_append);
 }
 
+//------------------------
+// class CSVTokenizer
+//------------------------
+
+std::pair<std::string_view, std::string_view> CSVTokenizer::findNextValue(const std::string_view &s_line,
+                                                                          char delim)
+{
+    std::pair<std::string_view, std::string_view> retval;
+    std::string_view s_delim = std::string_view(&delim, 1);
+
+    //if (s_delim.find_first_of(s_blanks) != s_delim.npos
+    if (s_delim.find_first_of(hebench::Utilities::BlankTrim) != s_delim.npos
+        || s_delim.find_first_of("\"") != s_delim.npos)
+        throw std::invalid_argument("`delim` cannot be whitespace or quotation mark.");
+
+    std::string_view &car = retval.first;
+    std::string_view &cdr = retval.second;
+    cdr                   = s_line;
+    hebench::Utilities::trim(cdr);
+    car = cdr;
+
+    if (!cdr.empty()) // && cdr.front() != s_delim.at(0))
+    {
+        // find next comma
+        auto comma_pos = cdr.find_first_of(s_delim);
+
+        // check for quotations
+        auto quote_pos = cdr.find_first_of("\"");
+        while (comma_pos != cdr.npos
+               && quote_pos != cdr.npos
+               && quote_pos < comma_pos)
+        {
+            // comma was found inside the quotations
+
+            // find closing quotations
+            quote_pos = cdr.find_first_of("\"", quote_pos + 1);
+            comma_pos = quote_pos == cdr.npos ?
+                            cdr.npos :
+                            cdr.find_first_of(s_delim, quote_pos + 1);
+            // see if there are more quotations
+            quote_pos = cdr.find_first_of("\"", quote_pos + 1);
+        } // end while
+
+        if (comma_pos != cdr.npos)
+        {
+            car.remove_suffix(car.size() - comma_pos);
+            cdr.remove_prefix(comma_pos + 1);
+        } // end if
+        else
+        {
+            // there are no move values in cdr after car
+            cdr = std::string_view();
+        } // end else
+    } // end if
+
+    hebench::Utilities::trim(car);
+    hebench::Utilities::trim(cdr);
+
+    return retval;
+}
+
+std::vector<std::string_view> CSVTokenizer::tokenizeLineInPlace(const std::string_view &s_line, char delim)
+{
+    std::vector<std::string_view> retval;
+
+    std::string_view cdr = s_line;
+    hebench::Utilities::trim(cdr);
+
+    // find first
+
+    while (!cdr.empty())
+    {
+        auto car_cdr = findNextValue(cdr, delim);
+        retval.push_back(car_cdr.first);
+        cdr = car_cdr.second;
+    } // end while
+
+    return retval;
+}
+
+std::vector<std::string> CSVTokenizer::tokenizeLine(const std::string_view &s_line, char delim)
+{
+    auto tokens = tokenizeLineInPlace(s_line, delim);
+
+    return std::vector<std::string>(tokens.begin(), tokens.end());
+}
+
 } // namespace Utilities
 } // namespace hebench

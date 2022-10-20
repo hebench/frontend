@@ -5,7 +5,11 @@
 #ifndef _HEBench_Harness_DataGenHelper_H_0596d40a3cce4b108a81595c50eb286d
 #define _HEBench_Harness_DataGenHelper_H_0596d40a3cce4b108a81595c50eb286d
 
+#include <cmath>
 #include <mutex>
+#include <set>
+#include <string>
+#include <type_traits>
 
 #include "modules/logging/include/logging.h"
 
@@ -73,6 +77,7 @@ public:
     static void generateRandomVectorU(hebench::APIBridge::DataType data_type,
                                       void *result, std::uint64_t elem_count,
                                       double min_val, double max_val);
+
     /**
      * @brief Generates normally distributed random data of the specified type.
      * @param[in] data_type Data type of data to generate.
@@ -84,6 +89,16 @@ public:
     static void generateRandomVectorN(hebench::APIBridge::DataType data_type,
                                       void *result, std::uint64_t elem_count,
                                       double mean, double stddev);
+
+    static std::uint64_t generateRandomIntU(std::uint64_t min_val, std::uint64_t max_val);
+
+    /**
+     * @brief Generates uniform random amount of indices.
+     * @param[in] elem_count Number of elements in the set.
+     * @param[in] indices_count Number of pre-defined indices to be generated.
+     * @return A vector holding the indices.
+     */
+    static std::vector<std::uint64_t> generateRandomIntersectionIndicesU(std::uint64_t elem_count, std::uint64_t indices_count = 0);
 
 protected:
     DataGeneratorHelper() = default;

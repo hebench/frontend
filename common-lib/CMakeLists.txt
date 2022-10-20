@@ -60,5 +60,8 @@ set_target_properties(${ACTIVE_TARGET} PROPERTIES
     CXX_EXTENSIONS NO
 )
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 target_link_libraries(${ACTIVE_TARGET} Threads::Threads)
 target_compile_options(${ACTIVE_TARGET} PRIVATE -Wall -Wextra -fPIC)

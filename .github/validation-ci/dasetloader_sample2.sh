@@ -17,9 +17,9 @@ input,0,2, local
 5.0,6.0,7.0,8.0,9.0
 #comment
 -11,10,-9,8,-7
-input,1,2,local
--11,10,-9,8,-7
-5,6,7,8,9
+input,1,2,local,6,0
+-11,10,,-9,8,,-7
+hello,,world!
 #input,1,1,csv
 #\"in(0,2)/test_file.csv\"
 #test_file.csv,1,0
