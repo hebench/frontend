@@ -159,9 +159,37 @@ class Description
 {
 public:
     /**
+     * @brief Workload ID as given by hebench::APIBridge::Workload
+     */
+    std::int64_t workload;
+    /**
      * @brief Human-readable friendly name of the benchmark workload.
      */
     std::string workload_name;
+    /**
+     * @brief Human-readable friendly name of the benchmark input/output data type.
+     */
+    std::string data_type;
+    /**
+     * @brief Human-readable friendly name of the benchmark category.
+     */
+    std::string category;
+    /**
+     * @brief Human-readable friendly name of the benchmark cipher parameters.
+     */
+    std::string cipher_flags;
+    /**
+     * @brief Human-readable friendly name of the benchmark security.
+     */
+    std::string security;
+    /**
+     * @brief Human-readable friendly name of the benchmark scheme.
+     */
+    std::string scheme;
+    /**
+     * @brief Other value used to uniquely identify benchmark implementations.
+     */
+    std::string other;
     /**
      * @brief CSV formatted header for this benchmark. This will be the header
      * pre-pended to the report containing the benchmark results.

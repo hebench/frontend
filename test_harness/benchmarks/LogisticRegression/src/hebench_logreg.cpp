@@ -106,24 +106,25 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     // workload name
 
     std::uint64_t vector_size = fetchVectorSize(config.w_params);
-    ss << BaseWorkloadName << " ";
+    ss << BaseWorkloadName;
     switch (backend_desc.descriptor.workload)
     {
     case hebench::APIBridge::Workload::LogisticRegression_PolyD3:
-        ss << "PolyD3 ";
+        ss << " PolyD3";
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD5:
-        ss << "PolyD5 ";
+        ss << " PolyD5";
         break;
     case hebench::APIBridge::Workload::LogisticRegression_PolyD7:
-        ss << "PolyD7 ";
+        ss << " PolyD7";
         break;
     default:
         // standard sigmoid
         break;
     } // end switch
-    ss << vector_size << " features";
 
+    output.workload_base_name = ss.str();
+    ss << " " << vector_size << " features";
     output.workload_name          = ss.str();
     output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
 }

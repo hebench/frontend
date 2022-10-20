@@ -83,6 +83,7 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
        << mat_dims[1].first << "x" << mat_dims[1].second << ")";
 
     output.workload_name          = ss.str();
+    output.workload_base_name     = BaseWorkloadName;
     output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
 }
 

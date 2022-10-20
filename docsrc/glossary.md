@@ -58,7 +58,7 @@ and a concrete instantiation:
 (5) = op+(2, 3)
 ```
 
-In this case, the input vector has `2` **components**. First  **operand** is `input_0`. Second **operand** is `input_1`. In the instantiation, `(2, 3)` is an input **sample**, `2` and `3` are the **arguments** corresponding to first and second **operation parameters** respectively.
+In this case, the input vector has `2` **components**. First  **operand** (or **operation parameter**) is `input_0`. Second **operand** is `input_1`. In the instantiation, `(2, 3)` is an input **sample**, `2` and `3` are the **arguments** (or **component samples**) corresponding to first and second **operation parameters** respectively.
 
 The result vector has 1 **component**: `result_0` is the first **component** of the result vector. `(5)` is a result **sample** where `5` is a **component sample** of the result sample.
 <hr>
@@ -76,6 +76,10 @@ A collection of samples for the input vector.
 ### Batch size
 Number of samples in a batch.
 
+### (Vector) Component
+
+See **operation**.
+
 ### Component Batch
 A collection of samples for a component of a vector.
 
@@ -86,7 +90,7 @@ Number of component samples in a component batch.
 A concrete value of a component of either input or result vectors.
 
 ### Dataset
-A collection of input samples for an operation.
+A collection of input samples for an operation. Sometimes, it also refers to a collection containing both, input samples and matching expected output samples for an operation.
 
 ### Input Dataset
 Same as **Dataset**.
@@ -101,7 +105,9 @@ A component of the input vector.
 Same as **Operand**.
 
 ### Sample
-A concrete value of either input or result vectors.
+A concrete value of either input or result (also known as output) vectors. A sample is made up of component samples, one per component.
+
+Input sample, result (or output) sample.
 
 ## Workload
 

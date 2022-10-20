@@ -50,7 +50,8 @@ public:
      * @return An `ExternalDataset` structure containing the data loaded where the loaded scalars
      * are of type `T`.
      * @details Contents of the file loaded will be casted to the type indicated for the template
-     * parameter specification during the method call.
+     * parameter specification during the method call. Samples containing strings will be converted
+     * into equivalent ASCII characters and cast into template type `T`.
      *
      * If \p max_loaded_size is not zero, then, the total number of bytes required to hold all
      * the values loaded in the returned `ExternalDataset` must be less than or equal to value of

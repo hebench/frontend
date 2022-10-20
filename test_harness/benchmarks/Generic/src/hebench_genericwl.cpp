@@ -118,6 +118,7 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     ss << BaseWorkloadName << ", " << op_info.first.size() << " Inputs, " << op_info.second.size() << " Outputs";
 
     output.workload_name          = ss.str();
+    output.workload_base_name     = BaseWorkloadName;
     output.operation_params_count = op_info.first.size();
 }
 

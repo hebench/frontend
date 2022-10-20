@@ -99,6 +99,19 @@ list(APPEND ${PROJECT_NAME}_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/Generic/offline/src/hebench_genericwl_o.cpp"
     )
 
+# Simple Set Intersection
+list(APPEND ${PROJECT_NAME}_HEADERS
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/include/hebench_simple_set_intersection.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/latency/include/hebench_simple_set_intersection_l.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/offline/include/hebench_simple_set_intersection_o.h"
+    )
+
+list(APPEND ${PROJECT_NAME}_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/src/hebench_simple_set_intersection.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/latency/src/hebench_simple_set_intersection_l.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/SimpleSetIntersection/offline/src/hebench_simple_set_intersection_o.cpp"
+    )
+
 # main application
 list(APPEND ${PROJECT_NAME}_HEADERS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/hebench_benchmark_factory.h"

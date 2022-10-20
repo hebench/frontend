@@ -22,6 +22,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
-    
+
+# add lib-common-lib.a dependency
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
+
 #target_link_libraries(${PROJECT_NAME} PRIVATE dl)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra)
