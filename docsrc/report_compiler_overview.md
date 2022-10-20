@@ -22,6 +22,7 @@ The documents and pages listed in this section detail how to use the report comp
 
 ## Namespace
 
-[Report generation namespace](@ref hebench::ReportGen)
-[Report compiler library](@ref hebench::ReportGen::Compiler)
+Report generation namespace: `hebench::ReportGen`
+
+Report compiler library: `hebench::ReportGen::Compiler`
 

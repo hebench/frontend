@@ -81,11 +81,10 @@ hebench:APIBridge::Category::Offline
 
 ### Category Parameters
 #### Latency
-See `hebench::APIBridge::CategoryParams::latency`.
+See @ref category_latency .
 
 #### Offline
-
-See `hebench::APIBridge::CategoryParams::offline`.
+See @ref category_offline .
 
 Value ranges for elements in `CategoryParams::offline::data_count`. Default value is used for elements that take any sample size, but sample size of `0` is specified by Test Harness.
 

@@ -26,6 +26,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_EXTENSIONS NO
 )
 
+add_subdirectory(../../common-lib common-lib/build)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE dl)
+target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

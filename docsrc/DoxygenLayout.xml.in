@@ -4,6 +4,11 @@
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
     <tab type="pages" visible="no" title="" intro=""/>
+    <tab type="usergroup" visible="yes" url="@ref category_overview" title="HEBench Supported Benchmark Categories" intro="">
+      <tab type="user" visible="yes" url="@ref category_latency" title="Latency" intro=""/>
+      <tab type="user" visible="yes" url="@ref category_offline" title="Offline" intro=""/>
+      <tab type="user" visible="yes" url="@ref results_order" title="Ordering of Offline Results" intro=""/>
+    </tab>
     <tab type="usergroup" visible="yes" url="@ref tests_overview" title="HEBench Supported Workloads" intro="">
       <tab type="usergroup" visible="yes" url="@ref generic_workload" title="Generic Workload" intro="">
         <tab type="user" visible="yes" url="@ref generic_wl_example" title="Generic Workload Example" intro=""/>
@@ -13,12 +18,12 @@
       <tab type="user" visible="yes" url="@ref elementwise_mult" title="Elementwise Multiplication" intro=""/>
       <tab type="user" visible="yes" url="@ref logistic_regression" title="Logistic Regression Inference" intro=""/>
       <tab type="user" visible="yes" url="@ref matrix_multiplication" title="Matrix Multiplication" intro=""/>
+      <tab type="user" visible="yes" url="@ref simple_set_intersection" title="Simple Set Intersection" intro=""/>
     </tab>
     <tab type="usergroup" visible="yes" url="@ref backend_overview" title="Backend Overview" intro="">
-      <tab type="user" visible="yes" url="@ref APIBridge_overview" title="APIBridge Overview" intro=""/>
+      <tab type="user" visible="yes" url="@ref APIBridge_overview" title="API Bridge Overview" intro=""/>
       <tab type="user" visible="yes" url="@ref function_pipeline_chart" title="API Bridge Function Pipeline" intro=""/>
       <tab type="user" visible="yes" url="@ref CPP_overview" title="C++ Wrapper Overview" intro=""/>
-      <tab type="user" visible="yes" url="@ref results_order" title="Ordering of Batched Results" intro=""/>
       <tab type="usergroup" visible="yes" url="@ref simple_cpp_example" title="Tutorial: Backend Creation using C++ Wrapper" intro="">
         <tab type="usergroup" visible="yes" url="@ref simple_cpp_example_palisade" title="Tutorial using PALISADE" intro="">
           <tab type="user" visible="yes" url="@ref be_tutorial_preparation_palisade" title="Preparation" intro=""/>
@@ -41,14 +46,18 @@
         <tab type="usergroup" visible="yes" url="@ref dataset_loader_overview" title="External Dataset Loader" intro="">
           <tab type="user" visible="yes" url="@ref dataset_csv_reference" title="CSV Format Reference" intro=""/>
         </tab>
-        <tab type="user" visible="yes" url="@ref extend_test_harness" title="Add Workload to Test Harness" intro=""/>
-        <tab type="user" visible="yes" url="@ref extend_test_harness_l" title="Add latency Category to Workload" intro=""/>
-        <tab type="user" visible="yes" url="@ref extend_test_harness_o" title="Add offline Category to Workload" intro=""/>
       </tab>
       <tab type="usergroup" visible="yes" url="@ref report_compiler_overview" title="Report Compiler Overview" intro="">
         <tab type="user" visible="yes" url="@ref report_compiler_usage_guide" title="Report Compiler User Guide" intro=""/>
         <tab type="user" visible="yes" url="@ref stats_n_summary_format" title="Statistics and Summary Output Format" intro=""/>
         <tab type="user" visible="yes" url="@ref overview_file_format" title="Run Overview Output Format" intro=""/>
+      </tab>
+      <tab type="usergroup" visible="yes" url="@ref intro_workload_addition" title="Working with Unsupported Workloads" intro="">
+        <tab type="user" visible="yes" url="@ref generic_workload" title="Custom Workload to Benchmark Unsupported Workloads" intro=""/>
+        <tab type="usergroup" visible="yes" url="@ref extend_test_harness" title="Add New Workload to Test Harness" intro="">
+          <tab type="user" visible="yes" url="@ref extend_test_harness_l" title="Add latency Category to Workload" intro=""/>
+          <tab type="user" visible="yes" url="@ref extend_test_harness_o" title="Add offline Category to Workload" intro=""/>
+        </tab>
       </tab>
     </tab>
     <tab type="modules" visible="yes" title="" intro=""/>

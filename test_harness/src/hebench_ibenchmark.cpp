@@ -183,20 +183,21 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     std::stringstream ss;
     std::filesystem::path ss_path;
 
-    std::string &s_workload_name = completed_description.workload_name;
+    std::string &s_workload_base_name = completed_description.workload_base_name;
+    std::string &s_workload_name      = completed_description.workload_name;
     std::string s_path_workload_name;
     std::string s_scheme_name   = engine.getSchemeName(bench_desc.scheme);
     std::string s_security_name = engine.getSecurityName(bench_desc.scheme, bench_desc.security);
 
     // generate path
     ss = std::stringstream();
-    if (!s_workload_name.empty())
+    if (!s_workload_base_name.empty())
     {
-        ss << s_workload_name << "_";
+        ss << s_workload_base_name << "_";
     }
     else
     {
-        s_workload_name = std::to_string(static_cast<int>(bench_desc.workload));
+        s_workload_base_name = std::to_string(static_cast<int>(bench_desc.workload));
     }
     ss << std::to_string(static_cast<int>(bench_desc.workload));
     s_path_workload_name = hebench::Utilities::convertToDirectoryName(ss.str());
@@ -253,7 +254,8 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
         for (std::size_t i = 0; i <= max_elem; ++i)
             ss << (cipher_param_pos.count(i) > 0 ? 'c' : 'p');
     } // end else
-    ss_path /= ss.str();
+    std::string pt_ct_str = ss.str();
+    ss_path /= pt_ct_str;
     ss_path /= hebench::Utilities::convertToDirectoryName(s_scheme_name);
     ss_path /= hebench::Utilities::convertToDirectoryName(s_security_name);
     ss_path /= std::to_string(bench_desc.other);
@@ -328,7 +330,14 @@ void PartialBenchmarkDescriptor::describe(const Engine &engine,
     backend_desc.operation_params_count = completed_description.operation_params_count;
     config.default_sample_sizes.resize(backend_desc.operation_params_count, 0);
 
-    description.workload_name = completed_description.workload_name;
+    description.workload      = static_cast<std::int64_t>(bench_desc.workload);
+    description.workload_name = completed_description.workload_base_name;
+    description.data_type     = PartialBenchmarkDescriptor::getDataTypeName(bench_desc.data_type);
+    description.category      = PartialBenchmarkDescriptor::getCategoryName(bench_desc.category);
+    description.scheme        = engine.getSchemeName(bench_desc.scheme);
+    description.security      = engine.getSecurityName(bench_desc.scheme, bench_desc.security);
+    description.cipher_flags  = pt_ct_str;
+    description.other         = std::to_string(completed_description.concrete_descriptor.other);
     description.header        = ss.str();
     description.path          = ss_path;
     if (config.b_single_path_report)

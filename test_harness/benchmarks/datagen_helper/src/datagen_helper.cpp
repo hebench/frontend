@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <iostream>
 #include <stdexcept>
 
 #include "../include/datagen_helper.h"
@@ -149,6 +150,26 @@ void DataGeneratorHelper::generateRandomVectorN(hebench::APIBridge::DataType dat
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Unknown data type."));
         break;
     } // end switch
+}
+
+std::uint64_t DataGeneratorHelper::generateRandomIntU(std::uint64_t min_val, std::uint64_t max_val)
+{
+    std::uniform_int_distribution<std::uint64_t> rnd(min_val, max_val);
+    return rnd(hebench::Utilities::RandomGenerator::get());
+}
+
+std::vector<std::uint64_t> DataGeneratorHelper::generateRandomIntersectionIndicesU(std::uint64_t elem_count, std::uint64_t indices_count)
+{
+    std::vector<std::uint64_t> retval;
+
+    if (indices_count <= 0)
+        indices_count = generateRandomIntU(0, elem_count - 1);
+
+    retval.resize(elem_count);
+    std::iota(retval.begin(), retval.end(), 0);
+    std::shuffle(retval.begin(), retval.end(), hebench::Utilities::RandomGenerator::get());
+
+    return std::vector<std::uint64_t>(retval.begin(), retval.begin() + indices_count);
 }
 
 } // namespace TestHarness
