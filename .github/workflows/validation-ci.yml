@@ -114,5 +114,5 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run:  |
           for file in ${{ needs.find-ssi-scripts.outputs.files }}; do
-            ../.github/validation-ci-ssi/${{ $file }}
+            ../.github/validation-ci-ssi/$file
           done
