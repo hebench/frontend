@@ -10,7 +10,7 @@ e.g. k = 5 and |United States| = 13.
 com
 
 # server paths
-CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
+CLEARTEXTLIB=$(realpath ./lib/libhebench_example_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
 # IDs relevant for offline and latency, covering all the types.

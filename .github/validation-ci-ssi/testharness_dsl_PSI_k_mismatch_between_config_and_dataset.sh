@@ -5,26 +5,27 @@
 PSI sample
 
 Exemplifies one of the main usages of the PSI Workload. Tests the PSI workload for offline and latency by using
-all the possible types along with even and odd sizes for 'k'. In this case |X| > |Y|.
+all the possible types along with even and odd sizes for 'k'. In this case, the k from the dataset does not
+match the values in the config file.
 com
 
 # server paths
-CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
+CLEARTEXTLIB=$(realpath ./lib/libhebench_example_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
+
+dataset="input, 0, 1, local, 20, 0
+Brazil, , Canada, , Colombia, , Mexico, , United States
+
+input, 1, 1, local, 20, 0
+Canada, , United States, , Ivory Coast"
+
+dataset_file=countries.csv
+echo "$dataset" > "$(pwd)/$dataset_file"
 
 # IDs relevant for offline and latency, covering all the types.
 for id in 48 49 50 51 52 53 54 55; do
-  # testing even and odd k
+  # testing k even and odd, 20 does not match with the sequence
   for k in 14 15; do
-
-dataset="input, 0, 1, local, $k, 0
-Brazil, , Canada, , Colombia, , Mexico, , United States
-
-input, 1, 1, local, $k, 0
-Canada, , United States, , Ivory Coast"
-
-    dataset_file=countries.csv
-    echo "$dataset" > "$(pwd)/$dataset_file"
 
 data="default_min_test_time: 0
 default_sample_size: 0
@@ -62,8 +63,8 @@ benchmark:
       file=psi.yaml
       echo "$data" > "$(pwd)/$file"
 
-      "$TESTHARNESS" --backend_lib_path "$CLEARTEXTLIB" --config_file "$(pwd)/$file" | tee test_harness_output.log
-      if ! grep -Fxq "[ Info    ] Failed: 0" test_harness_output.log
+      "$TESTHARNESS" --backend_lib_path "$CLEARTEXTLIB" --config_file "$(pwd)/$file"
+      if [ $? -ne 255 ];
       then
           echo "Failed to test the PSI's worload with: $0"
           echo "Workload ID: $id"
@@ -77,7 +78,7 @@ benchmark:
           echo "Workload ID: $id"
           echo "k: $k"
       fi
-    done # k related for   
+    done # k related for  
 done # ID related for
 
 # clean-up

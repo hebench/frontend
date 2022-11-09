@@ -6,11 +6,11 @@ PSI sample
 
 Exemplifies one of the main usages of the PSI Workload. Tests the PSI workload for offline and latency by using
 all the possible types along with even and odd sizes for 'k'. In this case it uses a config file that contains
-a predefined (expected) output.
+a predefined (expected) output that will not match.
 com
 
 # server paths
-CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
+CLEARTEXTLIB=$(realpath ./lib/libhebench_example_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
 # IDs relevant for offline and latency, covering all the types.
@@ -28,7 +28,7 @@ sri lanka,,bahamas,,turkey,,namibia,,cambodia,,palau,,ghana,,denmark,,seychelles
 nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing,,nothing
 
 output, 0, 6 , local, $k , 0
-belgium,,brunei,,congo,,croatia,,ecuador,,eritrea,,fiji,,iran,,jamaica,,maldives,,marshall islands,,burma,,norway,,portugal,,spain
+belgium_MADE_UP,,brunei,,congo,,croatia,,ecuador,,eritrea,,fiji,,iran,,jamaica,,maldives,,marshall islands,,burma,,norway,,portugal,,spain
 bahamas,,cambodia,,denmark,,east timor,,ghana,,namibia,,palau,,seychelles,,sri lanka,,turkey,,0,,0,,0,,0,,0
 0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0
 croatia,,jamaica,,marshall islands,,burma,,norway,,portugal,,spain,,0,,0,,0,,0,,0,,0,,0,,0
@@ -76,7 +76,8 @@ benchmark:
       echo "$data" > "$(pwd)/$file"
 
       "$TESTHARNESS" --backend_lib_path "$CLEARTEXTLIB" --config_file "$(pwd)/$file" | tee test_harness_output.log
-      if ! grep -Fxq "[ Info    ] Failed: 0" test_harness_output.log
+      tmp="Failed indices, (ground truth; 0..$((k-1))), (output; $((14*k))..$((15*k-1)))"
+      if ! grep -Fxq "$tmp" test_harness_output.log
       then
           echo "Failed to test the PSI's worload with: $0"
           echo "Workload ID: $id"

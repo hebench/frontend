@@ -9,7 +9,7 @@ all the possible types along with even and odd sizes for 'k'. In this case |X| >
 com
 
 # server paths
-CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
+CLEARTEXTLIB=$(realpath ./lib/libhebench_example_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
 # IDs relevant for offline and latency, covering all the types.
@@ -17,12 +17,21 @@ for id in 48 49 50 51 52 53 54 55; do
   # testing even and odd k
   for k in 14 15; do
 
+dataset="input, 0, 1, local, $k, 0
+Brazil, , Canada, , Colombia, , Mexico, , United States
+
+input, 1, 1, local, $k, 0
+Canada, , United States, , Ivory Coast"
+
+    dataset_file=countries.csv
+    echo "$dataset" > "$(pwd)/$dataset_file"
+
 data="default_min_test_time: 0
 default_sample_size: 0
 random_seed: 1234
 benchmark:
   - ID: $id
-    dataset: ~
+    dataset: $(pwd)/$dataset_file
     default_min_test_time: 0
     default_sample_sizes:
       0: 0
@@ -61,6 +70,7 @@ benchmark:
           echo "k: $k"
           # clean-up
           rm "$(pwd)/$file"
+          rm "$(pwd)/$dataset_file"
           exit 1
       else
           echo "Successfully tested Test Harness' PSI with:"
@@ -72,5 +82,6 @@ done # ID related for
 
 # clean-up
 rm "$(pwd)/$file"
+rm "$(pwd)/$dataset_file"
 
 exit 0
