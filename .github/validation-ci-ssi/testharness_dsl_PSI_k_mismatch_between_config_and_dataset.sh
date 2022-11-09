@@ -10,7 +10,7 @@ match the values in the config file.
 com
 
 # server paths
-CLEARTEXTLIB=$(realpath ./lib/libhebench_example_backend.so)
+CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
 dataset="input, 0, 1, local, 20, 0

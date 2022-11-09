@@ -96,6 +96,20 @@ jobs:
         with:
           ref: ${{ github.event.ref }}
 
+      - name: Clone Cleartext Backend (Latest on main)
+        uses: actions/checkout@v2
+        if: github.event.ref == ''
+        with:
+          repository: hebench/backend-cpu-cleartext
+          path: './cleartext-backend'
+          ref: main
+      - name: Clone Cleartext Backend (Manual Selection)
+        uses: actions/checkout@v2
+        if: github.event.ref != ''
+        with:
+          repository: hebench/backend-cpu-cleartext
+          path: './cleartext-backend'
+          ref: ${{ github.event.ref }}
       - name: Setup
         run: |
           echo yes | .github/workflows/install-requirements.sh
@@ -104,8 +118,12 @@ jobs:
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
           cmake --install ${{github.workspace}}/build
 
-          CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_example_backend.so
-          echo "CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_example_backend.so" >> $GITHUB_ENV
+          cmake -B ${{github.workspace}}/cleartext-backend/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
+          cmake --build ${{github.workspace}}/cleartext-backend/build --config ${{env.BUILD_TYPE}} -j
+          cmake --install ${{github.workspace}}/cleartext-backend/build
+
+          CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_cleartext_backend.so
+          echo "CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_cleartext_backend.so" >> $GITHUB_ENV
 
           # Create config.yml
           ${{github.workspace}}/build/bin/test_harness --config_file ${{github.workspace}}/build/config.yaml --backend_lib_path $CLEARTEXTLIB --dump
