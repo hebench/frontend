@@ -111,7 +111,8 @@ jobs:
           ${{github.workspace}}/build/bin/test_harness --config_file ${{github.workspace}}/build/config.yaml --backend_lib_path $CLEARTEXTLIB --dump
 
       - name: Run validation test
-        env:
-          OUTPUT: ${{ needs.find-ssi-scripts.outputs.files }}
         working-directory: ${{github.workspace}}/build
-        run: ../.github/validation-ci-ssi/${{ $OUTPUT }}
+        run:  |
+          for file in ${{ needs.find-ssi-scripts.outputs.files }}; do
+            ../.github/validation-ci-ssi/${{ $file }}
+          done
