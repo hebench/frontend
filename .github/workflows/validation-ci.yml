@@ -97,19 +97,12 @@ jobs:
           ref: ${{ github.event.ref }}
 
       - name: Clone Cleartext Backend (Latest on main)
-        uses: actions/checkout@v3
-        if: github.event.ref == ''
+        uses: actions/checkout@v2
         with:
           repository: hebench/backend-cpu-cleartext
           path: './cleartext-backend'
           ref: main
-      - name: Clone Cleartext Backend (Manual Selection)
-        uses: actions/checkout@v3
-        if: github.event.ref != ''
-        with:
-          repository: hebench/backend-cpu-cleartext
-          path: './cleartext-backend'
-          ref: ${{ github.event.ref }}
+
       - name: Setup
         run: |
           echo yes | .github/workflows/install-requirements.sh
