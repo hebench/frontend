@@ -112,10 +112,8 @@ jobs:
           cmake --install ${{github.workspace}}/build
 
           echo "*** COMPILING CT BE ***"
-          
-          ls -R ./cleartext-backend/
 
-          cmake -B ./cleartext-backend/build  -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -DAPI_BRIDGE_INSTALL_DIR=${{github.workspace}}/build
+          cmake -B ./cleartext-backend/build -S ./cleartext-backend/  -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -DAPI_BRIDGE_INSTALL_DIR=${{github.workspace}}/build
           cmake --build ./cleartext-backend/build --config ${{env.BUILD_TYPE}} -j          
           cmake --install ./cleartext-backend/build
 
