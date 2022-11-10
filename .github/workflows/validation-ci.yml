@@ -24,7 +24,7 @@ jobs:
         run: |
           matrix=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci")))')
           echo $matrix
-          echo "name=matrix::$matrix" >> $GITHUB_OUTPUT
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   validation:
     runs-on: ubuntu-20.04
@@ -78,7 +78,7 @@ jobs:
         run: |
           files=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci-ssi")))')
           echo $files
-          echo "name=files::$files" >> $GITHUB_OUTPUT
+          echo "files=$files" >> $GITHUB_OUTPUT
 
   validation-ssi:
     runs-on: ubuntu-20.04
