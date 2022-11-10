@@ -18,13 +18,13 @@ jobs:
     outputs: 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - id: set-matrix
         run: |
           matrix=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci")))')
           echo $matrix
-          echo "::set-output name=matrix::$matrix"
+          echo "name=matrix::$matrix" >> $GITHUB_OUTPUT
 
   validation:
     runs-on: ubuntu-20.04
@@ -35,12 +35,12 @@ jobs:
 
     steps:
       - name: Clone Repository (Latest on development)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref == ''
         with:
           ref: development
       - name: Clone Repository (Manual Selection)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref != ''
         with:
           ref: ${{ github.event.ref }}
@@ -72,13 +72,13 @@ jobs:
     outputs:
       files: ${{ steps.set-files.outputs.files }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - id: set-files
         run: |
           files=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci-ssi")))')
           echo $files
-          echo "::set-output name=files::$files"
+          echo "name=files::$files" >> $GITHUB_OUTPUT
 
   validation-ssi:
     runs-on: ubuntu-20.04
@@ -86,18 +86,18 @@ jobs:
 
     steps:
       - name: Clone Repository (Latest on development)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref == ''
         with:
           ref: development
       - name: Clone Repository (Manual Selection)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref != ''
         with:
           ref: ${{ github.event.ref }}
 
       - name: Clone Cleartext Backend (Latest on main)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: hebench/backend-cpu-cleartext
           path: './cleartext-backend'
@@ -110,8 +110,6 @@ jobs:
           cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
           cmake --install ${{github.workspace}}/build
-
-          echo "*** COMPILING CT BE ***"
 
           cmake -B ./cleartext-backend/build -S ./cleartext-backend/  -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -DAPI_BRIDGE_INSTALL_DIR=${{github.workspace}}/build
           cmake --build ./cleartext-backend/build --config ${{env.BUILD_TYPE}} -j          
