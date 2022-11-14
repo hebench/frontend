@@ -64,7 +64,7 @@ benchmark:
             rm "$(pwd)/$file"
             exit 1
         else
-            echo "Successfully tested Test Harness' PSI with:"
+            echo "Successfully tested Test Harness' PSI with: $0"
             echo "Workload ID: $id"
             echo "k: $k"
         fi
