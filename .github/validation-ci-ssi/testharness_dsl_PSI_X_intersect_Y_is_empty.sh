@@ -5,7 +5,8 @@
 PSI sample
 
 Exemplifies one of the main usages of the PSI Workload. Tests the PSI workload for offline and latency by using
-all the possible types along with even and odd sizes for 'k'. Also checks the scenario where Y is contained in X.
+all the possible types along with even and odd sizes for 'k'. This also checks the scenario where the intersection
+is an empty set.
 
 com
 
@@ -13,16 +14,15 @@ com
 CLEARTEXTLIB=$(realpath ./lib/libhebench_cleartext_backend.so)
 TESTHARNESS=$(realpath ./bin/test_harness)
 
-
 # IDs relevant for offline and latency, covering all the types.
 for id in 48 49 50 51 52 53 54 55; do
     # testing even and odd k
     for k in 14 15; do
 dataset="input, 0, 1, local, $k, 0
-Brazil, , Canada, , Colombia, , Mexico, , United States
+Brazil, , Canada, , Colombia, , Mexico
 
 input, 1, 1, local, $k, 0
-Canada, , United States"
+United States, , Ivory Coast"
 
       dataset_file=countries.csv
       echo "$dataset" > "$(pwd)/$dataset_file"
@@ -42,8 +42,8 @@ benchmark:
         name: n
         type: UInt64
         value:
-          from: 5
-          to: 5
+          from: 4
+          to: 4
           step: 0
       1:
         name: m
@@ -74,7 +74,7 @@ benchmark:
             rm "$(pwd)/$dataset_file"
             exit 1
         else
-            echo "Successfully tested Test Harness' PSI with:"
+            echo "Successfully tested Test Harness' PSI with: $0"
             echo "Workload ID: $id"
             echo "k: $k"
         fi
