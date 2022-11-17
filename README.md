@@ -21,7 +21,7 @@ This repo contains the frontend for HEBench which is the starting point for all 
 5. [Running a Benchmark](#running-a-benchmark)
 6. [Building the Documentation](#building-the-documentation)
 7. [Contributing](#contributing)
-
+8. [Citing HEBench](#citing)
 
 ## About Frontend <a name="about-frontend"></a>
 
@@ -166,3 +166,15 @@ Doxygen 1.9.1 for Ubuntu is required to build this documentation. Building with 
 ## Contributing <a name="contributing"></a>
 
 This project welcomes external contributions. To contribute to HEBench, see [CONTRIBUTING.md](CONTRIBUTING.md). We encourage feedback and suggestions via [Github Issues](https://github.com/hebench/frontend/issues) as well as discussion via [Github Discussions](https://github.com/hebench/frontend/discussions).
+
+## Citing HEBench <a name="citing"></a>
+
+To Cite HEBench in academic papers or otherwise, please use the following BibTeX entry:
+
+    @misc{hebench,
+        title = {Homomorphic Encryption Benchmarking Framework - HEBench (release v0.8)},
+        howpublished = {Online: \url{https://github.com/hebench/frontend}},
+        month = nov,
+        year = 2022,
+        note = {Algorand Foundation, CryptoLab, Deloitte, Duality, IBM Research, Intel, KU Leuven, Microsoft Research, Tune Insight SA}
+    }
