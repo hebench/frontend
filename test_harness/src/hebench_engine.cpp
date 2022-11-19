@@ -204,11 +204,7 @@ void Engine::completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescript
         || output.other != completed_descriptor.other)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Completed benchmark descriptor differs from backend specification."));
 
-    if (output.cat_params.min_test_time_ms == 0)
-        output.cat_params.min_test_time_ms = completed_descriptor.cat_params.min_test_time_ms;
-    for (std::uint64_t i = 0; i < HEBENCH_MAX_CATEGORY_PARAMS; ++i)
-        if (output.cat_params.reserved[i] == 0)
-            output.cat_params.reserved[i] = completed_descriptor.cat_params.reserved[i];
+    output.cat_params = completed_descriptor.cat_params;
 }
 
 std::vector<std::vector<hebench::APIBridge::WorkloadParam>>

@@ -62,20 +62,21 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
     std::uint64_t vector_size                          = fetchVectorSize(config.w_params);
     hebench::APIBridge::BenchmarkDescriptor bench_desc = backend_desc.descriptor;
 
-    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_W] == 0)
-        bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
-    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_b] == 0)
-        bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
+    // weights and bias can only have 1 sample
+    bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
+    bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
 
     std::uint64_t sample_size_fallback =
         config.fallback_default_sample_size > 0 ?
             config.fallback_default_sample_size :
             DefaultBatchSize;
-    std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
-                                                         OpParameterCount,
-                                                         config.default_sample_sizes,
-                                                         bench_desc,
-                                                         sample_size_fallback);
+    std::uint64_t result_batch_size =
+        PartialBenchmarkDescriptor::computeSampleSizes(batch_sizes,
+                                                       OpParameterCount,
+                                                       config.default_sample_sizes,
+                                                       bench_desc,
+                                                       sample_size_fallback,
+                                                       PartialBenchmarkDescriptor::getForceConfigValues());
     if (batch_sizes[DataLoader::Index_W] != 1)
     {
         ss = std::stringstream();
@@ -163,11 +164,9 @@ void Benchmark::init()
     std::uint64_t batch_sizes[BenchmarkDescriptor::OpParameterCount];
     std::stringstream ss;
 
-    hebench::APIBridge::BenchmarkDescriptor bench_desc = this->getBackendDescription().descriptor;
-    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_W] == 0)
-        bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
-    if (bench_desc.cat_params.offline.data_count[DataLoader::Index_b] == 0)
-        bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
+    hebench::APIBridge::BenchmarkDescriptor bench_desc            = this->getBackendDescription().descriptor;
+    bench_desc.cat_params.offline.data_count[DataLoader::Index_W] = 1;
+    bench_desc.cat_params.offline.data_count[DataLoader::Index_b] = 1;
 
     std::uint64_t sample_size_fallback =
         this->getBenchmarkConfiguration().fallback_default_sample_size > 0 ?
@@ -177,7 +176,8 @@ void Benchmark::init()
                                             BenchmarkDescriptor::OpParameterCount,
                                             this->getBenchmarkConfiguration().default_sample_sizes,
                                             bench_desc,
-                                            sample_size_fallback);
+                                            sample_size_fallback,
+                                            BenchmarkDescriptor::getForceConfigValues());
 
     assert(batch_sizes[DataLoader::Index_W] == 1 && batch_sizes[DataLoader::Index_b] == 1);
 

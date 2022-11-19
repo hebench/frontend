@@ -189,22 +189,62 @@ private:
 
 public:
     /**
+     * @brief Specifies whether frontend will override backend descriptors using
+     * configuration data or not.
+     * @returns `true` to have the frontend override the backend descriptors.
+     * @returns `false` to have the frontend respect the backend descriptors.
+     * @details When `true`, frontend implementations should attempt to override
+     * backend descriptors with the corresponding configuration values. In this case,
+     * it is expected that backend implementations will validate the concrete
+     * benchmark descriptor during `hebench::APIBridge::initBenchmark()` to detect
+     * invalid configurations.
+     *
+     * If `false`, frontend implementations should maintain non-flexible values of
+     * backend descriptors and ignore respective configuration data.
+     */
+    static bool getForceConfigValues() { return m_b_force_config_value; }
+    /**
+     * @brief Sets whether frontend will override backend descriptors using
+     * configuration data or not.
+     * @param[in] value New value to set.
+     * @details When set to `true`, frontend implementations should attempt to override
+     * backend descriptors with the corresponding configuration values. In this case,
+     * it is expected that backend implementations will validate the concrete
+     * benchmark descriptor during `hebench::APIBridge::initBenchmark()` to detect
+     * invalid configurations.
+     *
+     * If set to `false`, frontend implementations should maintain non-flexible values of
+     * backend descriptors and ignore respective configuration data.
+     */
+    static void setForceConfigValues(bool value) { m_b_force_config_value = value; }
+
+    /**
      * @brief Extracts the batch sizes for a workload from a specified HEBench API
      * benchmark descriptor.
      * @param[out] sample_sizes Array with \p param_count elements to receive the sample
      * sizes for each operation parameter. This is the final value to be used during testing.
      * @param[in] param_count Number of parameters for the workload operation.
-     * @param[in] default_batch_size If a batch size is set to 0 in the descriptor,
-     * this value will be used as default instead.
+     * @param[in] config_sample_sizes User-requested (configured) sample sizes per operand.
      * @param[in] bench_desc HEBench API benchmark descriptor from which to extract the
      * workload batch sizes.
      * @param[in] default_sample_size_fallback Fallback sample size for when none is
      * specified in \p bench_desc or \p default_sample_sizes . Must be greater than `0`.
+     * @param[in] force_config If `true` \p default_sample_sizes values have priority
+     * over the those in \p bench_desc `.cat_params.offline.data_count`
      * @return The batch size for the result of the operation.
      * @details For an operation parameter the sample size priority is:
      *
-     * 1. backend specified
-     * 2. benchmark specific in config file
+     * For `force_config == false`
+     *
+     * 1. backend specified (`bench_desc.cat_params.offline.data_count[i]`)
+     * 2. benchmark specific in config file (`config_sample_sizes[i]`)
+     * 3. global config file
+     * 4. workload specification
+     *
+     * For `force_config == false`
+     *
+     * 1. benchmark specific in config file (`config_sample_sizes[i]`)
+     * 2. backend specified (`bench_desc.cat_params.offline.data_count[i]`)
      * 3. global config file
      * 4. workload specification
      *
@@ -215,9 +255,10 @@ public:
      */
     static std::uint64_t computeSampleSizes(std::uint64_t *sample_sizes,
                                             std::size_t param_count,
-                                            const std::vector<std::uint64_t> &default_sample_sizes,
+                                            const std::vector<std::uint64_t> &config_sample_sizes,
                                             const hebench::APIBridge::BenchmarkDescriptor &bench_desc,
-                                            std::uint64_t default_sample_size_fallback = 1);
+                                            std::uint64_t default_sample_size_fallback,
+                                            bool force_config);
 
 public:
     PartialBenchmarkDescriptor();
@@ -344,11 +385,48 @@ protected:
                                              const BenchmarkDescription::Backend &backend_desc,
                                              const BenchmarkDescription::Configuration &config) const = 0;
 
+    /**
+     * @brief Completes common elements of category parameters in a descriptor
+     * using the specified configuration.
+     * @param out_descriptor
+     * @param in_descriptor
+     * @param config
+     * @param force_config
+     * @details It sets the common values of cat_params based on the force config
+     * policy.
+     *
+     * Common `cat_params` fields:
+     *
+     * - `cat_params.min_test_time_ms`
+     */
+    static void completeCategoryParams(hebench::APIBridge::BenchmarkDescriptor &out_descriptor,
+                                       const hebench::APIBridge::BenchmarkDescriptor &in_descriptor,
+                                       const BenchmarkDescription::Configuration &config,
+                                       bool force_config);
+
 private:
-    void describe(const Engine &engine,
-                  BenchmarkDescription::Backend &backend_desc,
-                  BenchmarkDescription::Configuration &config,
-                  BenchmarkDescription::Description &text_desc) const;
+    static bool m_b_force_config_value;
+
+    /**
+     * @brief Completes the description of the benchmark.
+     * @param[out] concrete_backend_desc Concrete, finalized backend description
+     * as completed by the frontend benchmark from the original backend descriptor and
+     * configuration parameters.
+     * @param[out] concrete_config Concrete, finalized configuration for the benchmark
+     * as completed by the frontend benchmark from the original backend descriptor and
+     * configuration parameters.
+     * @param[out] text_desc Friendly human-readable description of the benchmark.
+     * @param[in] engine Engine.
+     * @param[in] backend_desc Original benchmark description as returned by backend.
+     * @param[in] config Original configuration parameters for this benchmark as read from
+     * configuration file (or default parameters if no configuration file was supplied).
+     */
+    void describe(BenchmarkDescription::Backend &concrete_backend_desc,
+                  BenchmarkDescription::Configuration &concrete_config,
+                  BenchmarkDescription::Description &text_desc,
+                  const Engine &engine,
+                  const BenchmarkDescription::Backend &backend_desc,
+                  const BenchmarkDescription::Configuration &config) const;
 };
 
 /**
