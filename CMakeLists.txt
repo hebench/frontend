@@ -77,21 +77,17 @@ set(_COMPONENT_LIB_NAME "hebench_common-lib")
 set(_HEADER_ONLY FALSE)
 include(cmake/utils/import-library.cmake)
 
-# subprojects
-add_subdirectory(report_gen)
-add_subdirectory(dynamic_lib_load)
-add_subdirectory(dataset_loader)
-
 ## APIBridge
 set(_COMPONENT_NAME "API_BRIDGE")
 set(_COMPONENT_HEADER "hebench/api_bridge/api.h")
-set(_COMPONENT_LIB_NAME "hebench_cpp")
+set(_COMPONENT_LIB_NAME "hebench_dynamic_lib_load" "api_bridge")
 set(_HEADER_ONLY FALSE)
-set(_LINK_TO "hebench_dynamic_lib_load")
 include(cmake/utils/import-library.cmake)
 include(cmake/third-party/${_COMPONENT_NAME}_check.cmake)
-unset(_LINK_TO)
 
+# subprojects
+add_subdirectory(report_gen)
+add_subdirectory(dataset_loader)
 add_subdirectory(test_harness)
 
 ## yaml-cpp

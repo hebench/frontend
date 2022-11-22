@@ -143,15 +143,13 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEAD
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# API Bridge
-#target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/api_bridge)
-
 # add lib-common-lib.a dependency
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
 
-# dynamic_lib_load
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../dynamic_lib_load/include)
-target_link_libraries(${PROJECT_NAME} PRIVATE hebench_dynamic_lib_load)
+# add API Bridge dependency (need explicity dl link)
+target_link_libraries(hebench_dynamic_lib_load INTERFACE dl)
+target_link_libraries(${PROJECT_NAME} PUBLIC hebench_dynamic_lib_load)
+target_link_libraries(${PROJECT_NAME} PUBLIC api_bridge)
 
 # dataset_loader
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_dataset_loader)
