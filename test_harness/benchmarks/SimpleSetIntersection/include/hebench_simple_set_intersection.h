@@ -34,12 +34,12 @@ private:
     IL_DECLARE_CLASS_NAME(DotProduct::BenchmarkDescriptorCategory)
 public:
     static constexpr const char *BaseWorkloadName         = "Simple Set Intersection";
-    static constexpr std::uint64_t WorkloadParameterCount = 3; // number of parameters for this workload
+    static constexpr std::uint64_t WorkloadParameterCount = 5; // number of parameters for this workload
     static constexpr std::uint64_t OpParameterCount       = 2; // number of parameters for this operation
     static constexpr std::uint64_t OpResultCount          = 1; // number of outputs for this operation
     static hebench::APIBridge::WorkloadParamType::WorkloadParamType WorkloadParameterType[WorkloadParameterCount];
 
-    static std::array<std::uint64_t, BenchmarkDescriptorCategory::WorkloadParameterCount> fetchSetSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params);
+    static std::array<std::int64_t, BenchmarkDescriptorCategory::WorkloadParameterCount> fetchSetSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params);
 
 public:
     BenchmarkDescriptorCategory()           = default;
@@ -70,12 +70,16 @@ public:
                                   std::uint64_t batch_size_x,
                                   std::uint64_t batch_size_y,
                                   std::uint64_t element_size_k,
+                                  std::int64_t data_range_i,
+                                  std::int64_t data_range_j,
                                   hebench::APIBridge::DataType data_type);
     static DataLoader::Ptr create(std::uint64_t set_size_x,
                                   std::uint64_t set_size_y,
                                   std::uint64_t batch_size_x,
                                   std::uint64_t batch_size_y,
                                   std::uint64_t element_size_k,
+                                  std::int64_t data_range_i,
+                                  std::int64_t data_range_j,
                                   hebench::APIBridge::DataType data_type,
                                   const std::string &dataset_filename);
 
@@ -92,6 +96,8 @@ private:
     std::uint64_t m_set_size_x;
     std::uint64_t m_set_size_y;
     std::uint64_t m_element_size_k;
+    std::int64_t m_data_range_i;
+    std::int64_t m_data_range_j;
 
     DataLoader();
     void init(std::uint64_t set_size_x,
@@ -99,12 +105,16 @@ private:
               std::uint64_t batch_size_x,
               std::uint64_t batch_size_y,
               std::uint64_t element_size_k,
+              std::int64_t data_range_i,
+              std::int64_t data_range_j,
               hebench::APIBridge::DataType data_type);
     void init(std::uint64_t set_size_x,
               std::uint64_t set_size_y,
               std::uint64_t batch_size_x,
               std::uint64_t batch_size_y,
               std::uint64_t element_size_k,
+              std::int64_t data_range_i,
+              std::int64_t data_range_j,
               hebench::APIBridge::DataType data_type,
               const std::string &dataset_filename);
 };

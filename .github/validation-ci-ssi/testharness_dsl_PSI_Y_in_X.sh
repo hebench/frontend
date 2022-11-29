@@ -58,6 +58,20 @@ benchmark:
         value:
           from: $k
           to: $k
+          step: 0
+      3:
+        name: a
+        type: Int64
+        value:
+          from: -16384
+          to: -16384
+          step: 0
+      4:
+        name: b
+        type: Int64
+        value:
+          from: 16384
+          to: 16384
           step: 0"
 
         file=psi.yaml

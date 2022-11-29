@@ -23,16 +23,18 @@ hebench::APIBridge::WorkloadParamType::WorkloadParamType
     BenchmarkDescriptorCategory::WorkloadParameterType[BenchmarkDescriptorCategory::WorkloadParameterCount] = {
         hebench::APIBridge::WorkloadParamType::UInt64,
         hebench::APIBridge::WorkloadParamType::UInt64,
-        hebench::APIBridge::WorkloadParamType::UInt64
+        hebench::APIBridge::WorkloadParamType::UInt64,
+        hebench::APIBridge::WorkloadParamType::Int64,
+        hebench::APIBridge::WorkloadParamType::Int64
     };
 
-std::array<std::uint64_t, BenchmarkDescriptorCategory::WorkloadParameterCount> BenchmarkDescriptorCategory::fetchSetSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
+std::array<std::int64_t, BenchmarkDescriptorCategory::WorkloadParameterCount> BenchmarkDescriptorCategory::fetchSetSize(const std::vector<hebench::APIBridge::WorkloadParam> &w_params)
 {
-    assert(WorkloadParameterCount == 3);
+    assert(WorkloadParameterCount == 5);
     assert(OpParameterCount == 2);
     assert(OpResultCount == 1);
 
-    std::array<std::uint64_t, WorkloadParameterCount> retval;
+    std::array<std::int64_t, WorkloadParameterCount> retval;
 
     if (w_params.size() < WorkloadParameterCount)
     {
@@ -63,6 +65,18 @@ std::array<std::uint64_t, BenchmarkDescriptorCategory::WorkloadParameterCount> B
     retval.at(1) = w_params.at(1).u_param; // m
     retval.at(2) = w_params.at(2).u_param; // k
 
+    // in case the ranges are wrongly set
+    if (static_cast<std::int64_t>(w_params.at(3).u_param) < static_cast<std::int64_t>(w_params.at(4).u_param))
+    {
+        retval.at(3) = w_params.at(3).u_param; // data_range_i
+        retval.at(4) = w_params.at(4).u_param; // data_range_j
+    }
+    else
+    {
+        retval.at(3) = w_params.at(4).u_param; // data_range_j
+        retval.at(4) = w_params.at(3).u_param; // data_range_i
+    }
+
     return retval;
 }
 
@@ -84,7 +98,8 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     ss << BaseWorkloadName
        << " |X| -> " << sets_size[0] << ", "
        << "|Y| -> " << sets_size[1] << ", "
-       << "k  -> " << sets_size[2];
+       << "k -> " << sets_size[2] << ", "
+       << "values -> [" << sets_size[3] << ", " << sets_size[4] << "]";
 
     output.workload_name          = ss.str();
     output.operation_params_count = BenchmarkDescriptorCategory::OpParameterCount;
@@ -250,10 +265,13 @@ DataLoader::Ptr DataLoader::create(std::uint64_t set_size_x,
                                    std::uint64_t batch_size_x,
                                    std::uint64_t batch_size_y,
                                    std::uint64_t element_size_k,
+                                   std::int64_t data_range_i,
+                                   std::int64_t data_range_j,
                                    hebench::APIBridge::DataType data_type)
 {
     DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
-    retval->init(set_size_x, set_size_y, batch_size_x, batch_size_y, element_size_k, data_type);
+    retval->init(set_size_x, set_size_y, batch_size_x, batch_size_y, element_size_k, data_range_i,
+                 data_range_j, data_type);
     return retval;
 }
 
@@ -262,16 +280,19 @@ DataLoader::Ptr DataLoader::create(std::uint64_t set_size_x,
                                    std::uint64_t batch_size_x,
                                    std::uint64_t batch_size_y,
                                    std::uint64_t element_size_k,
+                                   std::int64_t data_range_i,
+                                   std::int64_t data_range_j,
                                    hebench::APIBridge::DataType data_type,
                                    const std::string &dataset_filename)
 {
     DataLoader::Ptr retval = DataLoader::Ptr(new DataLoader());
-    retval->init(set_size_x, set_size_y, batch_size_x, batch_size_y, element_size_k, data_type, dataset_filename);
+    retval->init(set_size_x, set_size_y, batch_size_x, batch_size_y, element_size_k, data_range_i,
+                 data_range_j, data_type, dataset_filename);
     return retval;
 }
 
 DataLoader::DataLoader() :
-    m_set_size_x(0), m_set_size_y(0), m_element_size_k(1)
+    m_set_size_x(0), m_set_size_y(0), m_element_size_k(1), m_data_range_i(-16384), m_data_range_j(16384)
 {
 }
 
@@ -280,6 +301,8 @@ void DataLoader::init(std::uint64_t set_size_x,
                       std::uint64_t batch_size_x,
                       std::uint64_t batch_size_y,
                       std::uint64_t element_size_k,
+                      std::int64_t data_range_i,
+                      std::int64_t data_range_j,
                       hebench::APIBridge::DataType data_type)
 {
     // Load/generate and initialize the data for vectors to be applied for simple set intersection:
@@ -295,6 +318,8 @@ void DataLoader::init(std::uint64_t set_size_x,
     m_set_size_x     = set_size_x;
     m_set_size_y     = set_size_y;
     m_element_size_k = element_size_k;
+    m_data_range_i   = data_range_i;
+    m_data_range_j   = data_range_j;
 
     // compute buffer size in bytes for each set (vector)
     std::uint64_t sample_set_sizes[InputDim0 + OutputDim0] = {
@@ -322,7 +347,8 @@ void DataLoader::init(std::uint64_t set_size_x,
         DataGeneratorHelper::generateRandomVectorU(data_type,
                                                    getParameterData(Param_SetX).p_buffers[sample_i].p,
                                                    sample_set_sizes[Param_SetX],
-                                                   -16384.0, 16384.0);
+                                                   static_cast<double>(m_data_range_i),
+                                                   static_cast<double>(m_data_range_j));
     } // end for
 
     // generate setY data
@@ -362,7 +388,8 @@ void DataLoader::init(std::uint64_t set_size_x,
                 DataGeneratorHelper::generateRandomVectorU(data_type,
                                                            p_setY_item,
                                                            element_size_k,
-                                                           -16384.0, 16384.0);
+                                                           static_cast<double>(data_range_i),
+                                                           static_cast<double>(data_range_j));
             } // end else
         } // end for
     } // end for
@@ -390,6 +417,8 @@ void DataLoader::init(std::uint64_t set_size_x,
                       std::uint64_t batch_size_x,
                       std::uint64_t batch_size_y,
                       std::uint64_t element_size_k,
+                      std::int64_t data_range_i,
+                      std::int64_t data_range_j,
                       hebench::APIBridge::DataType data_type,
                       const std::string &dataset_filename)
 {
@@ -406,6 +435,8 @@ void DataLoader::init(std::uint64_t set_size_x,
     m_set_size_x     = set_size_x;
     m_set_size_y     = set_size_y;
     m_element_size_k = element_size_k;
+    m_data_range_i   = data_range_i;
+    m_data_range_j   = data_range_j;
 
     // compute buffer size in bytes for each set (vector)
     std::uint64_t sample_set_sizes[InputDim0 + OutputDim0] = {
