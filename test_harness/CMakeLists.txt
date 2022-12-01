@@ -147,7 +147,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
 
 # add API Bridge dependency (need explicity dl link)
-target_link_libraries(hebench_dynamic_lib_load INTERFACE dl)
+if(UNIX)
+    target_link_libraries(hebench_dynamic_lib_load INTERFACE dl)
+endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC hebench_dynamic_lib_load)
 target_link_libraries(${PROJECT_NAME} PUBLIC api_bridge)
 

@@ -20,7 +20,7 @@
 #include "modules/general/include/hebench_utilities.h"
 #include "modules/logging/include/logging.h"
 
-#include "dynamic_lib_load.h"
+#include "hebench/dynamic_lib_load.h"
 #include "hebench_report_compiler.h"
 
 #include "include/hebench_config.h"
