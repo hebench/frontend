@@ -11,7 +11,7 @@
 #include <string>
 #include <type_traits>
 
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
 #include "include/hebench_idata_loader.h"

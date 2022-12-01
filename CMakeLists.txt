@@ -71,8 +71,8 @@ include(FetchContent)
 set(FETCHCONTENT_BASE_DIR ${CMAKE_BINARY_DIR}/third-party)
 
 # common-lib
-set(_COMPONENT_NAME "COMMON-LIB")
-set(_COMPONENT_HEADER "modules")
+set(_COMPONENT_NAME "COMMON_LIB")
+set(_COMPONENT_HEADER "hebench/modules")
 set(_COMPONENT_LIB_NAME "hebench_common-lib")
 set(_HEADER_ONLY FALSE)
 include(cmake/utils/import-library.cmake)

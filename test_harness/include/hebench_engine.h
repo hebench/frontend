@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "hebench/api_bridge/types.h"
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "hebench_benchmark_description.h"
 #include "hebench_benchmark_factory.h"

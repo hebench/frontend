@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "hebench/api_bridge/types.h"
 

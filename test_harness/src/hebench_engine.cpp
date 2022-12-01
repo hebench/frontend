@@ -7,7 +7,7 @@
 #include <sstream>
 
 #include "hebench/api_bridge/api.h"
-#include "modules/general/include/error.h"
+#include "hebench/modules/general/include/error.h"
 
 #include "include/hebench_engine.h"
 

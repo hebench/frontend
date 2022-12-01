@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "benchmarks/EltwiseMult/include/hebench_eltwisemult.h"
 #include "benchmarks/categories/include/hebench_benchmark_offline.h"

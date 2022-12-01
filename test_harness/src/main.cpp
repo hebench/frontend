@@ -14,11 +14,11 @@
 #include <thread>
 #include <vector>
 
-#include "modules/args_parser/include/args_parser.h"
-#include "modules/general/include/error.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/args_parser/include/args_parser.h"
+#include "hebench/modules/general/include/error.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "hebench/dynamic_lib_load.h"
 #include "hebench_report_compiler.h"

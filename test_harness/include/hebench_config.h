@@ -10,9 +10,9 @@
 #include <utility>
 #include <vector>
 
+#include "hebench/modules/logging/include/logging.h"
 #include "hebench_benchmark_description.h"
 #include "include/hebench_ibenchmark.h"
-#include "modules/logging/include/logging.h"
 
 namespace hebench {
 namespace TestHarness {

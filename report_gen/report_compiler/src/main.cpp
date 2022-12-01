@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "modules/args_parser/include/args_parser.h"
+#include "hebench/modules/args_parser/include/args_parser.h"
 
 #include "hebench_report_compiler.h"
 
