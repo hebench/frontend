@@ -18,14 +18,14 @@ jobs:
     outputs: 
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - id: set-matrix
         run: |
           matrix=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci")))')
           echo $matrix
-          echo "::set-output name=matrix::$matrix"
-          
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
   validation:
     runs-on: ubuntu-20.04
     needs: find-scripts
@@ -35,12 +35,12 @@ jobs:
 
     steps:
       - name: Clone Repository (Latest on development)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref == ''
         with:
           ref: development
       - name: Clone Repository (Manual Selection)
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         if: github.event.ref != ''
         with:
           ref: ${{ github.event.ref }}
@@ -66,3 +66,69 @@ jobs:
       - name: Run validation test
         working-directory: ${{github.workspace}}/build
         run: ../.github/validation-ci/${{ matrix.script }}
+
+  find-ssi-scripts:
+    runs-on: ubuntu-20.04
+    outputs:
+      files: ${{ steps.set-files.outputs.files }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: set-files
+        run: |
+          files=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci-ssi")))')
+          echo $files
+          echo "files=$files" >> $GITHUB_OUTPUT
+
+  validation-ssi:
+    runs-on: ubuntu-20.04
+    needs: find-ssi-scripts
+
+    steps:
+      - name: Clone Repository (Latest on development)
+        uses: actions/checkout@v3
+        if: github.event.ref == ''
+        with:
+          ref: development
+      - name: Clone Repository (Manual Selection)
+        uses: actions/checkout@v3
+        if: github.event.ref != ''
+        with:
+          ref: ${{ github.event.ref }}
+
+      - name: Clone Cleartext Backend (Latest on main)
+        uses: actions/checkout@v3
+        with:
+          repository: hebench/backend-cpu-cleartext
+          path: './cleartext-backend'
+          ref: main
+
+      - name: Setup
+        run: |
+          echo yes | .github/workflows/install-requirements.sh
+          git branch --show-current
+          cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j
+          cmake --install ${{github.workspace}}/build
+
+          cmake -B ./cleartext-backend/build -S ./cleartext-backend/  -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/build -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9 -DAPI_BRIDGE_INSTALL_DIR=${{github.workspace}}/build
+          cmake --build ./cleartext-backend/build --config ${{env.BUILD_TYPE}} -j          
+          cmake --install ./cleartext-backend/build
+
+          CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_cleartext_backend.so
+          echo "CLEARTEXTLIB=${{github.workspace}}/build/lib/libhebench_cleartext_backend.so" >> $GITHUB_ENV
+
+          # Create config.yml
+          ${{github.workspace}}/build/bin/test_harness --config_file ${{github.workspace}}/build/config.yaml --backend_lib_path $CLEARTEXTLIB --dump
+
+      - name: Run validation test
+        working-directory: ${{github.workspace}}/build
+        run:  |
+          for file in ${{ needs.find-ssi-scripts.outputs.files }}; do
+            file=$(echo $file | sed -e 's/"//g')
+            file=$(echo $file | sed -e 's/,//g')
+            file=$(echo $file | sed -e 's/\[//g')
+            file=$(echo $file | sed -e 's/\]//g')
+            echo $file
+            ../.github/validation-ci-ssi/$file
+          done
