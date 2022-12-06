@@ -69,21 +69,23 @@ jobs:
 
   find-ssi-scripts:
     runs-on: ubuntu-20.04
-    outputs:
-      files: ${{ steps.set-files.outputs.files }}
+    outputs: 
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v3
 
-      - id: set-files
+      - id: set-matrix
         run: |
-          files=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci-ssi")))')
-          echo $files
-          echo "files=$files" >> $GITHUB_OUTPUT
+          matrix=$(python3 -c 'import os, json; print(json.dumps(os.listdir(".github/validation-ci-ssi")))')
+          echo $matrix
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
   validation-ssi:
     runs-on: ubuntu-20.04
     needs: find-ssi-scripts
-
+    strategy:
+      matrix: 
+        script: ${{fromJson(needs.find-ssi-scripts.outputs.matrix)}}
     steps:
       - name: Clone Repository (Latest on development)
         uses: actions/checkout@v3
@@ -123,12 +125,4 @@ jobs:
 
       - name: Run validation test
         working-directory: ${{github.workspace}}/build
-        run:  |
-          for file in ${{ needs.find-ssi-scripts.outputs.files }}; do
-            file=$(echo $file | sed -e 's/"//g')
-            file=$(echo $file | sed -e 's/,//g')
-            file=$(echo $file | sed -e 's/\[//g')
-            file=$(echo $file | sed -e 's/\]//g')
-            echo $file
-            ../.github/validation-ci-ssi/$file
-          done
+        run: ../.github/validation-ci-ssi/${{ matrix.script }}
