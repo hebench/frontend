@@ -33,9 +33,10 @@ public:
     static void completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
                                             const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor);
 
-    static std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code);
+    //static
+    std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code) const;
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;
-    static Engine::Ptr create();
+    static Engine::Ptr create(const std::vector<std::int8_t> &data = std::vector<std::int8_t>());
 
     virtual ~Engine();
 
@@ -108,7 +109,7 @@ private:
     std::weak_ptr<IBenchmark> m_last_benchmark; // keeps track of whether a benchmark is already created
 
     Engine();
-    void init();
+    void init(const std::vector<std::int8_t> &data);
 };
 
 } // namespace TestHarness
