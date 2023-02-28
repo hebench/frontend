@@ -33,10 +33,17 @@ public:
     static void completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
                                             const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor);
 
-    //static
     std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code) const;
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;
-    static Engine::Ptr create(const std::vector<std::int8_t> &data = std::vector<std::int8_t>());
+    /**
+     * @brief Creates a new backend engine.
+     * @param[in] data External data to pass to the backend engine for initialization,
+     * if any. Otherwise, empty array.
+     * @return A pointer to the engine wrapper.
+     * @details This method calls `APIBridge::initEngine()` passing the specified data
+     * to create and initialize the loaded backend engine.
+     */
+    static Engine::Ptr create(const std::vector<std::int8_t> &data);
 
     virtual ~Engine();
 
