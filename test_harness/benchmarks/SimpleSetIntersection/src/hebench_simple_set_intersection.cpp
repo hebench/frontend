@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "../include/hebench_simple_set_intersection.h"
-#include "modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 
 namespace hebench {
 namespace TestHarness {
@@ -75,8 +75,10 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     std::stringstream ss;
 
     output.concrete_descriptor = backend_desc.descriptor;
-    if (output.concrete_descriptor.cat_params.min_test_time_ms == 0)
-        output.concrete_descriptor.cat_params.min_test_time_ms = config.default_min_test_time_ms;
+    PartialBenchmarkDescriptor::completeCategoryParams(output.concrete_descriptor,
+                                                       backend_desc.descriptor,
+                                                       config,
+                                                       PartialBenchmarkDescriptor::getForceConfigValues());
 
     // workload name
 

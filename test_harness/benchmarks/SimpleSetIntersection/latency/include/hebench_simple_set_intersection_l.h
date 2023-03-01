@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "benchmarks/SimpleSetIntersection/include/hebench_simple_set_intersection.h"
 #include "benchmarks/categories/include/hebench_benchmark_latency.h"

@@ -11,8 +11,8 @@
 #include <string>
 
 #include "hebench/api_bridge/types.h"
+#include "hebench/modules/timer/include/timer.h"
 #include "hebench_report_cpp.h"
-#include "modules/timer/include/timer.h"
 
 namespace hebench {
 namespace Utilities {

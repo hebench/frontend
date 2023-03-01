@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "hebench/api_bridge/types.h"
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "hebench_benchmark_description.h"
 #include "hebench_benchmark_factory.h"
@@ -30,12 +30,32 @@ private:
 public:
     typedef std::shared_ptr<Engine> Ptr;
 
+    /**
+     * @brief Grants a guarded write access to
+     * `hebench::TestHarness::BenchmarkDescription::Backend::m_descriptor::cat_params`.
+     * @param backend_description Backend description to complete. All members of
+     * `hebench::TestHarness::BenchmarkDescription::Backend::descriptor` must be set,
+     * except for, perhaps, cat_params which will be overwriten in this call.
+     * @param[in] completed_descriptor Descriptor from which to copy the `cat_params`.
+     * All other fields must match that of \p backend_description `.descriptor`.
+     * @throws Instance of `std::exception` if input and output descriptors are incompatible.
+     * @details If both backend descriptors are compatible, this method copies the
+     * category parameters from \p completed_descriptor to \p backend_descriptor .
+     */
     static void completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
                                             const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor);
 
-    static std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code);
+    std::string getErrorDescription(hebench::APIBridge::ErrorCode err_code) const;
     void validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_error = true) const;
-    static Engine::Ptr create();
+    /**
+     * @brief Creates a new backend engine.
+     * @param[in] data External data to pass to the backend engine for initialization,
+     * if any. Otherwise, empty array.
+     * @return A pointer to the engine wrapper.
+     * @details This method calls `APIBridge::initEngine()` passing the specified data
+     * to create and initialize the loaded backend engine.
+     */
+    static Engine::Ptr create(const std::vector<std::int8_t> &data);
 
     virtual ~Engine();
 
@@ -108,7 +128,7 @@ private:
     std::weak_ptr<IBenchmark> m_last_benchmark; // keeps track of whether a benchmark is already created
 
     Engine();
-    void init();
+    void init(const std::vector<std::int8_t> &data);
 };
 
 } // namespace TestHarness

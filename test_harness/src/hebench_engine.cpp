@@ -7,21 +7,21 @@
 #include <sstream>
 
 #include "hebench/api_bridge/api.h"
-#include "modules/general/include/error.h"
+#include "hebench/modules/general/include/error.h"
 
 #include "include/hebench_engine.h"
 
 namespace hebench {
 namespace TestHarness {
 
-std::string Engine::getErrorDescription(hebench::APIBridge::ErrorCode err_code)
+std::string Engine::getErrorDescription(hebench::APIBridge::ErrorCode err_code) const
 {
     std::vector<char> ch_retval;
-    std::uint64_t n = hebench::APIBridge::getErrorDescription(err_code, nullptr, 0);
+    std::uint64_t n = hebench::APIBridge::getErrorDescription(m_handle, err_code, nullptr, 0);
     if (n <= 0)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from backend."));
     ch_retval.resize(n);
-    if (hebench::APIBridge::getErrorDescription(err_code, ch_retval.data(), ch_retval.size()) <= 0)
+    if (hebench::APIBridge::getErrorDescription(m_handle, err_code, ch_retval.data(), ch_retval.size()) <= 0)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Unexpected error retrieving error message from backend."));
     return ch_retval.data();
 }
@@ -55,10 +55,10 @@ void Engine::validateRetCode(hebench::APIBridge::ErrorCode err_code, bool last_e
     } // end if
 }
 
-Engine::Ptr Engine::create()
+Engine::Ptr Engine::create(const std::vector<std::int8_t> &data)
 {
     Engine::Ptr retval = Engine::Ptr(new Engine());
-    retval->init();
+    retval->init(data);
     return retval;
 }
 
@@ -67,12 +67,12 @@ Engine::Engine()
     std::memset(&m_handle, 0, sizeof(m_handle));
 }
 
-void Engine::init()
+void Engine::init(const std::vector<std::int8_t> &data)
 {
     std::stringstream ss;
 
     // initialize backend engine
-    hebench::APIBridge::ErrorCode err_code = hebench::APIBridge::initEngine(&m_handle);
+    hebench::APIBridge::ErrorCode err_code = hebench::APIBridge::initEngine(&m_handle, data.data(), data.size() * sizeof(std::int8_t));
     if (err_code != HEBENCH_ECODE_SUCCESS)
     {
         try
@@ -96,7 +96,7 @@ void Engine::init()
     std::uint64_t count;
     validateRetCode(hebench::APIBridge::subscribeBenchmarksCount(m_handle, &count));
     m_h_bench_desc.resize(count);
-    validateRetCode(hebench::APIBridge::subscribeBenchmarks(m_handle, m_h_bench_desc.data()));
+    validateRetCode(hebench::APIBridge::subscribeBenchmarks(m_handle, m_h_bench_desc.data(), m_h_bench_desc.size()));
 }
 
 Engine::~Engine()
@@ -184,7 +184,7 @@ IBenchmarkDescriptor::DescriptionToken::Ptr Engine::describeBenchmark(std::size_
     validateRetCode(hebench::APIBridge::describeBenchmark(m_handle,
                                                           m_h_bench_desc[index],
                                                           &backend_desc.m_backend_description.m_descriptor,
-                                                          nullptr));
+                                                          nullptr, 0));
 
     retval = BenchmarkFactory::matchBenchmarkDescriptor(*this, backend_desc, config);
 
@@ -204,11 +204,7 @@ void Engine::completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescript
         || output.other != completed_descriptor.other)
         throw std::runtime_error(IL_LOG_MSG_CLASS("Completed benchmark descriptor differs from backend specification."));
 
-    if (output.cat_params.min_test_time_ms == 0)
-        output.cat_params.min_test_time_ms = completed_descriptor.cat_params.min_test_time_ms;
-    for (std::uint64_t i = 0; i < HEBENCH_MAX_CATEGORY_PARAMS; ++i)
-        if (output.cat_params.reserved[i] == 0)
-            output.cat_params.reserved[i] = completed_descriptor.cat_params.reserved[i];
+    output.cat_params = completed_descriptor.cat_params;
 }
 
 std::vector<std::vector<hebench::APIBridge::WorkloadParam>>
@@ -236,7 +232,8 @@ Engine::getDefaultWorkloadParams(std::size_t index) const
         validateRetCode(hebench::APIBridge::describeBenchmark(m_handle,
                                                               m_h_bench_desc[index],
                                                               &tmp_bd,
-                                                              wps.data()));
+                                                              wps.data(),
+                                                              wps.size()));
     } // end if
 
     return retval;

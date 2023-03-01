@@ -16,14 +16,14 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
 #include "include/hebench_benchmark_description.h"
 #include "include/hebench_benchmark_factory.h"
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_ibenchmark.h"
 #include "include/hebench_utilities_harness.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace Utilities {
@@ -611,9 +611,26 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
                << " for backend benchmark index " << bench_requests[i].index << ".";
             throw std::invalid_argument(IL_LOG_MSG_CLASS(ss.str()));
         } // end if
-        BenchmarkRequest bench_request_corrected;
-        bench_request_corrected.index         = bench_requests[i].index;
-        bench_request_corrected.configuration = p_token->getBenchmarkConfiguration();
+        BenchmarkRequest bench_request_corrected; // finalize the benchmark request to output default values
+        bench_request_corrected.index                                  = bench_requests[i].index;
+        bench_request_corrected.configuration                          = p_token->getBenchmarkConfiguration();
+        bench_request_corrected.configuration.default_min_test_time_ms = p_token->getBackendDescription().descriptor.cat_params.min_test_time_ms;
+        hebench::APIBridge::Category category                          = p_token->getBackendDescription().descriptor.category;
+        auto &sample_sizes                                             = bench_request_corrected.configuration.default_sample_sizes;
+        assert(sample_sizes.size() < HEBENCH_MAX_OP_PARAMS);
+        switch (category)
+        {
+        case hebench::APIBridge::Category::Latency:
+            // no sample sizes for latency test
+            sample_sizes.clear();
+            break;
+        case hebench::APIBridge::Category::Offline:
+            for (std::size_t i = 0; i < sample_sizes.size(); ++i)
+                sample_sizes[i] = p_token->getBackendDescription().descriptor.cat_params.offline.data_count[i];
+            break;
+        default:
+            break;
+        } // end switch
         ConfigExporterImpl::exportBenchmarkRequest2YAML(out, bench_request_corrected, p_token->getDescription());
     } // end for
 

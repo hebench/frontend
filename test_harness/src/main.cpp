@@ -14,13 +14,13 @@
 #include <thread>
 #include <vector>
 
-#include "modules/args_parser/include/args_parser.h"
-#include "modules/general/include/error.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/args_parser/include/args_parser.h"
+#include "hebench/modules/general/include/error.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
+#include "hebench/modules/logging/include/logging.h"
 
-#include "dynamic_lib_load.h"
+#include "hebench/dynamic_lib_load.h"
 #include "hebench_report_compiler.h"
 
 #include "include/hebench_config.h"
@@ -40,6 +40,7 @@ struct ProgramConfig
     std::filesystem::path backend_lib_path;
     std::filesystem::path config_file;
     bool b_dump_config;
+    bool b_force_config;
     bool b_validate_results;
     bool b_single_path_report;
     std::uint64_t random_seed;
@@ -76,6 +77,8 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     b_dump_config = parser.hasArgument("--dump_config");
     if (b_dump_config && config_file.empty())
         throw std::runtime_error("Dump default benchmark configuration file requested, but no filename given with \"--benchmark_config_file\" parameter.");
+
+    parser.getValue<decltype(b_force_config)>(b_force_config, "--force_config", true);
 
     parser.getValue<decltype(s_tmp)>(s_tmp, "--backend_lib_path");
     backend_lib_path = s_tmp;
@@ -144,7 +147,10 @@ void ProgramConfig::showConfig(std::ostream &os) const
     if (config_file.empty())
         os << "(none)" << std::endl;
     else
+    {
         os << config_file << std::endl;
+        os << "    Force configuration values: " << (b_force_config ? "Yes" : "No") << std::endl;
+    } // end else
     os << "    ==================" << std::endl;
 }
 
@@ -189,6 +195,10 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument("--enable_validation", "--validation", "-v", 1, "<bool: 0|false|1|true>",
                        "   [OPTIONAL] Specifies whether results from benchmarks ran will be validated\n"
                        "   against ground truth. Defaults to \"TRUE\".");
+    parser.addArgument("--force_config", 1, "<bool: 0|false|1|true>",
+                       "   [OPTIONAL] Specifies whether an attempt will be made to force configuration\n"
+                       "   file values on backend (TRUE) or non-flexible backend values will take\n"
+                       "   priority (FALSE). Defaults to \"TRUE\".");
     parser.addArgument("--run_overview", 1, "<bool: 0|false|1|true>",
                        "   [OPTIONAL] Specifies whether final summary overview of the benchmarks ran\n"
                        "   will be printed in standard output (TRUE) or not (FALSE). Results of the\n"
@@ -369,6 +379,9 @@ int main(int argc, char **argv)
         config.showConfig(ss);
         std::cout << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 
+        // propagating application configuration
+        hebench::TestHarness::PartialBenchmarkDescriptor::setForceConfigValues(config.b_force_config);
+
         ss = std::stringstream();
         ss << "Initializing Backend from shared library:" << std::endl
            << config.backend_lib_path;
@@ -378,7 +391,9 @@ int main(int argc, char **argv)
 
         // create engine and register all benchmarks
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
-        hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create();
+#pragma message("Pass the external engine initialization data here.")
+        std::vector<std::int8_t> engine_data;
+        hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create(engine_data);
         std::cout << IOS_MSG_OK << std::endl;
 
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;

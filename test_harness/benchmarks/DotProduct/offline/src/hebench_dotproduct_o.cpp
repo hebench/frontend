@@ -11,11 +11,11 @@
 #include <stdexcept>
 #include <utility>
 
-#include "modules/timer/include/timer.h"
+#include "hebench/modules/timer/include/timer.h"
 
 #include "hebench/api_bridge/api.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 #include "include/hebench_engine.h"
-#include "modules/general/include/hebench_math_utils.h"
 
 #include "../include/hebench_dotproduct_o.h"
 
@@ -66,11 +66,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
         config.fallback_default_sample_size > 0 ?
             config.fallback_default_sample_size :
             DefaultBatchSize;
-    std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
-                                                         OpParameterCount,
-                                                         config.default_sample_sizes,
-                                                         backend_desc.descriptor,
-                                                         sample_size_fallback);
+    std::uint64_t result_batch_size =
+        PartialBenchmarkDescriptor::computeSampleSizes(batch_sizes,
+                                                       OpParameterCount,
+                                                       config.default_sample_sizes,
+                                                       backend_desc.descriptor,
+                                                       sample_size_fallback,
+                                                       PartialBenchmarkDescriptor::getForceConfigValues());
     // complete header with workload specifics
     ss << ", , c = V0 . V1" << std::endl
        << ", , , Elements, Batch size" << std::endl;
@@ -137,7 +139,8 @@ void Benchmark::init()
                                             BenchmarkDescriptor::OpParameterCount,
                                             this->getBenchmarkConfiguration().default_sample_sizes,
                                             this->getBackendDescription().descriptor,
-                                            sample_size_fallback);
+                                            sample_size_fallback,
+                                            BenchmarkDescriptor::getForceConfigValues());
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 

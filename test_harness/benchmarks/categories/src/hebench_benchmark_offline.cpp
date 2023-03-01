@@ -10,11 +10,11 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "modules/timer/include/timer.h"
+#include "hebench/modules/timer/include/timer.h"
 
 #include "hebench/api_bridge/api.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 #include "include/hebench_engine.h"
-#include "modules/general/include/hebench_math_utils.h"
 
 #include "../include/hebench_benchmark_offline.h"
 
@@ -277,7 +277,8 @@ bool BenchmarkOffline::run(hebench::Utilities::TimingReportEx &out_report,
             h_remote_results.destroy();
         timer.start();
         validateRetCode(hebench::APIBridge::operate(handle(),
-                                                    h_inputs_remote.handle, params.data(),
+                                                    h_inputs_remote.handle,
+                                                    params.data(), params.size(),
                                                     &h_remote_results.handle));
         p_timing_event = timer.stop<DefaultTimeInterval>(event_id, num_results_samples, nullptr);
         elapsed_ms += p_timing_event->elapsedWallTime<std::milli>();

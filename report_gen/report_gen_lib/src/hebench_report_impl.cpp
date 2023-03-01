@@ -8,9 +8,9 @@
 #include <limits>
 #include <sstream>
 
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
 #include "hebench_report_impl.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace ReportGen {

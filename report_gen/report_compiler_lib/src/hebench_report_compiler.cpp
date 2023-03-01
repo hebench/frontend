@@ -13,8 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "modules/args_parser/include/args_parser.h"
-#include "modules/general/include/hebench_utilities.h"
+#include "hebench/modules/args_parser/include/args_parser.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
 
 #include "hebench_report_compiler.h"
 #include "hebench_report_cpp.h"
