@@ -100,8 +100,20 @@ void BenchmarkDescriptorCategory::completeWorkloadDescription(WorkloadDescriptio
     std::stringstream ss;
 
     output.concrete_descriptor = backend_desc.descriptor;
-    if (output.concrete_descriptor.cat_params.min_test_time_ms == 0)
-        output.concrete_descriptor.cat_params.min_test_time_ms = config.default_min_test_time_ms;
+    if (getForceConfigValues())
+    {
+        output.concrete_descriptor.cat_params.min_test_time_ms =
+            config.default_min_test_time_ms == 0 ?
+                backend_desc.descriptor.cat_params.min_test_time_ms :
+                config.default_min_test_time_ms;
+    } // end if
+    else
+    {
+        output.concrete_descriptor.cat_params.min_test_time_ms =
+            backend_desc.descriptor.cat_params.min_test_time_ms != 0 ?
+                backend_desc.descriptor.cat_params.min_test_time_ms :
+                config.default_min_test_time_ms;
+    } // end else
 
     // workload name
 

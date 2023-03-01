@@ -30,6 +30,18 @@ private:
 public:
     typedef std::shared_ptr<Engine> Ptr;
 
+    /**
+     * @brief Grants a guarded write access to
+     * `hebench::TestHarness::BenchmarkDescription::Backend::m_descriptor::cat_params`.
+     * @param backend_description Backend description to complete. All members of
+     * `hebench::TestHarness::BenchmarkDescription::Backend::descriptor` must be set,
+     * except for, perhaps, cat_params which will be overwriten in this call.
+     * @param[in] completed_descriptor Descriptor from which to copy the `cat_params`.
+     * All other fields must match that of \p backend_description `.descriptor`.
+     * @throws Instance of `std::exception` if input and output descriptors are incompatible.
+     * @details If both backend descriptors are compatible, this method copies the
+     * category parameters from \p completed_descriptor to \p backend_descriptor .
+     */
     static void completeBenchmarkDescriptor(hebench::TestHarness::BenchmarkDescription::Backend &backend_description,
                                             const hebench::APIBridge::BenchmarkDescriptor &completed_descriptor);
 

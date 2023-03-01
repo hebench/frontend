@@ -40,6 +40,7 @@ struct ProgramConfig
     std::filesystem::path backend_lib_path;
     std::filesystem::path config_file;
     bool b_dump_config;
+    bool b_force_config;
     bool b_validate_results;
     bool b_single_path_report;
     std::uint64_t random_seed;
@@ -76,6 +77,8 @@ void ProgramConfig::initializeConfig(const hebench::ArgsParser &parser)
     b_dump_config = parser.hasArgument("--dump_config");
     if (b_dump_config && config_file.empty())
         throw std::runtime_error("Dump default benchmark configuration file requested, but no filename given with \"--benchmark_config_file\" parameter.");
+
+    parser.getValue<decltype(b_force_config)>(b_force_config, "--force_config", true);
 
     parser.getValue<decltype(s_tmp)>(s_tmp, "--backend_lib_path");
     backend_lib_path = s_tmp;
@@ -144,7 +147,10 @@ void ProgramConfig::showConfig(std::ostream &os) const
     if (config_file.empty())
         os << "(none)" << std::endl;
     else
+    {
         os << config_file << std::endl;
+        os << "    Force configuration values: " << (b_force_config ? "Yes" : "No") << std::endl;
+    } // end else
     os << "    ==================" << std::endl;
 }
 
@@ -189,6 +195,10 @@ void initArgsParser(hebench::ArgsParser &parser, int argc, char **argv)
     parser.addArgument("--enable_validation", "--validation", "-v", 1, "<bool: 0|false|1|true>",
                        "   [OPTIONAL] Specifies whether results from benchmarks ran will be validated\n"
                        "   against ground truth. Defaults to \"TRUE\".");
+    parser.addArgument("--force_config", 1, "<bool: 0|false|1|true>",
+                       "   [OPTIONAL] Specifies whether an attempt will be made to force configuration\n"
+                       "   file values on backend (TRUE) or non-flexible backend values will take\n"
+                       "   priority (FALSE). Defaults to \"TRUE\".");
     parser.addArgument("--run_overview", 1, "<bool: 0|false|1|true>",
                        "   [OPTIONAL] Specifies whether final summary overview of the benchmarks ran\n"
                        "   will be printed in standard output (TRUE) or not (FALSE). Results of the\n"
@@ -368,6 +378,9 @@ int main(int argc, char **argv)
         ss = std::stringstream();
         config.showConfig(ss);
         std::cout << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
+
+        // propagating application configuration
+        hebench::TestHarness::PartialBenchmarkDescriptor::setForceConfigValues(config.b_force_config);
 
         ss = std::stringstream();
         ss << "Initializing Backend from shared library:" << std::endl

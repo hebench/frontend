@@ -69,11 +69,13 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
         config.fallback_default_sample_size > 0 ?
             config.fallback_default_sample_size :
             DefaultBatchSize;
-    std::uint64_t result_batch_size = computeSampleSizes(batch_sizes,
-                                                         output.operation_params_count,
-                                                         config.default_sample_sizes,
-                                                         backend_desc.descriptor,
-                                                         sample_size_fallback);
+    std::uint64_t result_batch_size =
+        PartialBenchmarkDescriptor::computeSampleSizes(batch_sizes,
+                                                       output.operation_params_count,
+                                                       config.default_sample_sizes,
+                                                       backend_desc.descriptor,
+                                                       sample_size_fallback,
+                                                       PartialBenchmarkDescriptor::getForceConfigValues());
     // complete header with workload specifics
     ss << ", , (C[0]";
     for (std::size_t i = 1; i < output_sizes.size(); ++i)
@@ -156,7 +158,8 @@ void Benchmark::init()
                                             batch_sizes.size(),
                                             this->getBenchmarkConfiguration().default_sample_sizes,
                                             this->getBackendDescription().descriptor,
-                                            sample_size_fallback);
+                                            sample_size_fallback,
+                                            BenchmarkDescriptor::getForceConfigValues());
 
     std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Preparing workload.") << std::endl;
 
