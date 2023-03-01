@@ -353,7 +353,7 @@ int main(int argc, char **argv)
     std::cout << std::endl
               << hebench::Logging::GlobalLogger::log(true, "HEBench") << std::endl;
 
-    std::vector<hebench::Utilities::BenchmarkRequest> benchmarks_to_run;
+    hebench::Utilities::BenchmarkSession benchmarks_to_run;
     std::size_t total_runs = 0;
     std::vector<std::string> report_paths;
     std::vector<std::size_t> failed_benchmarks;
@@ -389,19 +389,29 @@ int main(int argc, char **argv)
         hebench::APIBridge::DynamicLibLoad::loadLibrary(config.backend_lib_path);
         std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log("Backend loaded successfully.") << std::endl;
 
-        // create engine and register all benchmarks
-        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
-#pragma message("Pass the external engine initialization data here.")
-        std::vector<std::int8_t> engine_data;
-        hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create(engine_data);
-        std::cout << IOS_MSG_OK << std::endl;
-
-        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;
-        std::shared_ptr<hebench::Utilities::BenchmarkConfigurator> p_bench_config =
-            std::make_shared<hebench::Utilities::BenchmarkConfigurator>(p_engine, config.backend_lib_path);
+        std::shared_ptr<hebench::Utilities::BenchmarkConfigLoader> p_bench_config_loader;
+        if (!config.config_file.empty() && !config.b_dump_config)
+        {
+            std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading benchmark configuration from file...") << std::endl;
+            p_bench_config_loader = hebench::Utilities::BenchmarkConfigLoader::create(config.config_file, config.random_seed);
+            // update random seed
+            config.random_seed = p_bench_config_loader->getRandomSeed();
+        } // end if
         std::cout << IOS_MSG_DONE << std::endl;
 
-        // default configuration for benchmarks
+        // create engine and register all benchmarks
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
+        hebench::TestHarness::Engine::Ptr p_engine;
+        if (p_bench_config_loader)
+            p_engine = hebench::TestHarness::Engine::create(p_bench_config_loader->getInitData());
+        else
+            p_engine = hebench::TestHarness::Engine::create(std::vector<std::int8_t>());
+        std::cout << IOS_MSG_OK << std::endl;
+
+        // broker configuration for benchmarks
+        std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;
+        std::shared_ptr<hebench::Utilities::BenchmarkConfigBroker> p_bench_broker =
+            std::make_shared<hebench::Utilities::BenchmarkConfigBroker>(p_engine, config.random_seed, config.backend_lib_path);
 
         if (config.b_dump_config)
         {
@@ -409,9 +419,8 @@ int main(int argc, char **argv)
             ss << "Saving default benchmark configuration to storage:" << std::endl
                << config.config_file;
             std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-            p_bench_config->saveConfiguration(config.config_file,
-                                              p_bench_config->getDefaultConfiguration(),
-                                              config.random_seed);
+            p_bench_broker->exportConfiguration(config.config_file,
+                                                p_bench_broker->getDefaultConfiguration());
             std::cout << IOS_MSG_OK << std::endl;
 
             // default config dumped; program completed
@@ -420,24 +429,26 @@ int main(int argc, char **argv)
         {
             // initialize benchmarks requested to run
 
-            if (config.config_file.empty())
-            {
-                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading default benchmark configuration...") << std::endl;
-                benchmarks_to_run = p_bench_config->getDefaultConfiguration();
-            } // end if
-            else
+            if (p_bench_config_loader)
             {
                 ss = std::stringstream();
                 ss << "Loading benchmark configuration file:" << std::endl
                    << config.config_file;
                 std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
-                benchmarks_to_run = p_bench_config->loadConfiguration(config.config_file, config.random_seed);
+                benchmarks_to_run = p_bench_broker->importConfiguration(*p_bench_config_loader);
             } // end else
+            else
+            {
+                std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Loading default benchmark configuration...") << std::endl;
+                benchmarks_to_run = p_bench_broker->getDefaultConfiguration();
+            } // end if
         } // end else
 
-        p_bench_config.reset(); // clean up benchmark configurator
+        // clean up benchmark configurators
+        p_bench_broker.reset();
+        p_bench_config_loader.reset();
 
-        if (!benchmarks_to_run.empty())
+        if (!benchmarks_to_run.benchmark_requests.empty())
         {
             // start benchmarking if there are benchmarks to run
 
@@ -448,18 +459,18 @@ int main(int argc, char **argv)
 
             hebench::Utilities::RandomGenerator::setRandomSeed(config.random_seed);
 
-            total_runs = benchmarks_to_run.size();
+            total_runs = benchmarks_to_run.benchmark_requests.size();
             ss         = std::stringstream();
             ss << "Benchmarks to run: " << total_runs;
             std::cout << IOS_MSG_OK << hebench::Logging::GlobalLogger::log(ss.str()) << std::endl;
 
             // iterate through the registered benchmarks and execute them
             std::size_t run_i = 0;
-            for (std::size_t bench_i = 0; bench_i < benchmarks_to_run.size(); ++bench_i)
+            for (std::size_t bench_i = 0; bench_i < benchmarks_to_run.benchmark_requests.size(); ++bench_i)
             {
-                benchmarks_to_run[bench_i].configuration.b_single_path_report = config.b_single_path_report;
-                hebench::Utilities::BenchmarkRequest &benchmark_request       = benchmarks_to_run[bench_i];
-                bool b_critical_error                                         = false;
+                benchmarks_to_run.benchmark_requests[bench_i].configuration.b_single_path_report = config.b_single_path_report;
+                hebench::Utilities::BenchmarkRequest &benchmark_request                          = benchmarks_to_run.benchmark_requests[bench_i];
+                bool b_critical_error                                                            = false;
                 std::string bench_path;
                 hebench::Utilities::TimingReportEx report;
                 try

@@ -72,7 +72,11 @@ void Engine::init(const std::vector<std::int8_t> &data)
     std::stringstream ss;
 
     // initialize backend engine
-    hebench::APIBridge::ErrorCode err_code = hebench::APIBridge::initEngine(&m_handle, data.data(), data.size() * sizeof(std::int8_t));
+    hebench::APIBridge::ErrorCode err_code;
+    if (data.empty())
+        err_code = hebench::APIBridge::initEngine(&m_handle, nullptr, 0);
+    else
+        err_code = hebench::APIBridge::initEngine(&m_handle, data.data(), data.size() * sizeof(std::int8_t));
     if (err_code != HEBENCH_ECODE_SUCCESS)
     {
         try

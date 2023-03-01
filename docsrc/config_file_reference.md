@@ -1,4 +1,3 @@
-
 Benchmark Configuration File Reference {#config_file_reference}
 ========================
 
@@ -16,6 +15,7 @@ A configuration file is a YAML file with the following syntax:
 default_min_test_time: <fallback_min_test_time_ms>
 default_sample_size: <fallback_sample_size>
 random_seed: <seed>
+initialization_data: <data>
 
 benchmark:
   - ID: <benchmark_id>
@@ -136,7 +136,7 @@ The actual value used for a benchmark configuration is based on where it is spec
 1. Backend specified.
 2. Benchmark description in configuration file.
 3. Global in configuration file.
-4. Workload specification.
+4. [Workload definition](@ref tests_overview).
 5. Global execution specification (if any).
 
 This means, for example, if a benchmark description defines value `default_min_test_time: 10000`, this will override the configuration file global value for `default_min_test_time` (and any other value down the list).
@@ -167,6 +167,18 @@ When this setting is missing or set to `0` in the configuration file, this indic
 
 `random_seed` - type: `uint64`. Specifies the seed for the random number generator to use when generating synthetic data. When missing, the global Test Harness seed will be used (see command line `--random_seed` in @ref test_harness_usage_guide ). This value can be used to replicate results during tests.
 
+#### Field initialization_data
+
+`initialization_data` - type: `string`. (Optional field; can be `null`) Contains data to be passed to backend engine during initialization.
+
+If the value of this field is an existing file name, Test Harness will read the file into memory as binary and pass the contents to the backend engine initialization through the call to `initEngine()`. The file name can be relative to the configuration file, or absolute.
+
+If this field does not contain a file name Test Harness will just forward the specified string as is (no null terminator will be appended).
+
+If this field is null, missing, or contains an empty string, Test Harness will pass `null` values for data to the engine initialization.
+
+All data resulting from this field is kept in Test Harness memory during initialization as an array of bytes. Memory is freed and all pointers to the data become invalid after `initEngine()` call returns.
+
 ### Benchmark Configuration Section
 
 Top level `benchmark` key contains a list. This key must exist in the configuration file. An element of the value list specifies a benchmark to run and the corresponding configuration.
@@ -195,7 +207,7 @@ If `default_min_test_time`, or `default_sample_sizes` are specified, their value
 
 Workloads executed by benchmarks have a number of mandatory parameters. The number and type for these parameters is workload specific. Required parameters for each workload are listed under the [documentation for each workload](@ref tests_overview).
 
-Arguments for the benchmark’s workload parameters are specified under `params`. This is technically a list of parameters. Each argument is identified by its zero-based index. This index must correspond to the one in the workload documentation. Under its index, an argument specifies a `name`, a `type`, and a `value`.
+Arguments for the benchmark\u2019s workload parameters are specified under `params`. This is technically a list of parameters. Each argument is identified by its zero-based index. This index must correspond to the one in the workload documentation. Under its index, an argument specifies a `name`, a `type`, and a `value`.
 
 The value of field `name` is `<param_name>`. This is any string used for description purposes. This string can be anything as long as it is unique inside the benchmark section. Names already populated by exported configuration files can be changed, but it is not recommended.
 
@@ -249,6 +261,7 @@ For example, if a backend exported configuration looks like below:
 default_min_test_time: 0
 default_sample_size: 0
 random_seed: 0
+initialization_data: ~
 
 benchmark:
 
@@ -271,7 +284,7 @@ benchmark:
     default_sample_size:
       0: 0
       1: 0
-      2: 0
+      2: 100
     params:
       0:
         name: n
