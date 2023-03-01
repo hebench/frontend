@@ -9,8 +9,8 @@
 #include "hebench/api_bridge/api.h"
 
 #include "../include/hebench_benchmark_category.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 #include "include/hebench_utilities_harness.h"
-#include "modules/general/include/hebench_math_utils.h"
 
 namespace hebench {
 namespace TestHarness {

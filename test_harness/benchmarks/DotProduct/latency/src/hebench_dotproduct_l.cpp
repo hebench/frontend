@@ -11,11 +11,11 @@
 #include <stdexcept>
 #include <utility>
 
-#include "modules/timer/include/timer.h"
+#include "hebench/modules/timer/include/timer.h"
 
 #include "hebench/api_bridge/api.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 #include "include/hebench_engine.h"
-#include "modules/general/include/hebench_math_utils.h"
 
 #include "../include/hebench_dotproduct_l.h"
 

@@ -9,7 +9,7 @@
 #include <utility>
 
 #include "../include/hebench_simple_set_intersection.h"
-#include "modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 
 namespace hebench {
 namespace TestHarness {

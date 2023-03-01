@@ -13,7 +13,7 @@
 #include <vector>
 
 #include "../include/hebench_logreg.h"
-#include "modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
 
 namespace hebench {
 namespace TestHarness {

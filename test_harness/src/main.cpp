@@ -14,13 +14,13 @@
 #include <thread>
 #include <vector>
 
-#include "modules/args_parser/include/args_parser.h"
-#include "modules/general/include/error.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/args_parser/include/args_parser.h"
+#include "hebench/modules/general/include/error.h"
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
+#include "hebench/modules/logging/include/logging.h"
 
-#include "dynamic_lib_load.h"
+#include "hebench/dynamic_lib_load.h"
 #include "hebench_report_compiler.h"
 
 #include "include/hebench_config.h"
@@ -391,7 +391,9 @@ int main(int argc, char **argv)
 
         // create engine and register all benchmarks
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Initializing Backend engine...") << std::endl;
-        hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create();
+#pragma message("Pass the external engine initialization data here.")
+        std::vector<std::int8_t> engine_data;
+        hebench::TestHarness::Engine::Ptr p_engine = hebench::TestHarness::Engine::create(engine_data);
         std::cout << IOS_MSG_OK << std::endl;
 
         std::cout << IOS_MSG_INFO << hebench::Logging::GlobalLogger::log("Retrieving default benchmark configuration from Backend...") << std::endl;

@@ -10,8 +10,8 @@
 #include <string>
 #include <vector>
 
-#include "modules/general/include/nocopy.h"
-#include "modules/logging/include/logging.h"
+#include "hebench/modules/general/include/nocopy.h"
+#include "hebench/modules/logging/include/logging.h"
 
 #include "include/hebench_ibenchmark.h"
 

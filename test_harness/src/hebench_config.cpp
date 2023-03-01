@@ -16,14 +16,14 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "hebench/modules/general/include/hebench_math_utils.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
 #include "include/hebench_benchmark_description.h"
 #include "include/hebench_benchmark_factory.h"
 #include "include/hebench_config.h"
 #include "include/hebench_engine.h"
 #include "include/hebench_ibenchmark.h"
 #include "include/hebench_utilities_harness.h"
-#include "modules/general/include/hebench_math_utils.h"
-#include "modules/general/include/hebench_utilities.h"
 
 namespace hebench {
 namespace Utilities {

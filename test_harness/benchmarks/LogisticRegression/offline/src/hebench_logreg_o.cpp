@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <utility>
 
-#include "modules/timer/include/timer.h"
+#include "hebench/modules/timer/include/timer.h"
 
 #include "hebench/api_bridge/api.h"
 #include "include/hebench_engine.h"

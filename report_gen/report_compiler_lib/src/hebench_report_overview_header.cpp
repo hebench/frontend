@@ -6,7 +6,7 @@
 #include <sstream>
 #include <utility>
 
-#include "modules/general/include/hebench_utilities.h"
+#include "hebench/modules/general/include/hebench_utilities.h"
 
 #include "hebench_report_overview_header.h"
 
