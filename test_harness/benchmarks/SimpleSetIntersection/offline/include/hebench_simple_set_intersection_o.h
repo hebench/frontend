@@ -28,8 +28,10 @@ private:
     IL_DECLARE_CLASS_NAME(SimpleSetIntersection::Offline::BenchmarkDescriptor)
 public:
     // TODO: Ask for ID selection
-    static constexpr std::uint32_t BenchmarkID      = 1301;
-    static constexpr std::uint64_t DefaultBatchSize = 1; // default number of elements for a parameter
+    static constexpr std::uint32_t BenchmarkID = 1301;
+    // default number of samples for an operand
+    // (based on docs definition of the workload operation)
+    static constexpr std::uint64_t DefaultBatchSize = 5;
 
 public:
     BenchmarkDescriptor()           = default;
