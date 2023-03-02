@@ -15,11 +15,13 @@ hebench:APIBridge::Category::Offline
 
 ## Category Parameters
 
-All categories support `std::uint64_t min_test_time_ms` to specify the minimum time, in milliseconds, to run the test.
+- `std::uint64_t min_test_time_ms`: supported by all categories.
+  Specifies the minimum time, in milliseconds, to run the test.
 
-Offline category supports `std::uint64_t data_count[HEBENCH_MAX_OP_PARAMS]` which specifies a hard value for the number of data samples for each input parameter to the workload operation.
+- `std::uint64_t data_count[HEBENCH_MAX_OP_PARAMS]`
+  Specifies a hard value for the number of data samples for each input parameter to the workload operation.
 
-See `hebench::APIBridge::CategoryParams` for more information. Note that setting fields of `CategoryParams` to `0` or `null` values (as corresponding to the data types) will allow Test Harness users to configure these from [benchmark configuration files](@ref config_file_reference). Otherwise, configuration files values will be overridden by actual values hard set by the backend in this structure.
+Note that a backend implementation that sets any field in `CategoryParams` to `0` or `null` values (as corresponding to the field data type) is indicating that it accepts any valid value in the supported range for said field (according to the valid ranges as specified in the documentation for each field). In this case, these values are user-configurable using Test Harness features such as [benchmark configuration files](@ref config_file_reference).
 
 ## Description
 
