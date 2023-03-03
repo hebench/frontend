@@ -4,8 +4,10 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <numeric>
 #include <sstream>
@@ -471,11 +473,87 @@ void ConfigExporterImpl::exportBenchmarkRequest2YAML(YAML::Emitter &out,
     out << node_benchmark << YAML::Newline;
 }
 
-//------------------------------
-// class BenchmarkConfiguration
-//------------------------------
+//-----------------------------
+// class BenchmarkConfigLoader
+//-----------------------------
 
-BenchmarkConfigurator::BenchmarkConfigurator(std::weak_ptr<hebench::TestHarness::Engine> wp_engine,
+std::shared_ptr<BenchmarkConfigLoader> BenchmarkConfigLoader::create(const std::string &yaml_filename,
+                                                                     std::uint64_t fallback_random_seed)
+{
+    std::shared_ptr<BenchmarkConfigLoader> p_retval =
+        std::shared_ptr<BenchmarkConfigLoader>(new BenchmarkConfigLoader(yaml_filename, fallback_random_seed));
+    return p_retval;
+}
+
+BenchmarkConfigLoader::BenchmarkConfigLoader(const std::string &yaml_filename,
+                                             std::uint64_t fallback_random_seed) :
+    m_random_seed(fallback_random_seed),
+    m_default_min_test_time_ms(0),
+    m_default_sample_size(0)
+{
+    // get absolute path and directory of yaml file to load
+    m_filename                     = std::filesystem::canonical(yaml_filename).string();
+    std::filesystem::path file_dir = std::filesystem::path(m_filename).remove_filename();
+    YAML::Node root                = YAML::LoadFile(m_filename);
+
+    if (!root["benchmark"].IsDefined())
+        throw std::runtime_error("Map \"benchmark\" not found at root of configuration file.");
+    if (!root["benchmark"].IsSequence())
+        throw std::runtime_error("Value for map \"benchmark\" is not a valid YAML sequence.");
+
+    // parse benchmark defaults
+    if (root["default_min_test_time"].IsDefined())
+        m_default_min_test_time_ms =
+            ConfigImporterImpl::retrieveValue<decltype(m_default_min_test_time_ms)>(root["default_min_test_time"]);
+    if (root["default_sample_size"].IsDefined())
+        m_default_sample_size =
+            ConfigImporterImpl::retrieveValue<decltype(m_default_sample_size)>(root["default_sample_size"]);
+    if (root["random_seed"].IsDefined())
+        m_random_seed = ConfigImporterImpl::retrieveValue<std::uint64_t>(root["random_seed"]);
+
+    if (root["initialization_data"].IsDefined() && !root["initialization_data"].IsNull())
+    {
+        // process initialization data
+        std::string init_data = ConfigImporterImpl::retrieveValue<std::string>(root["initialization_data"]);
+        if (!init_data.empty())
+        {
+            std::filesystem::path init_data_filepath = init_data;
+            // check if this is a relative file name
+            if (init_data_filepath.is_relative())
+                // filenames are relative to the yaml file
+                init_data_filepath = file_dir / init_data_filepath;
+            if (std::filesystem::exists(init_data_filepath) && std::filesystem::is_regular_file(init_data_filepath))
+            {
+                std::ifstream fnum;
+                fnum.open(init_data_filepath, std::ifstream::in | std::ifstream::binary);
+                if (!fnum.is_open())
+                {
+                    std::stringstream ss;
+                    ss << "Could not open file " << init_data_filepath
+                       << " for reading as indicated by field `initialization_data`.";
+                    throw std::runtime_error(ss.str());
+                } // end if
+                // read the whole file
+                fnum.seekg(0, fnum.end);
+                m_data.resize(fnum.tellg());
+                fnum.seekg(0, fnum.beg);
+                fnum.read(reinterpret_cast<std::ifstream::char_type *>(m_data.data()), m_data.size());
+            } // end if
+            else
+                // make the actual yaml string into the initialization data
+                m_data.assign(init_data.begin(), init_data.end());
+        } // end if
+    } // end if
+
+    m_yaml_content = std::shared_ptr<YAML::Node>(new YAML::Node(root));
+}
+
+//-----------------------------
+// class BenchmarkConfigBroker
+//-----------------------------
+
+BenchmarkConfigBroker::BenchmarkConfigBroker(std::weak_ptr<hebench::TestHarness::Engine> wp_engine,
+                                             std::uint64_t random_seed,
                                              const std::string s_backend) :
     m_wp_engine(wp_engine),
     m_s_backend(s_backend)
@@ -484,16 +562,18 @@ BenchmarkConfigurator::BenchmarkConfigurator(std::weak_ptr<hebench::TestHarness:
     if (!p_engine)
         throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid empty 'wp_engine'."));
 
-    std::size_t count_benchmarks = p_engine->countBenchmarks();
-    m_default_benchmarks.reserve(count_benchmarks);
+    std::size_t count_benchmarks                      = p_engine->countBenchmarks();
+    m_default_benchmarks.random_seed                  = random_seed;
+    std::vector<BenchmarkRequest> &benchmark_requests = m_default_benchmarks.benchmark_requests;
+    benchmark_requests.reserve(count_benchmarks);
     for (std::size_t bench_i = 0; bench_i < count_benchmarks; ++bench_i)
     {
         std::vector<std::vector<hebench::APIBridge::WorkloadParam>> w_params_set =
             p_engine->getDefaultWorkloadParams(bench_i);
         for (std::size_t w_params_i = 0; w_params_i < w_params_set.size(); ++w_params_i)
         {
-            m_default_benchmarks.emplace_back();
-            BenchmarkRequest &bench_description      = m_default_benchmarks.back();
+            benchmark_requests.emplace_back();
+            BenchmarkRequest &bench_description      = benchmark_requests.back();
             bench_description.configuration.w_params = std::move(w_params_set[w_params_i]);
             // obtain full description for the benchmark
             hebench::TestHarness::IBenchmarkDescriptor::DescriptionToken::Ptr p_token =
@@ -503,14 +583,12 @@ BenchmarkConfigurator::BenchmarkConfigurator(std::weak_ptr<hebench::TestHarness:
             // store the data needed to retrieve the benchmark
             bench_description.index         = bench_i;
             bench_description.configuration = p_token->getBenchmarkConfiguration();
-            //bench_description.description = p_token->getDescription();
         } // end for
     } // end for
 }
 
-void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
-                                              const std::vector<BenchmarkRequest> &bench_requests,
-                                              std::uint64_t random_seed) const
+void BenchmarkConfigBroker::exportConfiguration(const std::string &yaml_filename,
+                                                const BenchmarkSession &bench_configs) const
 {
     std::shared_ptr<hebench::TestHarness::Engine> p_engine = m_wp_engine.lock();
     if (!p_engine)
@@ -589,7 +667,18 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
     ss << "Random seed to use when generating synthetic data for these benchmarks." << std::endl
        << "Type: unsigned int. Defaults to system time when not present.";
     out << YAML::Comment(ss.str())
-        << YAML::Key << "random_seed" << YAML::Value << random_seed;
+        << YAML::Key << "random_seed" << YAML::Value << bench_configs.random_seed;
+    out << YAML::Newline << YAML::Newline;
+
+    ss = std::stringstream();
+    ss << "Optional backend initialization data." << std::endl
+       << "Type: string (can be null)." << std::endl
+       << "When present, if this is the name of an existing file (relative to this" << std::endl
+       << "file, or absolute), the file binary contents will be forwarded to the" << std::endl
+       << "backend engine during initialization. Otherwise, the specified string is" << std::endl
+       << "forwarded as is (without null terminator)";
+    out << YAML::Comment(ss.str())
+        << YAML::Key << "initialization_data" << YAML::Value << YAML::Null;
     out << YAML::Newline << YAML::Newline;
 
     out << YAML::EndMap;
@@ -599,6 +688,8 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
     out << YAML::BeginMap;
     out << YAML::Key << "benchmark" << YAML::Value
         << YAML::BeginSeq;
+
+    auto &bench_requests = bench_configs.benchmark_requests;
 
     for (std::size_t i = 0; i < bench_requests.size(); ++i)
     {
@@ -645,42 +736,31 @@ void BenchmarkConfigurator::saveConfiguration(const std::string &yaml_filename,
         false, false);
 }
 
-std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std::string &yaml_filename,
-                                                                       std::uint64_t &random_seed) const
+BenchmarkSession BenchmarkConfigBroker::importConfiguration(const BenchmarkConfigLoader &loader) const
 {
-    std::vector<BenchmarkRequest> retval;
+    BenchmarkSession retval;
     std::uint64_t default_min_test_time_ms = 0;
     std::uint64_t default_sample_size      = 0;
 
+    const void *p_yaml_content = loader.getYAMLContent({});
+    if (!p_yaml_content)
+        throw std::invalid_argument(IL_LOG_MSG_CLASS("Invalid loader: internal YAML content is not initialized."));
     std::shared_ptr<hebench::TestHarness::Engine> p_engine = m_wp_engine.lock();
     if (!p_engine)
         throw std::logic_error(IL_LOG_MSG_CLASS("Invalid internal state: engine object has been released."));
 
-    std::filesystem::path file_dir = std::filesystem::path(yaml_filename).remove_filename();
-    YAML::Node root                = YAML::LoadFile(yaml_filename);
+    std::filesystem::path file_dir = std::filesystem::path(loader.getFilename()).remove_filename();
+    YAML::Node root                = *reinterpret_cast<const YAML::Node *>(p_yaml_content);
 
-    if (!root["benchmark"].IsDefined())
-        throw std::runtime_error("Map \"benchmark\" not found at root of configuration file.");
-
-    // parse benchmark defaults
-    if (root["default_min_test_time"].IsDefined())
-        default_min_test_time_ms =
-            ConfigImporterImpl::retrieveValue<decltype(default_min_test_time_ms)>(root["default_min_test_time"]);
-    if (root["default_sample_size"].IsDefined())
-        default_sample_size =
-            ConfigImporterImpl::retrieveValue<decltype(default_sample_size)>(root["default_sample_size"]);
-    if (root["random_seed"].IsDefined())
-        random_seed =
-            ConfigImporterImpl::retrieveValue<std::uint64_t>(root["random_seed"]);
-
-    root = root["benchmark"];
-    if (!root.IsSequence())
-        throw std::runtime_error("Value for map \"benchmark\" is not a valid YAML sequence.");
-    retval.reserve(root.size());
+    // Root is already validated by loader to be a valid benchmark sequence
+    // (individual benchmarks are not validated by loader).
+    root                                              = root["benchmark"];
+    std::vector<BenchmarkRequest> &benchmark_requests = retval.benchmark_requests;
+    benchmark_requests.reserve(root.size());
     for (std::size_t i = 0; i < root.size(); ++i)
     {
         if (!root[i]["ID"].IsDefined())
-            throw std::runtime_error("Field \"ID\" not found on benchmark.");
+            throw std::runtime_error("Field \"ID\" not found in benchmark.");
         std::size_t benchmark_index = ConfigImporterImpl::retrieveValue<std::size_t>(root[i]["ID"]);
         std::vector<BenchmarkRequest> node_requests =
             ConfigImporterImpl::importYAML2BenchmarkRequest(file_dir,
@@ -689,8 +769,11 @@ std::vector<BenchmarkRequest> BenchmarkConfigurator::loadConfiguration(const std
                                                             *p_engine,
                                                             default_min_test_time_ms,
                                                             default_sample_size);
-        retval.insert(retval.end(), node_requests.begin(), node_requests.end());
+        benchmark_requests.insert(benchmark_requests.end(), node_requests.begin(), node_requests.end());
     } // end for
+
+    retval.random_seed = loader.getRandomSeed();
+    retval.data        = loader.getInitData();
 
     return retval;
 }
