@@ -147,6 +147,7 @@ void Benchmark::init()
         m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
                                     m_k_count,
+                                    set_size.at(3), set_size.at(4), // data_range_i, data_range_j
                                     this->getBackendDescription().descriptor.data_type);
     } // end if
     else
@@ -159,6 +160,7 @@ void Benchmark::init()
         m_data = DataLoader::create(set_size.at(0), set_size.at(1), // |X|, |Y|
                                     batch_sizes[0], batch_sizes[1],
                                     m_k_count,
+                                    set_size.at(3), set_size.at(4), // data_range_i, data_range_j
                                     this->getBackendDescription().descriptor.data_type,
                                     this->getBenchmarkConfiguration().dataset_filename);
     } // end else
