@@ -172,7 +172,7 @@ This project welcomes external contributions. To contribute to HEBench, see [CON
 To Cite HEBench in academic papers or otherwise, please use the following BibTeX entry:
 
     @misc{hebench,
-        title = {Homomorphic Encryption Benchmarking Framework - HEBench (release v0.8)},
+        title = {Homomorphic Encryption Benchmarking Framework - HEBench (release v0.9)},
         howpublished = {Online: \url{https://github.com/hebench/frontend}},
         month = nov,
         year = 2022,

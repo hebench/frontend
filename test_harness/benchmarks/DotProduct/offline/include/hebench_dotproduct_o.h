@@ -27,8 +27,10 @@ public:
 private:
     IL_DECLARE_CLASS_NAME(DotProduct::Offline::BenchmarkDescriptor)
 public:
-    static constexpr std::uint32_t BenchmarkID      = 701;
-    static constexpr std::uint64_t DefaultBatchSize = 100; // default number of elements for a parameter
+    static constexpr std::uint32_t BenchmarkID = 701;
+    // default number of samples for an operand
+    // (based on docs definition of the workload operation)
+    static constexpr std::uint64_t DefaultBatchSize = 5;
 
 public:
     BenchmarkDescriptor()           = default;
