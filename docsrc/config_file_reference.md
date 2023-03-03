@@ -207,7 +207,7 @@ If `default_min_test_time`, or `default_sample_sizes` are specified, their value
 
 Workloads executed by benchmarks have a number of mandatory parameters. The number and type for these parameters is workload specific. Required parameters for each workload are listed under the [documentation for each workload](@ref tests_overview).
 
-Arguments for the benchmark\u2019s workload parameters are specified under `params`. This is technically a list of parameters. Each argument is identified by its zero-based index. This index must correspond to the one in the workload documentation. Under its index, an argument specifies a `name`, a `type`, and a `value`.
+Arguments for the benchmark's workload parameters are specified under `params`. This is technically a list of parameters. Each argument is identified by its zero-based index. This index must correspond to the one in the workload documentation. Under its index, an argument specifies a `name`, a `type`, and a `value`.
 
 The value of field `name` is `<param_name>`. This is any string used for description purposes. This string can be anything as long as it is unique inside the benchmark section. Names already populated by exported configuration files can be changed, but it is not recommended.
 
