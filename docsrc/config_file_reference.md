@@ -173,7 +173,7 @@ When this setting is missing or set to `0` in the configuration file, this indic
 
 If the value of this field is an existing file name, Test Harness will read the file into memory as binary and pass the contents to the backend engine initialization through the call to `initEngine()`. The file name can be relative to the configuration file, or absolute.
 
-If this field does not contain a file name Test Harness will just forward the specified string as is (no null terminator will be appended).
+If this field does not contain a file name, Test Harness will just forward the specified string as is (no null terminator will be appended).
 
 If this field is null, missing, or contains an empty string, Test Harness will pass `null` values for data to the engine initialization.
 
