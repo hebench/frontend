@@ -93,7 +93,7 @@ See @ref category_latency .
 #### Offline
 See @ref category_offline .
 
-Value ranges for elements in `CategoryParams::offline::data_count`. Default value is used for elements that take any sample size, but no sample size or `0` is specified in the hierarchy by Test Harness.
+Value ranges for elements in `CategoryParams::offline::data_count`. Default value is used when the backend implementation sets the `data_count` for the corresponding operand to `0`, but user specified `0` or no value at run-time.
 
 | Parameter | Lower bound | Upper bound | Default |
 |-|-|-|-|

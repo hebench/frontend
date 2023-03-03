@@ -52,7 +52,7 @@ void BenchmarkDescriptor::completeWorkloadDescription(WorkloadDescriptionOutput 
 {
     // finish describing workload
     assert(OpParameterCount == 2);
-    assert(DefaultBatchSize == 1);
+    assert(DefaultBatchSize == 5);
 
     BenchmarkDescriptorCategory::completeWorkloadDescription(output, engine, backend_desc, config);
 
