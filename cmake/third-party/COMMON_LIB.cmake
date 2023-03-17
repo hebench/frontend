@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS_CURRENT "${CMAKE_CXX_FLAGS}")
 
 FetchContent_Declare(
   ${CONTENT_NAME}
-  GIT_REPOSITORY https://kylanerace@github.com/hebench/common-lib
+  GIT_REPOSITORY https://github.com/hebench/common-lib
   GIT_TAG        ${${_COMPONENT_NAME}_TAG}
   SUBBUILD_DIR   ${FETCHCONTENT_BASE_DIR}/${CONTENT_NAME}/${CONTENT_NAME}-subbuild
   SOURCE_DIR     ${FETCHCONTENT_BASE_DIR}/${CONTENT_NAME}/${CONTENT_NAME}-src
