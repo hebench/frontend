@@ -1,0 +1,6 @@
+<map id="hebench::TestHarness::BenchmarkDescription::Backend" name="hebench::TestHarness::BenchmarkDescription::Backend">
+<area shape="rect" id="node1" title=" " alt="" coords="30,213,209,269"/>
+<area shape="rect" id="node2" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1__FlexibleData" title="Structure to contain flexible data." alt="" coords="5,109,153,151"/>
+<area shape="rect" id="node3" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1BenchmarkDescriptor" title="Defines a benchmark test." alt="" coords="178,109,349,151"/>
+<area shape="rect" id="node4" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1CategoryParams" title="Specifies parameters for a category." alt="" coords="189,5,337,47"/>
+</map>

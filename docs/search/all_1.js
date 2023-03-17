@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['add_4',['add',['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#a4ad851ea5a543f42af0e760982cf0cbe',1,'hebench::cpp::WorkloadParams::Common::add(const T &amp;value, const std::string &amp;name=std::string())'],['../classhebench_1_1cpp_1_1WorkloadParams_1_1Common.html#ab6bd0aa8b50f7c1d744e37b24c50eef7',1,'hebench::cpp::WorkloadParams::Common::add(const double &amp;value, const std::string &amp;name)']]],
+  ['addbenchmarkdescription_5',['addBenchmarkDescription',['../classhebench_1_1cpp_1_1BaseEngine.html#a43c4bc52af5aebfbee886ffab9bac6ea',1,'hebench::cpp::BaseEngine']]],
+  ['adddefaultparameters_6',['addDefaultParameters',['../classhebench_1_1cpp_1_1BenchmarkDescription.html#aa4613b6a14273d65afd187b10a58bb07',1,'hebench::cpp::BenchmarkDescription::addDefaultParameters(const WorkloadParams::Common &amp;default_params_set)'],['../classhebench_1_1cpp_1_1BenchmarkDescription.html#a7e696542e80ef3b0ed6bb53bd15f30bb',1,'hebench::cpp::BenchmarkDescription::addDefaultParameters(const std::vector&lt; hebench::APIBridge::WorkloadParam &gt; &amp;default_params_set)']]],
+  ['adderrorcode_7',['addErrorCode',['../classhebench_1_1cpp_1_1BaseEngine.html#aa5ea77cb079712562845943bac65ce36',1,'hebench::cpp::BaseEngine']]],
+  ['addevent_8',['addEvent',['../classhebench_1_1ReportGen_1_1cpp_1_1TimingReport.html#a3c8119cd604b785aa821fb965dba7246',1,'hebench::ReportGen::cpp::TimingReport::addEvent()'],['../namespacehebench_1_1ReportGen.html#a40e760d49854b2ede8778b8575284028',1,'hebench::ReportGen::addEvent()'],['../classhebench_1_1Utilities_1_1TimingReportEx.html#a3c8119cd604b785aa821fb965dba7246',1,'hebench::Utilities::TimingReportEx::addEvent(const TimingReportEventC &amp;p_event)'],['../classhebench_1_1Utilities_1_1TimingReportEx.html#a03a8cdf727df83ff409fec20f45622b0',1,'hebench::Utilities::TimingReportEx::addEvent(hebench::Common::TimingReportEvent::Ptr p_event, const std::string &amp;event_type_name)'],['../classhebench_1_1Utilities_1_1TimingReportEx.html#a07948b7dd6440e280fef1be3d1d7de5e',1,'hebench::Utilities::TimingReportEx::addEvent(hebench::Common::TimingReportEvent::Ptr p_event)']]],
+  ['addeventtype_9',['addEventType',['../classhebench_1_1ReportGen_1_1cpp_1_1TimingReport.html#a950aebd8658e7f75e2169ec77ef4801a',1,'hebench::ReportGen::cpp::TimingReport::addEventType()'],['../namespacehebench_1_1ReportGen.html#a90d38748ad53160123cf69e33777e43f',1,'hebench::ReportGen::addEventType()']]],
+  ['adding_20a_20new_20workload_20to_20test_20harness_10',['Adding a New Workload to Test Harness',['../extend_test_harness.html',1,'']]],
+  ['adding_20latency_20category_20using_20pre_2dexisting_20implementation_11',['Adding Latency Category Using Pre-existing Implementation',['../extend_test_harness_l.html',1,'']]],
+  ['adding_20offline_20category_20using_20pre_2dexisting_20implementation_12',['Adding Offline Category Using Pre-existing Implementation',['../extend_test_harness_o.html',1,'']]],
+  ['addmaineventtype_13',['addMainEventType',['../namespacehebench_1_1ReportGen.html#a1ad2a3f68b88ce0bfd376e2c23446305',1,'hebench::ReportGen']]],
+  ['addschemename_14',['addSchemeName',['../classhebench_1_1cpp_1_1BaseEngine.html#a836aea3eadbbe8bd1fcaa047ad4565ee',1,'hebench::cpp::BaseEngine']]],
+  ['addsecurityname_15',['addSecurityName',['../classhebench_1_1cpp_1_1BaseEngine.html#ada106fa2a929522a6e5d99c2530ef7f3',1,'hebench::cpp::BaseEngine']]],
+  ['allocatereport_16',['allocateReport',['../namespacehebench_1_1ReportGen.html#a1db236e29e005f1ef7f6a65dfbb03458',1,'hebench::ReportGen']]],
+  ['almostequalset_17',['almostEqualSet',['../namespacehebench_1_1TestHarness_1_1SimpleSetIntersection.html#ab1bd3295131a2172a0285e7788fc1c6a',1,'hebench::TestHarness::SimpleSetIntersection']]],
+  ['api_20bridge_20function_20pipeline_20chart_18',['API Bridge Function Pipeline Chart',['../function_pipeline_chart.html',1,'']]],
+  ['api_20bridge_20overview_19',['API Bridge overview',['../APIBridge_overview.html',1,'']]],
+  ['api_2eh_20',['api.h',['../api_8h.html',1,'']]],
+  ['apibridge_5foverview_2emd_21',['APIBridge_overview.md',['../APIBridge__overview_8md.html',1,'']]],
+  ['appendfooter_22',['appendFooter',['../classhebench_1_1ReportGen_1_1TimingReportImpl.html#a762d876529ed0471f89534229d12a683',1,'hebench::ReportGen::TimingReportImpl::appendFooter()'],['../classhebench_1_1ReportGen_1_1cpp_1_1TimingReport.html#ac00bcb74550afd1c14f85ee68d8c757b',1,'hebench::ReportGen::cpp::TimingReport::appendFooter()']]],
+  ['appendheader_23',['appendHeader',['../classhebench_1_1ReportGen_1_1TimingReportImpl.html#a0526380e17c14f4e8c470eefc35eac92',1,'hebench::ReportGen::TimingReportImpl::appendHeader()'],['../classhebench_1_1ReportGen_1_1cpp_1_1TimingReport.html#af86b5ece8203468163e89a6bfd9eb45a',1,'hebench::ReportGen::cpp::TimingReport::appendHeader()']]],
+  ['appendreportfooter_24',['appendReportFooter',['../namespacehebench_1_1ReportGen.html#acf8afdb67f3822d3d67a8b858925ca35',1,'hebench::ReportGen']]],
+  ['appendreportheader_25',['appendReportHeader',['../namespacehebench_1_1ReportGen.html#a2d371c6db2b376fd2e81045df1798087',1,'hebench::ReportGen']]],
+  ['ave_26',['ave',['../namespacehebench_1_1ReportGen.html#ae8308f5fcc9bce4768764638ef95b952',1,'hebench::ReportGen::StatisticsResult']]],
+  ['ave_5ftrim_27',['ave_trim',['../namespacehebench_1_1ReportGen.html#af314aceba005d6a12fd1377f4489bd61',1,'hebench::ReportGen::StatisticsResult']]]
+];

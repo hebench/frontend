@@ -1,0 +1,4 @@
+<map id="hebench::cpp::BenchmarkDescription" name="hebench::cpp::BenchmarkDescription">
+<area shape="rect" id="node1" title="Base class for objects representing a specific benchmark based on an HEBench benchmark descriptor." alt="" coords="5,80,269,107"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1ITaggedObject.html" title="Represents an object with a tag." alt="" coords="33,5,241,32"/>
+</map>

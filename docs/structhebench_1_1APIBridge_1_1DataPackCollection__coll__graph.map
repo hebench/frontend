@@ -1,0 +1,5 @@
+<map id="hebench::APIBridge::DataPackCollection" name="hebench::APIBridge::DataPackCollection">
+<area shape="rect" id="node1" title="Defines a collection of data packs." alt="" coords="5,213,161,255"/>
+<area shape="rect" id="node2" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1DataPack" title="Defines a data package for an operation." alt="" coords="9,109,157,151"/>
+<area shape="rect" id="node3" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1__FlexibleData" title="Structure to contain flexible data." alt="" coords="9,5,157,47"/>
+</map>

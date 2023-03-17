@@ -1,0 +1,12 @@
+<map id="hebench::Utilities::BenchmarkSession" name="hebench::Utilities::BenchmarkSession">
+<area shape="rect" id="node1" title=" " alt="" coords="1685,85,1840,126"/>
+<area shape="rect" id="node2" title=" " alt="" coords="1265,49,1496,90"/>
+<area shape="rect" id="node3" href="$namespacehebench_1_1Utilities.html#structhebench_1_1Utilities_1_1BenchmarkRequest" title=" " alt="" coords="995,49,1152,90"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1BenchmarkDescription_1_1Configuration.html" title="Specifies a benchmark configuration." alt="" coords="679,41,857,97"/>
+<area shape="rect" id="node5" title=" " alt="" coords="275,5,477,32"/>
+<area shape="rect" id="node6" title=" " alt="" coords="333,56,419,83"/>
+<area shape="rect" id="node7" title=" " alt="" coords="10,47,149,89"/>
+<area shape="rect" id="node8" title=" " alt="" coords="267,110,485,151"/>
+<area shape="rect" id="node9" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1WorkloadParam" title="Defines a single workload parameter." alt="" coords="5,113,153,154"/>
+<area shape="rect" id="node10" title=" " alt="" coords="1287,115,1474,141"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="hebench::TestHarness::BenchmarkOffline" name="hebench::TestHarness::BenchmarkOffline">
+<area shape="rect" id="node1" title="Base class for workload benchmarks in the offline category." alt="" coords="25,273,189,315"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1PartialBenchmarkCategory.html" title=" " alt="" coords="5,184,209,225"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1PartialBenchmark.html" title="Base class for benchmarks." alt="" coords="25,95,189,136"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1IBenchmark.html" title="Interface for benchmarks." alt="" coords="25,5,189,47"/>
+</map>

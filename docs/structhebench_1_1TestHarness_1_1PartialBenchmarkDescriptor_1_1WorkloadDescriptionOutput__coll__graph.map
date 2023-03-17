@@ -1,0 +1,7 @@
+<map id="hebench::TestHarness::PartialBenchmarkDescriptor::WorkloadDescriptionOutput" name="hebench::TestHarness::PartialBenchmarkDescriptor::WorkloadDescriptionOutput">
+<area shape="rect" id="node1" title="Bundles values that need to be filled by a workload during completeWorkloadDescription()." alt="" coords="67,243,279,299"/>
+<area shape="rect" id="node2" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1BenchmarkDescriptor" title="Defines a benchmark test." alt="" coords="5,109,176,151"/>
+<area shape="rect" id="node3" href="$namespacehebench_1_1APIBridge.html#structhebench_1_1APIBridge_1_1CategoryParams" title="Specifies parameters for a category." alt="" coords="15,5,163,47"/>
+<area shape="rect" id="node4" title=" " alt="" coords="214,117,301,143"/>
+<area shape="rect" id="node5" title=" " alt="" coords="188,5,327,47"/>
+</map>

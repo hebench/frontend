@@ -1,0 +1,4 @@
+<map id="hebench::cpp::EngineObject" name="hebench::cpp::EngineObject">
+<area shape="rect" id="node1" title="Helper class to encapsulate objects that will cross the boundary of the API Bridge." alt="" coords="8,80,211,107"/>
+<area shape="rect" id="node2" href="$classhebench_1_1cpp_1_1ITaggedObject.html" title="Represents an object with a tag." alt="" coords="5,5,213,32"/>
+</map>

@@ -1,0 +1,13 @@
+<map id="hebench::TestHarness::BenchmarkOffline" name="hebench::TestHarness::BenchmarkOffline">
+<area shape="rect" id="node1" title="Base class for workload benchmarks in the offline category." alt="" coords="681,253,845,294"/>
+<area shape="rect" id="node5" href="$classhebench_1_1TestHarness_1_1DotProduct_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="899,5,1063,61"/>
+<area shape="rect" id="node6" href="$classhebench_1_1TestHarness_1_1EltwiseAdd_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="899,85,1063,141"/>
+<area shape="rect" id="node7" href="$classhebench_1_1TestHarness_1_1EltwiseMult_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="899,165,1063,221"/>
+<area shape="rect" id="node8" href="$classhebench_1_1TestHarness_1_1GenericWL_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="899,245,1063,301"/>
+<area shape="rect" id="node9" href="$classhebench_1_1TestHarness_1_1LogisticRegression_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="899,325,1063,381"/>
+<area shape="rect" id="node10" href="$classhebench_1_1TestHarness_1_1MatrixMultiply_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="893,405,1068,461"/>
+<area shape="rect" id="node11" href="$classhebench_1_1TestHarness_1_1SimpleSetIntersection_1_1Offline_1_1Benchmark.html" title=" " alt="" coords="894,485,1067,541"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1PartialBenchmarkCategory.html" title=" " alt="" coords="429,253,633,294"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1PartialBenchmark.html" title="Base class for benchmarks." alt="" coords="217,253,381,294"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1IBenchmark.html" title="Interface for benchmarks." alt="" coords="5,253,169,294"/>
+</map>

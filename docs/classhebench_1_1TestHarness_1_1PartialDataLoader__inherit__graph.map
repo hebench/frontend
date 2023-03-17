@@ -1,0 +1,12 @@
+<map id="hebench::TestHarness::PartialDataLoader" name="hebench::TestHarness::PartialDataLoader">
+<area shape="rect" id="node1" title="Base class for data loaders and data generators." alt="" coords="217,201,381,243"/>
+<area shape="rect" id="node3" href="$classhebench_1_1TestHarness_1_1DataLoaderCompute.html" title=" " alt="" coords="429,201,593,243"/>
+<area shape="rect" id="node2" href="$classhebench_1_1TestHarness_1_1IDataLoader.html" title=" " alt="" coords="5,201,169,243"/>
+<area shape="rect" id="node4" href="$classhebench_1_1TestHarness_1_1DotProduct_1_1DataLoader.html" title=" " alt="" coords="652,5,837,47"/>
+<area shape="rect" id="node5" href="$classhebench_1_1TestHarness_1_1EltwiseAdd_1_1DataLoader.html" title=" " alt="" coords="652,71,837,112"/>
+<area shape="rect" id="node6" href="$classhebench_1_1TestHarness_1_1EltwiseMult_1_1DataLoader.html" title=" " alt="" coords="650,136,839,177"/>
+<area shape="rect" id="node7" href="$classhebench_1_1TestHarness_1_1GenericWL_1_1DataLoader.html" title=" " alt="" coords="653,201,836,243"/>
+<area shape="rect" id="node8" href="$classhebench_1_1TestHarness_1_1LogisticRegression_1_1DataLoader.html" title=" " alt="" coords="663,267,827,323"/>
+<area shape="rect" id="node9" href="$classhebench_1_1TestHarness_1_1MatrixMultiply_1_1DataLoader.html" title=" " alt="" coords="641,348,848,389"/>
+<area shape="rect" id="node10" href="$classhebench_1_1TestHarness_1_1SimpleSetIntersection_1_1DataLoader.html" title=" " alt="" coords="658,414,831,470"/>
+</map>
