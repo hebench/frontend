@@ -24,9 +24,20 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
-)
+    )
 
-add_subdirectory(../../common-lib common-lib/build)
+set(COMMON_LIB_SRC "../../build/third-party/common-lib/common-lib-src")
+set(COMMON_LIB_BUILD "../../build/third-party/common-lib/common-lib-build")
+
+if(DEFINED ENV{COMMON_LIB_SRC} OR DEFINED ENV{COMMON_LIB_BUILD})
+    set(COMMON_LIB_SRC $ENV{COMMON_LIB_SRC})
+    set(COMMON_LIB_BUILD $ENV{COMMON_LIB_BUILD})
+    message(STATUS "Modified Common Library Directories")
+endif()
+
+message(STATUS "Common Library Source Directory: ${COMMON_LIB_SRC}")
+message(STATUS "Common Library Build Directory: ${COMMON_LIB_BUILD}")
+add_subdirectory(${COMMON_LIB_SRC} ${COMMON_LIB_BUILD})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE dl)
 target_link_libraries(${PROJECT_NAME} PRIVATE hebench_common-lib)
