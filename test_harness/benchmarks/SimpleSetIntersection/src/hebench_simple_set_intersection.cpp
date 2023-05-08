@@ -332,7 +332,7 @@ void DataLoader::init(std::uint64_t set_size_x,
 
     for (std::uint64_t sample_i = 0; sample_i < batch_sizes[Param_SetY]; ++sample_i)
     {
-        std::vector<std::uint64_t> indices_y = DataGeneratorHelper::generateRandomIntersectionIndicesU(set_size_y);
+        std::vector<std::uint64_t> indices_y = DataGeneratorHelper::generateRandomIntersectionIndicesU(std::min(set_size_y, set_size_x));
         std::vector<std::uint64_t> indices_x;
         std::vector<std::uint64_t>::iterator it_indices_y;
         if (!indices_y.empty())
