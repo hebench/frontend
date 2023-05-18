@@ -35,8 +35,8 @@ benchmark:
     dataset: $(pwd)/$dataset_file
     default_min_test_time: 0
     default_sample_sizes:
-      0: 0
-      1: 0
+      0: 1
+      1: 1
     params:
       0:
         name: n
